@@ -1,0 +1,50 @@
+{
+  "task_id": "interactive_20260301023442_1",
+  "repo_path": "D:\\Breach",
+  "objective": "change the sign in button color to yellow in LoginPage.tsx",
+  "verify_cmd": "pytest -q",
+  "max_steps": 20,
+  "policy": {
+    "allowed_prefixes": [
+      "cargo test",
+      "eslint",
+      "git diff",
+      "git log",
+      "git rev-parse",
+      "git status",
+      "go test",
+      "mypy",
+      "npm run test",
+      "npm test",
+      "pnpm test",
+      "py -m py_compile",
+      "py -m pytest",
+      "pytest",
+      "pytest -q",
+      "python -m py_compile",
+      "python -m pytest",
+      "rg",
+      "ruff",
+      "tsc",
+      "yarn test"
+    ],
+    "blocked_patterns": [
+      "rm -rf",
+      "rm -r",
+      "del /f",
+      "format ",
+      "shutdown",
+      "reboot",
+      "git reset --hard",
+      "git checkout --",
+      "git clean -fd",
+      "npm install",
+      "pnpm install",
+      "yarn install",
+      "pip install",
+      "curl ",
+      "wget "
+    ]
+  },
+  "started_at": "2026-03-01T02:34:42.687678+00:00"
+}

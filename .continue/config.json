@@ -1,0 +1,22 @@
+{
+  "models": [
+    {
+      "title": "Ollama Code Assistant",
+      "provider": "ollama",
+      "model": "codellama:7b",
+      "apiBase": "http://127.0.0.1:11434"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Ollama Autocomplete",
+    "provider": "ollama",
+    "model": "qwen2.5-coder:1.5b-base",
+    "apiBase": "http://127.0.0.1:11434"
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text",
+    "apiBase": "http://127.0.0.1:11434"
+  },
+  "allowAnonymousTelemetry": false
+}

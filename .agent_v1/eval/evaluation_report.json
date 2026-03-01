@@ -1,0 +1,42 @@
+{
+  "tasks_total": 2,
+  "tasks_succeeded": 2,
+  "success_rate": 100.0,
+  "elapsed_seconds": 57.49,
+  "results": [
+    {
+      "id": "sample_python_tests",
+      "ok": true,
+      "message": "Objective verified.",
+      "steps_taken": 2,
+      "changed_files": [],
+      "verification": {
+        "ok": true,
+        "command": "python -m py_compile agent.py",
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "summary": "Verification pass (cmd: python -m py_compile agent.py).",
+        "status": "pass"
+      },
+      "run_dir": "D:\\Breach\\.agent_v1\\eval\\sample_python_tests_20260301T022649Z"
+    },
+    {
+      "id": "sample_repo_health",
+      "ok": true,
+      "message": "Objective verified.",
+      "steps_taken": 3,
+      "changed_files": [],
+      "verification": {
+        "ok": true,
+        "command": "git status --short",
+        "exit_code": 0,
+        "stdout": "A  .idea/.gitignore\nA  .idea/Breach.iml\nA  .idea/inspectionProfiles/Project_Default.xml\nA  .idea/modules.xml\nA  .idea/vcs.xml\n?? .agent_v1/\n?? .ai/\n?? .aiignore\n?? .continue/\n?? .cursor/\n?? .gitignore\n?? .idea/compiler.xml\n?? .vscode/\n?? README.md\n?? __pycache__/\n?? agent.py\n?? agent_v1/\n?? breach-agent.cmd\n?? breach-agent.ps1\n?? core/\n?? frontend/\n?? greeting.txt\n?? index.html\n?? package-lock.json\n?? package.json\n?? project_structure.txt\n?? requirements.txt\n?? run_agent_v1.py\n?? scripts/\n?? setup_agent.py\n?? tools/\n",
+        "stderr": "",
+        "summary": "Verification pass (cmd: git status --short).",
+        "status": "pass"
+      },
+      "run_dir": "D:\\Breach\\.agent_v1\\eval\\sample_repo_health_20260301T022709Z"
+    }
+  ]
+}

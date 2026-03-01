@@ -1,0 +1,26 @@
+{
+  "tasks_total": 2,
+  "tasks_succeeded": 0,
+  "success_rate": 0.0,
+  "elapsed_seconds": 182.19,
+  "results": [
+    {
+      "id": "sample_python_tests",
+      "ok": false,
+      "message": "Stopped after 3 consecutive failed actions (limit=2).",
+      "steps_taken": 3,
+      "changed_files": [],
+      "verification": null,
+      "run_dir": "D:\\Breach\\.agent_v1\\eval_smoke\\sample_python_tests_20260301T014919Z"
+    },
+    {
+      "id": "sample_repo_health",
+      "ok": false,
+      "message": "Max steps reached (6) before completion.",
+      "steps_taken": 6,
+      "changed_files": [],
+      "verification": null,
+      "run_dir": "D:\\Breach\\.agent_v1\\eval_smoke\\sample_repo_health_20260301T015034Z"
+    }
+  ]
+}

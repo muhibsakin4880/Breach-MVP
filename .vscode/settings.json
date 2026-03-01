@@ -1,0 +1,5 @@
+{
+    "claudeCode.useTerminal": true,
+    "CodeGPT.apiKey": "Ollama",
+    "editor.inlineSuggest.enabled": true
+}

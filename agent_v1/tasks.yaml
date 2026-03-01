@@ -1,0 +1,12 @@
+# Sample benchmark tasks for agent_v1
+- id: sample_python_tests
+  repo_path: .
+  objective: "Inspect the repository and ensure Python files compile without syntax errors."
+  verify_cmd: "python -m py_compile agent.py"
+  max_steps: 8
+
+- id: sample_repo_health
+  repo_path: .
+  objective: "Gather repository status and produce final verified completion."
+  verify_cmd: "git status --short"
+  max_steps: 6

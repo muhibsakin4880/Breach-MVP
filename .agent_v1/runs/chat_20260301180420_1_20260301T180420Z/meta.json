@@ -1,0 +1,50 @@
+{
+  "task_id": "chat_20260301180420_1",
+  "repo_path": "D:\\Breach",
+  "objective": "hi",
+  "verify_cmd": "python -m pytest -q",
+  "max_steps": 20,
+  "policy": {
+    "allowed_prefixes": [
+      "cargo test",
+      "eslint",
+      "git diff",
+      "git log",
+      "git rev-parse",
+      "git status",
+      "go test",
+      "mypy",
+      "npm run test",
+      "npm test",
+      "pnpm test",
+      "py -m py_compile",
+      "py -m pytest",
+      "pytest",
+      "python -m py_compile",
+      "python -m pytest",
+      "python -m pytest -q",
+      "rg",
+      "ruff",
+      "tsc",
+      "yarn test"
+    ],
+    "blocked_patterns": [
+      "rm -rf",
+      "rm -r",
+      "del /f",
+      "format ",
+      "shutdown",
+      "reboot",
+      "git reset --hard",
+      "git checkout --",
+      "git clean -fd",
+      "npm install",
+      "pnpm install",
+      "yarn install",
+      "pip install",
+      "curl ",
+      "wget "
+    ]
+  },
+  "started_at": "2026-03-01T18:04:20.175605+00:00"
+}

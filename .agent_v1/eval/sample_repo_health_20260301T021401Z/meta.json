@@ -1,0 +1,48 @@
+{
+  "task_id": "sample_repo_health",
+  "repo_path": "D:\\Breach",
+  "objective": "Gather repository status and produce final verified completion.",
+  "verify_cmd": "git status --short",
+  "max_steps": 6,
+  "policy": {
+    "allowed_prefixes": [
+      "cargo test",
+      "eslint",
+      "git diff",
+      "git log",
+      "git rev-parse",
+      "git status",
+      "git status --short",
+      "go test",
+      "mypy",
+      "npm run test",
+      "npm test",
+      "pnpm test",
+      "py -m pytest",
+      "pytest",
+      "python -m pytest",
+      "rg",
+      "ruff",
+      "tsc",
+      "yarn test"
+    ],
+    "blocked_patterns": [
+      "rm -rf",
+      "rm -r",
+      "del /f",
+      "format ",
+      "shutdown",
+      "reboot",
+      "git reset --hard",
+      "git checkout --",
+      "git clean -fd",
+      "npm install",
+      "pnpm install",
+      "yarn install",
+      "pip install",
+      "curl ",
+      "wget "
+    ]
+  },
+  "started_at": "2026-03-01T02:14:01.262838+00:00"
+}
