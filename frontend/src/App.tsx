@@ -26,21 +26,64 @@ import TrustProfilePage from './pages/TrustProfilePage'
 import PipelinesPage from './pages/PipelinesPage'
 import { useAuth } from './contexts/AuthContext'
 
+type AccessIntentAuth = ReturnType<typeof useAuth> & {
+    accessIntentPromptPending?: boolean
+    submitAccessIntent?: () => void
+    skipAccessIntent?: () => void
+}
+
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
+function AccessIntentModal({
+    onContinue,
+    onSkip
+}: {
+    onContinue: () => void
+    onSkip: () => void
+}) {
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg rounded-xl border border-slate-700 bg-slate-800 p-6 space-y-4">
+                <h2 className="text-2xl font-semibold text-white">Access Intent</h2>
+                <p className="text-slate-300">
+                    Before entering your workspace, please complete your access intent prompt.
+                </p>
+                <div className="flex justify-end gap-3 pt-2">
+                    <button
+                        onClick={onSkip}
+                        className="px-4 py-2 rounded-lg border border-slate-600 text-slate-200 hover:text-white"
+                    >
+                        Skip for now
+                    </button>
+                    <button
+                        onClick={onContinue}
+                        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white"
+                    >
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 function App() {
-    const { isAuthenticated, accessStatus } = useAuth()
+    const auth = useAuth() as AccessIntentAuth
+    const {
+        isAuthenticated,
+        accessStatus,
+        accessIntentPromptPending = false,
+        submitAccessIntent,
+        skipAccessIntent
+    } = auth
 
     const RequireOnboardingAccess = (element: JSX.Element) => {
-        // Allow access while onboarding is in progress or awaiting review
         if (accessStatus === 'pending') return element
         if (accessStatus === 'not_started') return element
-        // If already approved, redirect to dashboard/login
         if (accessStatus === 'approved') {
             if (MOCK_AUTH) return element
             return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
         }
-        // Only redirect to home if user hasn't started onboarding at all
         return <Navigate to="/" replace />
     }
 
@@ -50,17 +93,31 @@ function App() {
             return <Navigate to="/" replace />
         }
         if (!isAuthenticated) return <Navigate to="/login" replace />
+
+        if (accessIntentPromptPending) {
+            return (
+                <AccessIntentModal
+                    onContinue={() => {
+                        submitAccessIntent?.()
+                    }}
+                    onSkip={() => {
+                        skipAccessIntent?.()
+                    }}
+                />
+            )
+        }
+
         return element
     }
 
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<MainLayout />}>
+                <Route element={<MainLayout />}>
                     <Route index element={<HomePage />} />
                     <Route path="about" element={<AboutPage />} />
                     <Route path="solutions" element={<SolutionsPage />} />
-                    <Route path="login" element={<LoginPage />} />
+                    <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path="onboarding" element={RequireOnboardingAccess(<OnboardingPage />)} />
                     <Route path="onboarding/step1" element={RequireOnboardingAccess(<OnboardingStep1 />)} />
@@ -68,10 +125,9 @@ function App() {
                     <Route path="onboarding/step3" element={RequireOnboardingAccess(<OnboardingStep3 />)} />
                     <Route path="onboarding/step4" element={RequireOnboardingAccess(<OnboardingStep4 />)} />
                     <Route path="onboarding/confirmation" element={RequireOnboardingAccess(<OnboardingConfirmation />)} />
-                    <Route path="*" element={<NotFoundPage />} />
                 </Route>
 
-                <Route path="/" element={RequireWorkspaceAccess(<AppLayout />)}>
+                <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
@@ -85,6 +141,8 @@ function App() {
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
+
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </Router>
     )
