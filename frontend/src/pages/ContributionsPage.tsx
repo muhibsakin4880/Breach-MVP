@@ -237,21 +237,63 @@ export default function ContributionsPage() {
             title: 'Privacy & access controls',
             description: 'Define policy controls before submission.',
             body: (
-                <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                        <div className="text-slate-400 text-xs mb-1">Default access level</div>
-                        <div className="text-slate-100">Restricted participant workspaces</div>
+                <div className="space-y-4 text-sm">
+                    <div className="rounded-xl border border-cyan-400/30 bg-gradient-to-br from-cyan-500/10 via-slate-900/80 to-slate-950 px-4 py-4 shadow-lg shadow-cyan-900/20">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">Anonymity Settings</div>
+                                <div className="text-slate-200 text-xs mt-1">Configure identity protection and de-identification before dataset release.</div>
+                            </div>
+                            <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[11px] font-medium text-cyan-200">Recommended</span>
+                        </div>
+
+                        <div className="space-y-2.5">
+                            <div className="flex items-start justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                <div>
+                                    <div className="text-slate-100 font-medium">Enable Anonymous Upload</div>
+                                    <div className="text-slate-400 text-xs mt-1 max-w-xl">Your identity and organization name will remain completely hidden from other participants and accessors</div>
+                                </div>
+                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-cyan-500 ring-1 ring-cyan-300/40">
+                                    <span className="inline-block h-5 w-5 translate-x-5 rounded-full bg-white shadow" />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                <div className="text-slate-100 font-medium">Apply Pseudonymization</div>
+                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-slate-700 ring-1 ring-slate-500/60">
+                                    <span className="inline-block h-5 w-5 translate-x-1 rounded-full bg-white shadow" />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                <div className="text-slate-100 font-medium">Full De-identification</div>
+                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-slate-700 ring-1 ring-slate-500/60">
+                                    <span className="inline-block h-5 w-5 translate-x-1 rounded-full bg-white shadow" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                        <div className="text-slate-400 text-xs mb-1">Export policy</div>
-                        <div className="text-slate-100">Aggregated export only</div>
+
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Access Governance</div>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
+                                <div className="text-slate-400 text-xs mb-1">Default access level</div>
+                                <div className="text-slate-100">Restricted participant workspaces</div>
+                            </div>
+                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
+                                <div className="text-slate-400 text-xs mb-1">Export policy</div>
+                                <div className="text-slate-100">Aggregated export only</div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 sm:col-span-2">
-                        <div className="text-slate-400 text-xs mb-1">Compliance tags</div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="px-2 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">PII-checked</span>
-                            <span className="px-2 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Retention: 12 months</span>
-                            <span className="px-2 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Audit logging enabled</span>
+
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Compliance Controls</div>
+                        <div className="flex flex-wrap gap-2">
+                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">PII-checked</span>
+                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Retention: 12 months</span>
+                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Audit logging enabled</span>
                         </div>
                     </div>
                 </div>
