@@ -1,9 +1,0 @@
-{
-  "ok": false,
-  "message": "Max steps reached (6) before completion.",
-  "steps_taken": 6,
-  "verification": null,
-  "changed_files": [],
-  "diff": "",
-  "finished_at": "2026-03-01T02:23:57.029478+00:00"
-}
