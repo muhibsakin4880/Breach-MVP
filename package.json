@@ -11,5 +11,8 @@
     "agent:edit": "node tools/ollama-agent/agent.mjs edit",
     "agent:fix": "node tools/ollama-agent/agent.mjs fix",
     "agent:health": "node tools/ollama-agent/agent.mjs health"
+  },
+  "dependencies": {
+    "@heyputer/puter.js": "^2.2.10"
   }
 }

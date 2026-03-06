@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 type NavItem = { label: string; to: string; primary?: boolean }
 
@@ -12,16 +13,26 @@ const publicNav: NavItem[] = [
 
 export default function Header() {
     const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const { signOut } = useAuth()
 
     const renderLinks = (isMobile = false) => (
-        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-4 md:gap-6'}`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-6'}`}>
             {publicNav.map(item => {
                 const classes = item.primary
                     ? 'px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-medium rounded-lg transition-colors text-center'
-                    : 'text-sm md:text-base text-slate-300 hover:text-white transition-colors'
+                    : 'text-sm md:text-base text-slate-300 hover:text-cyan-400 transition-all duration-300'
 
                 return (
-                    <Link key={`${item.label}-${item.to}`} to={item.to} className={classes} onClick={() => setIsMobileOpen(false)}>
+                    <Link
+                        key={`${item.label}-${item.to}`}
+                        to={item.to}
+                        className={classes}
+                        style={!item.primary ? { textShadow: '0 0 20px rgba(0, 240, 255, 0.3)' } : {}}
+                        onClick={() => {
+                            if (item.to === '/login') signOut()
+                            setIsMobileOpen(false)
+                        }}
+                    >
                         {item.label}
                     </Link>
                 )
@@ -30,12 +41,16 @@ export default function Header() {
     )
 
     return (
-        <header className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
-            <nav className="container mx-auto px-4 py-4">
-                <div className="flex items-center justify-between">
-                    <Link to="/" className="text-xl md:text-2xl font-bold text-white hover:text-blue-400 transition-colors">
-                        Breach
-                        <span className="block text-xs text-slate-400 font-normal">Data Confidence & Security Infrastructure Layer</span>
+        <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/80 border-b border-cyan-500/30" style={{ height: '88px' }}>
+            <nav className="container mx-auto px-8 md:px-16 h-full">
+                <div className="flex items-center justify-between h-full">
+                    <Link to="/" className="flex items-center gap-5">
+                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 15px #00F0FF40)' }} fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.6v3c0 1-.8 1.9-1.8 1.9h-4c-1 0-1.8-.9-1.8-1.9v-3c0-.7.4-1.3 1-1.6V9.5c0-1.4 1.4-2.5 2.8-2.5zm0 1.5c-.8 0-1.3.7-1.3 1v1.5h2.6V9.5c0-1.3-.5-1-1.3-1z"/>
+                        </svg>
+                        <div className="flex items-center">
+                            <span className="text-2xl text-white" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Breach</span>
+                        </div>
                     </Link>
 
                     <div className="flex items-center gap-3 md:hidden">
@@ -50,7 +65,7 @@ export default function Header() {
                         </button>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex items-center gap-6">
                         {renderLinks(false)}
                     </div>
                 </div>

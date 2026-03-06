@@ -16,13 +16,17 @@ export default function LoginPage() {
         e.preventDefault()
         if (!email) return
         if (!MOCK_AUTH && !password) return
-        const signedIn = signIn()
-        if (signedIn) {
-            navigate('/dashboard', { replace: true })
-        }
+        const signInResult = signIn() as boolean | { accessIntentRequired?: boolean }
+        if (!signInResult) return
+
+        const accessIntentRequired =
+            typeof signInResult === 'object' && signInResult.accessIntentRequired === true
+
+        if (accessIntentRequired) return
+        navigate('/dashboard', { replace: true })
     }
 
-    if (accessStatus === 'pending') {
+    if (!MOCK_AUTH && accessStatus === 'pending') {
         return (
             <div className="container mx-auto px-4 py-12">
                 <div className="max-w-md mx-auto">
@@ -48,7 +52,7 @@ export default function LoginPage() {
         )
     }
 
-    if (accessStatus !== 'approved') {
+    if (!MOCK_AUTH && accessStatus !== 'approved') {
         return (
             <div className="container mx-auto px-4 py-12">
                 <div className="max-w-md mx-auto">

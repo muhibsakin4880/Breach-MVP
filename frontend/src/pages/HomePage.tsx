@@ -35,7 +35,7 @@ function useInView(threshold = 0.2) {
 }
 
 export default function HomePage() {
-    const { startOnboarding, signIn } = useAuth()
+    const { startOnboarding, signIn, signOut } = useAuth()
     const navigate = useNavigate()
     const [wizardOpen, setWizardOpen] = useState(false)
     const [wizardStep, setWizardStep] = useState(1)
@@ -54,6 +54,10 @@ export default function HomePage() {
     const handleRequestPlatformAccess = () => {
         startOnboarding()
         navigate('/onboarding')
+    }
+
+    const handleSignInFromLanding = () => {
+        signOut()
     }
 
     const handleWizardProceed = (data: BasicInfoFormState) => {
@@ -252,7 +256,13 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     HERO SECTION
                 ═══════════════════════════════════════ */}
-                <section className="hero-bg relative min-h-screen flex items-center overflow-hidden">
+                <section className="hero-bg relative min-h-screen flex items-center overflow-hidden" style={{ background: 'linear-gradient(180deg, #000000 0%, #020408 50%, #050C1F 100%)' }}>
+                    {/* Dark navy grid pattern */}
+                    <div className="absolute inset-0 opacity-10" style={{ 
+                        backgroundImage: 'linear-gradient(rgba(0,240,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.05) 1px, transparent 1px)', 
+                        backgroundSize: '50px 50px' 
+                    }} />
+
                     {/* Animated grid background */}
                     <div className="absolute inset-0 grid-bg opacity-40" />
 
@@ -274,37 +284,44 @@ export default function HomePage() {
                         <div className="max-w-5xl mx-auto text-center">
 
                             {/* Badge */}
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 opacity-0-init ${heroVisible ? 'animate-fadeUp' : ''}`}
-                                 style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', animationDelay: '0s', opacity: heroVisible ? undefined : 0 }}>
-                                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse-ring" />
-                                <span className="text-blue-300 text-sm font-medium tracking-wide">Trusted Data Infrastructure</span>
+                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 backdrop-blur-xl border border-cyan-500/30 opacity-0-init ${heroVisible ? 'animate-fadeUp' : ''}`}
+                                 style={{ background: 'rgba(0,240,255,0.05)', animationDelay: '0s', opacity: heroVisible ? undefined : 0 }}>
+                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                                <span className="text-cyan-300 text-sm font-medium tracking-wide">Trusted Data Infrastructure</span>
                             </div>
 
                             {/* Headline */}
-                            <h1 className={`breach-font text-5xl md:text-7xl font-bold mb-6 leading-none tracking-tight opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
+                            <h1 className={`breach-font font-bold mb-6 leading-none tracking-tight opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}>
-                                <span className="text-white block">Breach —</span>
-                                <span className="text-shimmer block">Data Confidence &</span>
-                                <span className="text-white block">Security Layer</span>
+                                <span className="text-white flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl">
+                                    <svg className="w-16 h-16 text-cyan-400 cyber-glow" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.6v3c0 1-.8 1.9-1.8 1.9h-4c-1 0-1.8-.9-1.8-1.9v-3c0-.7.4-1.3 1-1.6V9.5c0-1.4 1.4-2.5 2.8-2.5zm0 1.5c-.8 0-1.3.7-1.3 1v1.5h2.6V9.5c0-1.3-.5-1-1.3-1z"/>
+                                    </svg>
+                                    Breach
+                                </span>
+                                <span className="text-shimmer block text-base md:text-lg lg:text-xl mt-2 leading-tight whitespace-nowrap" style={{ textShadow: '0 0 30px rgba(0,240,255,0.4)' }}>Layered Defense for Data Confidence</span>
                             </h1>
 
                             {/* Subtitle */}
-                            <p className={`text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
+                            {/* <p className={`text-base md:text-xl text-[#A1A1AA] mb-10 max-w-2xl mx-auto leading-normal opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
                                style={{ opacity: heroVisible ? undefined : 0 }}>
-                                Secure data access with verified datasets, AI-backed confidence, and
-                                controlled participation — no marketplace, just trust-first collaboration.
-                            </p>
+                                Layered Defense for Data Confidence
+                            </p> */}
 
                             {/* CTA Buttons */}
                             <div className={`flex flex-col sm:flex-row gap-4 justify-center opacity-0-init ${heroVisible ? 'animate-fadeUp delay-300' : ''}`}
                                  style={{ opacity: heroVisible ? undefined : 0 }}>
-                                <Link to="/login" className="btn-primary relative z-10 px-8 py-4 text-white font-semibold rounded-xl text-lg">
+                                <Link
+                                    to="/login"
+                                    onClick={handleSignInFromLanding}
+                                    className="btn-primary relative z-10 px-8 py-4 text-[#050C1F] font-semibold rounded-xl text-lg cyber-glow"
+                                >
                                     <span className="relative z-10">Sign In →</span>
                                 </Link>
                                 <button
                                     type="button"
                                     onClick={handleRequestPlatformAccess}
-                                    className="btn-secondary px-8 py-4 text-white font-semibold rounded-xl text-lg"
+                                    className="px-8 py-4 text-white font-semibold rounded-xl text-lg backdrop-blur-xl bg-black/50 border border-white/10 hover:border-cyan-500/50 transition-all duration-300"
                                 >
                                     Request Platform Access
                                 </button>
@@ -315,7 +332,7 @@ export default function HomePage() {
                                  style={{ opacity: heroVisible ? undefined : 0 }}>
                                 {['SOC 2 Compliant', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
                                     <div key={item} className="flex items-center gap-2 text-slate-500 text-sm">
-                                        <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
                                         {item}
@@ -333,17 +350,32 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     STATS SECTION
                 ═══════════════════════════════════════ */}
-                <section className="py-16" style={{ background: '#020817' }}>
+                <section className="py-16" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
                     <div ref={statsRef.ref} className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto grid grid-cols-3 gap-6">
                             {[
-                                { value: datasetsCount.toLocaleString() + '+', label: 'Verified Datasets' },
-                                { value: verifiedCount + '%', label: 'Accuracy Rate' },
-                                { value: partnersCount + '+', label: 'Trusted Partners' },
+                                { value: datasetsCount.toLocaleString() + '+', label: 'Verified Datasets', icon: (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                )},
+                                { value: verifiedCount + '%', label: 'Accuracy Rate', icon: (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                )},
+                                { value: partnersCount + '+', label: 'Trusted Partners', icon: (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                )},
                             ].map((stat) => (
-                                <div key={stat.label} className="stat-card rounded-2xl p-6 text-center">
+                                <div key={stat.label} className="glass rounded-2xl p-6 text-center cyber-glow">
+                                    <div className="w-10 h-10 mx-auto mb-3 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                                        {stat.icon}
+                                    </div>
                                     <div className="breach-font text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
-                                    <div className="text-slate-500 text-sm">{stat.label}</div>
+                                    <div className="text-slate-400 text-sm">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -353,11 +385,11 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     HOW IT WORKS SECTION
                 ═══════════════════════════════════════ */}
-                <section className="py-24" style={{ background: 'linear-gradient(180deg, #020817 0%, #070f1f 100%)' }}>
+                <section className="py-24" style={{ background: 'linear-gradient(180deg, #020817 0%, #050C1F 100%)' }}>
                     <div className="container mx-auto px-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-20">
-                                <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-3">Process</p>
+                                <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Process</p>
                                 <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
                                     How It Works
                                 </h2>
@@ -367,23 +399,43 @@ export default function HomePage() {
                             </div>
 
                             <div className="grid md:grid-cols-4 gap-6 relative">
-                                {/* Connector line */}
-                                <div className="hidden md:block absolute top-8 left-1/4 right-1/4 h-px"
-                                     style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.3), rgba(59,130,246,0.1))', left: '12.5%', right: '12.5%' }} />
+                                {/* Glowing cyan connector line */}
+                                <div className="hidden md:block absolute top-8 left-[12.5%] right-[12.5%] h-px">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                                    <div className="absolute top-0 left-0 w-[calc(33.33%-12px)] h-px bg-gradient-to-r from-cyan-400 to-transparent" />
+                                    <div className="absolute top-0 right-0 w-[calc(33.33%-12px)] h-px bg-gradient-to-l from-cyan-400 to-transparent" />
+                                </div>
 
                                 {[
-                                    { num: '01', title: 'Controlled Dataset Onboarding', desc: 'Participants submit datasets with metadata and documentation for verification', icon: '⬆' },
-                                    { num: '02', title: 'AI Quality Verification', desc: 'Automated AI systems check data quality, completeness, and consistency', icon: '⚡' },
-                                    { num: '03', title: 'Confidence Scoring', desc: 'Each dataset receives a comprehensive confidence score based on multiple factors', icon: '◎' },
-                                    { num: '04', title: 'Secure Access', desc: 'Approved participants access datasets with full audit trails and security controls', icon: '🔐' },
+                                    { num: '01', title: 'Controlled Dataset Onboarding', desc: 'Participants submit datasets with metadata and documentation for verification', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                    )},
+                                    { num: '02', title: 'AI Quality Verification', desc: 'Automated AI systems check data quality, completeness, and consistency', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    )},
+                                    { num: '03', title: 'Confidence Scoring', desc: 'Each dataset receives a comprehensive confidence score based on multiple factors', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    )},
+                                    { num: '04', title: 'Secure Access', desc: 'Approved participants access datasets with full audit trails and security controls', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    )},
                                 ].map((step, i) => (
-                                    <div key={step.num} className="glass-card rounded-2xl p-6 relative" style={{ animationDelay: `${i * 0.1}s` }}>
+                                    <div key={step.num} className="glass rounded-2xl p-6 relative cyber-glow" style={{ animationDelay: `${i * 0.1}s` }}>
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold"
-                                                 style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(99,102,241,0.1))', border: '1px solid rgba(59,130,246,0.2)' }}>
+                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-cyan-500 text-white text-sm font-bold shadow-[0_0_15px_rgba(0,240,255,0.5)]">
+                                                {step.num}
+                                            </div>
+                                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-cyan-400 border border-cyan-500/30 bg-cyan-500/10">
                                                 {step.icon}
                                             </div>
-                                            <span className="breach-font text-blue-400 text-sm font-semibold">{step.num}</span>
                                         </div>
                                         <h3 className="breach-font text-lg font-semibold text-white mb-3">{step.title}</h3>
                                         <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
@@ -397,13 +449,14 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     TRUST & VERIFICATION SECTION
                 ═══════════════════════════════════════ */}
-                <section className="py-24" style={{ background: '#020817' }}>
+                <section className="py-24" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
                     <div className="container mx-auto px-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-16">
-                                <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-3">Security</p>
+                                <div className="w-16 h-px mx-auto mb-4 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                                <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Security</p>
                                 <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
-                                    Trust & Verification
+                                    Trust & <span className="text-cyan-400" style={{ textShadow: '0 0 20px rgba(0,240,255,0.4)' }}>Verification</span>
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xl mx-auto">
                                     Multi-layered verification ensures secure, trustworthy collaboration without marketplace risks
@@ -412,14 +465,29 @@ export default function HomePage() {
 
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                                 {[
-                                    { icon: '🤖', title: 'AI Dataset Validation', desc: 'Automated AI systems validate data quality, detect anomalies, and ensure consistency', color: 'rgba(59,130,246,0.1)' },
-                                    { icon: '✓', title: 'Provider Verification', desc: 'All data providers undergo identity verification and credentialing processes', color: 'rgba(16,185,129,0.1)' },
-                                    { icon: '📊', title: 'Confidence Scores', desc: 'Transparent scoring system showing quality, completeness, and reliability metrics', color: 'rgba(245,158,11,0.1)' },
-                                    { icon: '🔒', title: 'Secure Dataset Access', desc: 'Enterprise-grade security with role-based access and complete audit trails', color: 'rgba(99,102,241,0.1)' },
+                                    { title: 'AI Dataset Validation', desc: 'Automated AI systems validate data quality, detect anomalies, and ensure consistency', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    )},
+                                    { title: 'Provider Verification', desc: 'All data providers undergo identity verification and credentialing processes', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    )},
+                                    { title: 'Confidence Scores', desc: 'Transparent scoring system showing quality, completeness, and reliability metrics', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    )},
+                                    { title: 'Secure Dataset Access', desc: 'Enterprise-grade security with role-based access and complete audit trails', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    )},
                                 ].map((card) => (
-                                    <div key={card.title} className="glass-card rounded-2xl p-6">
-                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5"
-                                             style={{ background: card.color, border: `1px solid ${card.color.replace('0.1', '0.3')}` }}>
+                                    <div key={card.title} className="glass rounded-2xl p-6 cyber-glow border-cyan-500/20 hover:border-cyan-500/50">
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-cyan-400 mb-5 border border-cyan-500/30 bg-cyan-500/10">
                                             {card.icon}
                                         </div>
                                         <h3 className="breach-font text-lg font-semibold text-white mb-3">{card.title}</h3>
@@ -434,33 +502,50 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     BUILT FOR EVERY TEAM SECTION
                 ═══════════════════════════════════════ */}
-                <section className="py-24" style={{ background: 'linear-gradient(180deg, #020817 0%, #070f1f 100%)' }}>
+                <section className="py-24" style={{ background: 'linear-gradient(180deg, #020817 0%, #050C1F 100%)' }}>
                     <div className="container mx-auto px-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-16">
-                                <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-3">Solutions</p>
+                                <div className="w-16 h-px mx-auto mb-4 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                                <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Solutions</p>
                                 <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
-                                    Built for Every Team
+                                    Built for Every <span className="text-cyan-400" style={{ textShadow: '0 0 20px rgba(0,240,255,0.4)' }}>Team</span>
                                 </h2>
                                 <p className="text-slate-400 text-lg">Tailored solutions for diverse data needs</p>
                             </div>
 
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
                                 {[
-                                    { icon: '🎓', title: 'Researchers', desc: 'Verified datasets for academic research with citation support', to: '/solutions#researchers', color: '#3b82f6' },
-                                    { icon: '🤖', title: 'AI & ML Teams', desc: 'Training data with quality validation and bias detection', to: '/solutions#ai-ml-teams', color: '#8b5cf6' },
-                                    { icon: '🏢', title: 'Enterprises', desc: 'Enterprise-grade security and compliance for critical applications', to: '/solutions#enterprises', color: '#10b981' },
-                                    { icon: '📊', title: 'Contribute Data', desc: 'Participants can contribute datasets with verification, governance, and audit trails', to: '/solutions#data-providers', color: '#f59e0b' },
+                                    { title: 'Researchers', desc: 'Verified datasets for academic research with citation support', to: '/solutions#researchers', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    )},
+                                    { title: 'AI & ML Teams', desc: 'Training data with quality validation and bias detection', to: '/solutions#ai-ml-teams', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    )},
+                                    { title: 'Enterprises', desc: 'Enterprise-grade security and compliance for critical applications', to: '/solutions#enterprises', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    )},
+                                    { title: 'Contribute Data', desc: 'Participants can contribute datasets with verification, governance, and audit trails', to: '/solutions#data-providers', icon: (
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                    )},
                                 ].map((card) => (
-                                    <Link key={card.title} to={card.to} className="glass-card rounded-2xl p-6 group block">
-                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 transition-transform group-hover:scale-110"
-                                             style={{ background: `${card.color}18`, border: `1px solid ${card.color}30` }}>
+                                    <Link key={card.title} to={card.to} className="glass rounded-2xl p-6 cyber-glow border-cyan-500/20 hover:border-cyan-500/50 group block">
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-cyan-400 mb-5 border border-cyan-500/30 bg-cyan-500/10 transition-transform group-hover:scale-110">
                                             {card.icon}
                                         </div>
                                         <h3 className="breach-font text-lg font-semibold text-white mb-3">{card.title}</h3>
                                         <p className="text-slate-400 text-sm leading-relaxed mb-4">{card.desc}</p>
-                                        <span className="text-sm font-medium transition-colors group-hover:text-white" style={{ color: card.color }}>
-                                            Learn more →
+                                        <span className="text-sm font-medium text-cyan-400 relative overflow-hidden inline-flex items-center gap-1 group-hover:text-cyan-300">
+                                            Learn more 
+                                            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                                         </span>
                                     </Link>
                                 ))}
@@ -480,27 +565,34 @@ export default function HomePage() {
 
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="max-w-3xl mx-auto text-center">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
-                                 style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                                <span className="text-blue-300 text-sm">Invitation-only platform</span>
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 backdrop-blur-xl bg-black/70 border border-cyan-500/30">
+                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" style={{ boxShadow: '0 0 10px #22d3ee' }} />
+                                <span className="text-cyan-200 text-sm font-medium">Secured Onboarding Platform</span>
                             </div>
 
-                            <h2 className="breach-font text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>
                                 Participation requires
-                                <span className="text-shimmer block">verification & approval</span>
+                                <span className="block" style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.5)' }}>verification & approval</span>
                             </h2>
+                            <p className="text-xl md:text-2xl text-cyan-300 font-semibold mb-3 opacity-0-init animate-fadeIn" style={{ textShadow: '0 0 15px rgba(34, 211, 238, 0.4)' }}>
+                                Layered Defense for Data Confidence
+                            </p>
+                            <p className="text-cyan-300 text-sm mb-3 font-medium">Invitation permitted — secured onboarding mandatory</p>
                             <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-                                Secure data access only after identity and use-case verification. Collaborate with confidence as trusted participants in a controlled network.
+                                Secure data access only after identity, use-case verification, and our rigorous secured onboarding procedure. Invitations are permitted for qualified participants in a controlled network.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Link to="/login" className="btn-primary relative z-10 px-8 py-4 text-white font-semibold rounded-xl text-lg">
+                                <Link
+                                    to="/login"
+                                    onClick={handleSignInFromLanding}
+                                    className="btn-primary relative z-10 px-8 py-4 text-[#050C1F] font-semibold rounded-xl text-lg cyber-glow"
+                                >
                                     <span className="relative z-10">Sign In →</span>
                                 </Link>
                                 <button
                                     type="button"
                                     onClick={handleRequestPlatformAccess}
-                                    className="btn-secondary px-8 py-4 text-white font-semibold rounded-xl text-lg"
+                                    className="px-8 py-4 text-white font-semibold rounded-xl text-lg backdrop-blur-xl bg-black/50 border border-cyan-500/50 hover:border-cyan-400 transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
                                 >
                                     Request Platform Access
                                 </button>

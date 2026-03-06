@@ -31,7 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
         const stored = localStorage.getItem(STORAGE_AUTH)
         if (stored !== null) return stored === 'true'
-        return MOCK_AUTH
+        // Even in mock mode, users should explicitly sign in from the login screen.
+        return false
     })
     const [accessStatus, setAccessStatus] = useState<AccessApplicationStatus>(() => {
         const storedStatus = localStorage.getItem(STORAGE_ACCESS_STATUS)

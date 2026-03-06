@@ -132,6 +132,118 @@ const DATASETS: Dataset[] = [
         confidenceSummary: 'De-identification and k-anonymity applied; under review for additional privacy controls.',
         contributorTrust: 'Verified Participant',
         contributionHistory: '5 secure submissions'
+    },
+    {
+        id: 5,
+        title: 'Satellite Land Use Dataset 2023',
+        timeRange: '2022-2023',
+        description: 'Satellite imagery and land use classification data from Landsat and Sentinel-2 missions.',
+        domain: 'Climate',
+        dataType: 'Geospatial',
+        geography: 'Global',
+        confidenceScore: 88,
+        verificationStatus: 'Verified',
+        lastUpdated: '2026-01-20',
+        size: '450 GB',
+        coverage: '2.8M tiles',
+        completeness: 88,
+        freshness: 85,
+        consistency: 87,
+        accessType: 'Approved access required',
+        sampleSchema: [
+            { field: 'tile_id', type: 'string' },
+            { field: 'acquisition_date', type: 'date' },
+            { field: 'land_use_class', type: 'string' },
+            { field: 'ndvi', type: 'float' },
+            { field: 'latitude', type: 'float' },
+            { field: 'longitude', type: 'float' }
+        ],
+        confidenceSummary: 'Multi-spectral analysis with ground truthing; some regions have incomplete coverage.',
+        contributorTrust: 'Trusted Participant',
+        contributionHistory: '6 verified submissions'
+    },
+    {
+        id: 6,
+        title: 'Consumer Behavior Analytics Q4',
+        timeRange: 'Q4 2025',
+        description: 'Consumer spending patterns and product preferences across demographic segments.',
+        domain: 'Finance',
+        dataType: 'Tabular',
+        geography: 'North America',
+        confidenceScore: 79,
+        verificationStatus: 'Under Review',
+        lastUpdated: '2026-01-25',
+        size: '320 GB',
+        coverage: '45M households',
+        completeness: 82,
+        freshness: 78,
+        consistency: 80,
+        accessType: 'Restricted',
+        sampleSchema: [
+            { field: 'household_id', type: 'string' },
+            { field: 'category', type: 'string' },
+            { field: 'spend_amount', type: 'decimal' },
+            { field: 'demographic_segment', type: 'string' }
+        ],
+        confidenceSummary: 'Aggregated from retail loyalty cards; under review for anonymization compliance.',
+        contributorTrust: 'Verified Participant',
+        contributionHistory: '4 secure submissions'
+    },
+    {
+        id: 7,
+        title: 'Genomics Research Dataset v2',
+        timeRange: '2019-2025',
+        description: 'Gene expression data and variant calling from research institutions and biobanks.',
+        domain: 'Healthcare',
+        dataType: 'Genomic',
+        geography: 'Global',
+        confidenceScore: 94,
+        verificationStatus: 'Verified',
+        lastUpdated: '2026-02-01',
+        size: '1.5 TB',
+        coverage: '125K samples',
+        completeness: 94,
+        freshness: 92,
+        consistency: 95,
+        accessType: 'Approved access required',
+        sampleSchema: [
+            { field: 'sample_id', type: 'string' },
+            { field: 'gene_id', type: 'string' },
+            { field: 'expression_value', type: 'float' },
+            { field: 'variant_call', type: 'string' },
+            { field: 'patient_cohort', type: 'string' }
+        ],
+        confidenceSummary: 'Peer-reviewed and reproducibility validated; all data has ethical approvals.',
+        contributorTrust: 'High Confidence Participant',
+        contributionHistory: '15 verified pushes'
+    },
+    {
+        id: 8,
+        title: 'Smart Grid Energy Patterns',
+        timeRange: '2024-2026 rolling',
+        description: 'Energy consumption patterns from smart meters and grid sensors across utilities.',
+        domain: 'Energy',
+        dataType: 'Time-series',
+        geography: 'US, EU',
+        confidenceScore: 91,
+        verificationStatus: 'Verified',
+        lastUpdated: '2026-02-13',
+        size: '890 GB',
+        coverage: '4.2M meters',
+        completeness: 91,
+        freshness: 88,
+        consistency: 90,
+        accessType: 'Approved access required',
+        sampleSchema: [
+            { field: 'meter_id', type: 'string' },
+            { field: 'timestamp_utc', type: 'datetime' },
+            { field: 'consumption_kwh', type: 'float' },
+            { field: 'voltage', type: 'float' },
+            { field: 'frequency', type: 'float' }
+        ],
+        confidenceSummary: 'Real-time grid monitoring with anomaly detection; some residential data anonymized.',
+        contributorTrust: 'Verified Participant',
+        contributionHistory: '10 verified submissions'
     }
 ]
 
@@ -366,7 +478,7 @@ export default function DatasetsPage() {
                         <div className="mt-auto pt-4 flex justify-center">
                             <Link
                                 to={`/datasets/${dataset.id}`}
-                                className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/40 transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                                className="inline-flex w-full items-center justify-center rounded-xl border border-blue-500 bg-transparent px-6 py-3.5 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
                             >
                                 View Details
                             </Link>

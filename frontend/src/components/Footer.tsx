@@ -2,11 +2,14 @@ export default function Footer() {
     const currentYear = new Date().getFullYear()
 
     return (
-        <footer className="bg-slate-900 border-t border-slate-800">
+        <footer className="bg-slate-900 border-t border-cyan-500/30 relative">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
             <div className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
                     <div className="text-center md:text-left">
-                        <h3 className="text-white font-bold text-lg mb-2">Data Confidence Layer</h3>
+                        <h3 className="text-white font-bold text-lg mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                            <span className="text-cyan-400" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>Layered Defense for Data Confidence</span>
+                        </h3>
                         <p className="text-slate-400 text-sm">
                             A trusted platform for data verification, research access, and dataset management with built-in quality assurance.
                         </p>
@@ -15,14 +18,17 @@ export default function Footer() {
                     <div className="text-center md:text-left">
                         <h4 className="text-white font-semibold text-sm mb-3">Quick Links</h4>
                         <div className="flex flex-col gap-2">
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                About Us
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">About Us</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                Documentation
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">Documentation</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                API Reference
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">API Reference</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
                         </div>
                     </div>
@@ -30,23 +36,32 @@ export default function Footer() {
                     <div className="text-center md:text-left">
                         <h4 className="text-white font-semibold text-sm mb-3">Legal</h4>
                         <div className="flex flex-col gap-2">
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                Privacy Policy
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">Privacy Policy</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                Terms of Service
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">Terms of Service</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
-                            <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
-                                Contact
+                            <a href="#" className="text-slate-400 hover:text-cyan-400 text-sm transition-all duration-300 relative group overflow-hidden">
+                                <span className="relative z-10">Contact</span>
+                                <span className="absolute bottom-0 left-0 w-0 h-px bg-cyan-400 transition-all duration-300 group-hover:w-full" style={{ boxShadow: '0 0 10px #22d3ee' }} />
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-800 text-center">
-                    <p className="text-slate-400 text-sm">
-                        © {currentYear} Data Confidence Layer. All rights reserved.
+                <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-slate-400 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        © {currentYear} <span className="text-cyan-400" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.4)' }}>Layered Defense for Data Confidence</span>. All rights reserved.
                     </p>
+                    <div className="flex items-center gap-2 cyber-glow" style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}>
+                        <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="text-white font-semibold text-sm" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Breach</span>
+                    </div>
                 </div>
             </div>
         </footer>

@@ -34,16 +34,16 @@ export default function AppLayout() {
                     </Link>
                     <p className="text-xs text-slate-400 mt-1">Participant Console</p>
                 </div>
-                <nav className="p-3 space-y-1">
+                <nav className="p-4 space-y-1">
                     {workspaceNav.map(item => (
                         <NavLink
                             key={item.to}
                             to={item.to}
                             className={({ isActive }) =>
-                                `block px-3 py-2 rounded-lg text-sm transition-colors ${
+                                `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
                                     isActive
-                                        ? 'bg-blue-500/20 border border-blue-500/40 text-blue-100'
-                                        : 'text-slate-300 border border-transparent hover:border-slate-700 hover:text-white'
+                                        ? 'bg-blue-600/30 border border-blue-500/60 text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.2)]'
+                                        : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
                                 }`
                             }
                         >
