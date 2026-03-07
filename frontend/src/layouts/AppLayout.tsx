@@ -29,10 +29,13 @@ export default function AppLayout() {
         <div className="min-h-screen bg-slate-900 text-white flex">
             <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
                 <div className="px-5 py-5 border-b border-slate-800">
-                    <Link to="/dashboard" className="text-xl font-bold text-white hover:text-blue-300 transition-colors">
-                        Breach Workspace
+                    <Link to="/dashboard" className="flex items-center gap-3">
+                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.4))' }} fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.6v3c0 1-.8 1.9-1.8 1.9h-4c-1 0-1.8-.9-1.8-1.9v-3c0-.7.4-1.3 1-1.6V9.5c0-1.4 1.4-2.5 2.8-2.5zm0 1.5c-.8 0-1.3.7-1.3 1v1.5h2.6V9.5c0-1.3-.5-1-1.3-1z"/>
+                        </svg>
+                        <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Breach Workspace</span>
                     </Link>
-                    <p className="text-xs text-slate-400 mt-1">Participant Console</p>
+                    <p className="text-xs text-slate-400 mt-1 ml-11">Participant Console</p>
                 </div>
                 <nav className="p-4 space-y-1">
                     {workspaceNav.map(item => (
@@ -42,7 +45,7 @@ export default function AppLayout() {
                             className={({ isActive }) =>
                                 `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
                                     isActive
-                                        ? 'bg-blue-600/30 border border-blue-500/60 text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.2)]'
+                                        ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
                                         : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
                                 }`
                             }
@@ -54,8 +57,8 @@ export default function AppLayout() {
             </aside>
 
             <div className="flex-1 min-w-0">
-                <header className="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur">
-                    <div className="h-full px-4 md:px-6 flex items-center justify-between">
+                <header className="h-[76px] border-b border-cyan-500/30 bg-black/80 backdrop-blur-xl">
+                    <div className="h-full px-6 flex items-center justify-between">
                         <div className="md:hidden">
                             <Link to="/dashboard" className="text-sm font-semibold text-slate-100">
                                 Workspace
@@ -69,9 +72,9 @@ export default function AppLayout() {
                                 </svg>
                                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400" />
                             </button>
-                            <div className="text-right leading-tight">
-                                <div className="text-sm font-semibold text-white">Participant</div>
-                                <div className="text-xs text-slate-400">Verified session</div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/50">
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                <span className="text-xs text-slate-300">Verified session</span>
                             </div>
                             <button
                                 onClick={handleSignOut}

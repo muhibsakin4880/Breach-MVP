@@ -120,7 +120,8 @@ export default function PipelinesPage() {
     const [activeTab, setActiveTab] = useState<PipelinesTab>('overview')
 
     return (
-        <div className="container mx-auto px-4 py-10 text-white space-y-6">
+        <div className="cyber-grid-bg min-h-screen">
+            <div className="max-w-7xl mx-auto px-4 py-12 text-white space-y-6">
             <section className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">Pipelines</h1>
@@ -132,16 +133,16 @@ export default function PipelinesPage() {
                 </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-2 md:p-3 shadow-xl">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <section className="rounded-2xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-2 shadow-[0_0_15px_#00F0FF30]">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`rounded-lg border px-3 py-2 text-xs md:text-sm font-semibold transition-colors ${
+                            className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                                 activeTab === tab.id
-                                    ? 'border-blue-500/60 bg-blue-500/10 text-blue-100'
-                                    : 'border-slate-700 text-slate-300 hover:border-blue-500/60 hover:text-white'
+                                    ? 'border-b-2 border-cyan-400 bg-cyan-500/10 text-white shadow-[0_0_15px_#00F0FF30]'
+                                    : 'text-gray-400 hover:text-white hover:shadow-[0_0_15px_#00F0FF30]'
                             }`}
                         >
                             {tab.label}
@@ -151,190 +152,442 @@ export default function PipelinesPage() {
             </section>
 
             {activeTab === 'overview' && (
-                <section className="grid xl:grid-cols-3 gap-4">
-                    <div className="xl:col-span-2 rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-4">
-                        <h2 className="text-xl font-semibold">Pipeline Overview</h2>
-                        <p className="text-slate-300 text-sm">
-                            Use Breach Pipelines to discover datasets, automate access workflows, and contribute new dataset packages through an
-                            auditable validation process.
-                        </p>
-                        <div className="grid md:grid-cols-3 gap-3">
-                            {[
-                                { title: 'Discover', detail: 'Query metadata and confidence scores via read APIs.' },
-                                { title: 'Contribute', detail: 'Upload files, finalize submissions, and start validations.' },
-                                { title: 'Govern', detail: 'Use scoped credentials, limits, and policy enforcement.' }
-                            ].map(item => (
-                                <div key={item.title} className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                                    <div className="text-sm font-semibold text-white">{item.title}</div>
-                                    <div className="text-xs text-slate-400 mt-1">{item.detail}</div>
+                <section className="space-y-8">
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 md:p-12 shadow-2xl">
+                        <div className="max-w-3xl">
+                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 border-t border-cyan-500/40 pt-4">Breach Data Pipeline API</h2>
+                            <p className="text-lg md:text-xl text-slate-400 mb-6">Enterprise-grade verified data delivery for platforms, tools, and AI systems</p>
+                            <div className="flex flex-wrap gap-3">
+                                <span className="px-4 py-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 text-cyan-200 text-sm font-medium">API v1 • Live</span>
+                                <span className="px-4 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 text-sm font-medium">SOC 2 Compliant</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-5 shadow-[0_0_15px_#00F0FF40]">
+                                <svg className="w-12 h-12 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">Discover</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">Query metadata, confidence scores, and trust metrics via our read APIs. Filter by domain, data type, and verification status.</p>
+                        </div>
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-5 shadow-[0_0_15px_#00F0FF40]">
+                                <svg className="w-12 h-12 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">Contribute</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">Upload files, finalize submissions, and trigger validation pipelines. All contributions go through our auditable review process.</p>
+                        </div>
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-5 shadow-[0_0_15px_#00F0FF40]">
+                                <svg className="w-12 h-12 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-3">Govern</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">Use scoped credentials, rate limits, and policy enforcement. Control access with fine-grained permissions and audit logs.</p>
+                        </div>
+                    </div>
+
+                    <div className="text-center py-8">
+                        <h3 className="text-2xl font-semibold text-white mb-2 border-t border-cyan-500/40 pt-4">Built for enterprise data stacks</h3>
+                        <p className="text-slate-400 mb-6">Connect Breach verified data directly into your existing infrastructure</p>
+                        <div className="flex flex-wrap justify-center gap-4">
+                            {['Snowflake', 'Databricks', 'BigQuery', 'Palantir'].map(name => (
+                                <div key={name} className="px-6 py-3 rounded-lg border border-slate-700 bg-[#0a1628] text-slate-300 text-sm font-medium">
+                                    {name}
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                        <h3 className="text-base font-semibold">Auth Modes</h3>
-                        <ul className="space-y-2 text-sm text-slate-300">
-                            <li className="rounded-lg border border-slate-700 bg-slate-900/70 p-2">API key (server-to-server)</li>
-                            <li className="rounded-lg border border-slate-700 bg-slate-900/70 p-2">OAuth 2.0 (user delegated)</li>
-                            <li className="rounded-lg border border-slate-700 bg-slate-900/70 p-2">Verified session token (upload flows)</li>
-                        </ul>
+
+                    <div>
+                        <h3 className="text-2xl font-bold text-white mb-6 border-t border-cyan-500/40 pt-4">Pipeline Access Pricing</h3>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                                <div className="text-lg font-bold text-white mb-2">Starter</div>
+                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">$500<span className="text-base font-normal text-gray-400">/mo</span></div>
+                                <div className="text-sm text-gray-400 mb-6">1,000 API calls/month</div>
+                                <ul className="space-y-2 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Basic API access</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Email support</li>
+                                </ul>
+                                <button className="w-full py-3 rounded-xl border border-cyan-500/50 text-white text-sm font-semibold transition-all duration-300 hover:bg-cyan-500/20 hover:shadow-[0_0_20px_#00F0FF50]">Get Started</button>
+                            </div>
+                            <div className="rounded-3xl border border-cyan-500/50 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35] relative">
+                                <div className="absolute -top-3 right-4 px-4 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 text-xs font-bold shadow-[0_0_15px_#00F0FF50]">Most Popular</div>
+                                <div className="text-lg font-bold text-white mb-2">Growth</div>
+                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">$2,000<span className="text-base font-normal text-gray-400">/mo</span></div>
+                                <div className="text-sm text-gray-400 mb-6">10,000 API calls/month</div>
+                                <ul className="space-y-2 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Full API access</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Priority support</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Custom integrations</li>
+                                </ul>
+                                <button className="w-full py-3 rounded-xl bg-cyan-500 text-black text-sm font-bold transition-all duration-300 hover:bg-cyan-400 hover:shadow-[0_0_25px_#00F0FF70]">Get Started</button>
+                            </div>
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                                <div className="text-lg font-bold text-white mb-2">Enterprise</div>
+                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">Custom</div>
+                                <div className="text-sm text-gray-400 mb-6">Unlimited API calls</div>
+                                <ul className="space-y-2 mb-6">
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Unlimited access</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Dedicated support</li>
+                                    <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>SLA guarantee</li>
+                                </ul>
+                                <button className="w-full py-3 rounded-xl border border-cyan-500/50 text-white text-sm font-semibold transition-all duration-300 hover:bg-cyan-500/20 hover:shadow-[0_0_20px_#00F0FF50]">Contact Sales</button>
+                            </div>
+                        </div>
                     </div>
                 </section>
             )}
 
             {activeTab === 'api' && (
-                <section className="space-y-4">
-                    <div className="grid xl:grid-cols-3 gap-4">
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Authentication</h3>
-                            <ul className="space-y-2 text-sm text-slate-300 list-disc list-inside">
-                                <li>Send `Authorization: Bearer &lt;token&gt;` on every request.</li>
-                                <li>Use workspace-scoped API keys for backend jobs.</li>
-                                <li>Use OAuth for user-context operations and approval flows.</li>
-                            </ul>
-                        </div>
-                        <div className="xl:col-span-2 rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl">
-                            <h3 className="text-lg font-semibold mb-3">Endpoints</h3>
-                            <div className="space-y-2">
-                                {endpoints.map(endpoint => (
-                                    <div key={`${endpoint.method}-${endpoint.path}`} className="grid md:grid-cols-[auto_1fr] gap-3 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                                        <div className="flex items-start gap-2">
-                                            <span className={`px-2 py-1 rounded border text-[11px] font-semibold ${methodStyle(endpoint.method)}`}>
-                                                {endpoint.method}
-                                            </span>
-                                            <code className="text-xs text-slate-100">{endpoint.path}</code>
-                                        </div>
-                                        <div className="text-xs text-slate-300">
-                                            <div>{endpoint.description}</div>
-                                            <div className="text-slate-400 mt-1">Auth: {endpoint.auth}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                <section className="space-y-6">
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/80 backdrop-blur-xl p-6">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+                            <div className="flex-1">
+                                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Base URL</div>
+                                <div className="flex items-center gap-3">
+                                    <code className="text-sm text-cyan-300 font-mono">https://api.breach.io/v1</code>
+                                    <button className="p-1.5 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF40]">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="md:border-l md:border-cyan-500/30 md:pl-8">
+                                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Auth Header</div>
+                                <div className="flex items-center gap-3">
+                                    <code className="text-sm text-cyan-300 font-mono">Authorization: Bearer {'{your_api_key}'}</code>
+                                    <button className="p-1.5 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF40]">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid xl:grid-cols-2 gap-4">
-                        <div className="space-y-3 rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl">
-                            <h3 className="text-lg font-semibold">Request / Response Examples</h3>
-                            <CodeBlock label="curl" code={curlExample} />
-                            <CodeBlock label="JSON response" code={jsonResponseExample} />
-                        </div>
-                        <div className="space-y-3 rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl">
-                            <h3 className="text-lg font-semibold">Language Examples</h3>
-                            <CodeBlock label="Python" code={pythonExample} />
-                            <CodeBlock label="JavaScript" code={jsExample} />
-                        </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Rate Limits</h3>
-                            <div className="text-sm text-slate-300 space-y-1">
-                                <div>Read APIs: 120 requests/minute</div>
-                                <div>Upload APIs: 20 requests/minute</div>
-                                <div>Burst window: 2x for 30 seconds</div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Error Codes</h3>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                {[
-                                    ['400', 'Invalid request payload'],
-                                    ['401', 'Missing/invalid credentials'],
-                                    ['403', 'Scope not allowed'],
-                                    ['404', 'Dataset or upload not found'],
-                                    ['409', 'Validation state conflict'],
-                                    ['429', 'Rate limit exceeded']
-                                ].map(([code, message]) => (
-                                    <div key={code} className="rounded-lg border border-slate-700 bg-slate-900/70 p-2">
-                                        <div className="text-slate-100 font-semibold">{code}</div>
-                                        <div className="text-xs text-slate-400">{message}</div>
-                                    </div>
-                                ))}
-                            </div>
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6">
+                        <h3 className="text-xl font-bold text-white mb-4 border-t border-cyan-500/40 pt-4">Endpoints</h3>
+                        <div className="space-y-3">
+                            {[
+                                { method: 'GET', path: '/v1/datasets', desc: 'List verified datasets' },
+                                { method: 'GET', path: '/v1/datasets/{id}', desc: 'Get dataset metadata' },
+                                { method: 'GET', path: '/v1/datasets/{id}/confidence', desc: 'Get confidence score' },
+                                { method: 'POST', path: '/v1/access/request', desc: 'Submit access request' },
+                                { method: 'GET', path: '/v1/audit/logs', desc: 'Retrieve audit trail' }
+                            ].map(endpoint => (
+                                <div key={`${endpoint.method}-${endpoint.path}`} className="flex items-center gap-4 rounded-2xl border border-cyan-500/20 bg-black/50 p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_15px_#00F0FF25] hover:border-cyan-500/40">
+                                    <span className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+                                        endpoint.method === 'GET' 
+                                            ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:shadow-[0_0_15px_#00F0FF40]' 
+                                            : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:shadow-[0_0_15px_#10B98140]'
+                                    }`}>
+                                        {endpoint.method}
+                                    </span>
+                                    <code className="text-sm text-gray-200 font-mono">{endpoint.path}</code>
+                                    <span className="text-sm text-gray-400">{endpoint.desc}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
             )}
 
             {activeTab === 'sdks' && (
-                <section className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Available SDKs</h3>
-                            <div className="space-y-2 text-sm text-slate-300">
-                                <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">Python SDK: `breach-sdk`</div>
-                                <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">JavaScript SDK: `@breach/sdk`</div>
+                <section className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                                    <span className="text-yellow-300 font-bold text-lg">Py</span>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">Python SDK</h3>
                             </div>
+                            <div className="rounded-lg bg-[#0a1628] border border-cyan-500/20 p-3 mb-5 flex items-center justify-between gap-3">
+                                <code className="text-sm text-cyan-300 font-mono">pip install breach-sdk</code>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50] flex-shrink-0">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p className="text-slate-400 text-sm mb-5 leading-relaxed">Official Python client for data discovery and access workflows</p>
+                            <button className="px-4 py-2 rounded-lg border border-cyan-500/50 text-cyan-300 text-sm font-medium hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">View Docs</button>
                         </div>
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Installation</h3>
-                            <CodeBlock label="pip" code="pip install breach-sdk" />
-                            <CodeBlock label="npm" code="npm install @breach/sdk" />
-                        </div>
-                    </div>
 
-                    <div className="grid xl:grid-cols-2 gap-4">
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">Python Quickstart</h3>
-                            <CodeBlock label="Python" code={pythonQuickstart} />
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                    <span className="text-blue-300 font-bold text-lg">JS</span>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">JavaScript/Node SDK</h3>
+                            </div>
+                            <div className="rounded-lg bg-[#0a1628] border border-cyan-500/20 p-3 mb-5 flex items-center justify-between gap-3">
+                                <code className="text-sm text-cyan-300 font-mono">npm install @breach/sdk</code>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50] flex-shrink-0">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p className="text-slate-400 text-sm mb-5 leading-relaxed">Node.js client for server-side pipeline integrations</p>
+                            <button className="px-4 py-2 rounded-lg border border-cyan-500/50 text-cyan-300 text-sm font-medium hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">View Docs</button>
                         </div>
-                        <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                            <h3 className="text-lg font-semibold">JavaScript Quickstart</h3>
-                            <CodeBlock label="JavaScript" code={jsQuickstart} />
+
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-10 h-10 rounded-lg bg-orange-500/20 border border-orange-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                                    <span className="text-orange-300 font-bold text-lg">Ja</span>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">Java SDK</h3>
+                                <span className="px-2 py-1 rounded-full bg-slate-800/50 border border-cyan-500/40 text-xs text-cyan-300/80">Coming Soon</span>
+                            </div>
+                            <p className="text-slate-400 text-sm mb-5 leading-relaxed">Enterprise Java client for Snowflake and Palantir integrations</p>
+                            <button className="px-4 py-2 rounded-lg border border-cyan-500/50 text-cyan-300 text-sm font-medium hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">View Docs</button>
+                        </div>
+
+                        <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                                    <span className="text-cyan-300 font-bold text-lg">R</span>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">R SDK</h3>
+                                <span className="px-2 py-1 rounded-full bg-slate-800/50 border border-cyan-500/40 text-xs text-cyan-300/80">Coming Soon</span>
+                            </div>
+                            <p className="text-slate-400 text-sm mb-5 leading-relaxed">Statistical computing integration for research workflows</p>
+                            <button className="px-4 py-2 rounded-lg border border-cyan-500/50 text-cyan-300 text-sm font-medium hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">View Docs</button>
                         </div>
                     </div>
                 </section>
             )}
 
             {activeTab === 'samples' && (
-                <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl space-y-3">
-                    <h2 className="text-xl font-semibold">Code Samples / Playground</h2>
-                    <p className="text-sm text-slate-400">Expandable examples for common integration tasks.</p>
-                    <div className="space-y-2">
-                        <details className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <summary className="cursor-pointer text-sm font-semibold text-slate-100">Sample: Filter verified datasets by domain</summary>
-                            <div className="mt-3">
-                                <CodeBlock label="curl" code={`curl "https://api.breach.local/v1/datasets?domain=healthcare&verification=verified"`} />
+                <section className="space-y-6">
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_25px_#00F0FF35]">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold">Python</span>
+                                <h3 className="text-lg font-semibold text-white">List Verified Datasets</h3>
                             </div>
-                        </details>
-                        <details className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <summary className="cursor-pointer text-sm font-semibold text-slate-100">Sample: Start upload + finalize validation</summary>
-                            <div className="mt-3">
-                                <CodeBlock label="JSON payload" code={`{\n  "title": "Mobility QA Batch",\n  "domain": "Mobility",\n  "dataType": "Time-series"\n}`} />
+                            <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <pre className="rounded-xl bg-[#0F172A] border border-cyan-500/20 p-4 text-sm overflow-x-auto font-mono">
+                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">import</span> breach<br/>
+<span className="text-cyan-400">2</span>  <span className="text-gray-400">client =</span> <span className="text-cyan-400">breach</span>.<span className="text-yellow-300">Client</span>(<span className="text-green-400">api_key</span>=<span className="text-orange-300">"YOUR_KEY"</span>)<br/>
+<span className="text-cyan-400">3</span>  datasets = <span className="text-gray-400">client</span>.<span className="text-yellow-300">datasets</span>.<span className="text-blue-300">list</span>(<br/>
+<span className="text-cyan-400">4</span>      <span className="text-green-400">domain</span>=<span className="text-orange-300">"healthcare"</span>,<br/>
+<span className="text-cyan-400">5</span>      <span className="text-green-400">min_confidence</span>=<span className="text-orange-300">90</span><br/>
+<span className="text-cyan-400">6</span>  )</code>
+                        </pre>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_25px_#00F0FF35]">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold">JavaScript</span>
+                                <h3 className="text-lg font-semibold text-white">Request Dataset Access</h3>
                             </div>
-                        </details>
-                        <details className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <summary className="cursor-pointer text-sm font-semibold text-slate-100">Sample: Handle 429 retries with backoff</summary>
-                            <div className="mt-3">
-                                <CodeBlock label="JavaScript helper" code={`const retryAfter = Number(res.headers.get("retry-after") || "2")\nawait new Promise(r => setTimeout(r, retryAfter * 1000))`} />
+                            <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <pre className="rounded-xl bg-[#0F172A] border border-cyan-500/20 p-4 text-sm overflow-x-auto font-mono">
+                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">const</span> breach = <span className="text-purple-400">require</span>(<span className="text-orange-300">'@breach/sdk'</span>);<br/>
+<span className="text-cyan-400">2</span>  <span className="text-purple-400">const</span> client = <span className="text-purple-400">new</span> <span className="text-cyan-400">breach</span>.<span className="text-yellow-300">Client</span>({'{'}<span className="text-green-400">apiKey</span>{'}'});<br/>
+<span className="text-cyan-400">3</span>  <span className="text-purple-400">await</span> client.<span className="text-yellow-300">access</span>.<span className="text-blue-300">request</span>({'{'}<br/>
+<span className="text-cyan-400">4</span>      <span className="text-green-400">datasetId</span>: <span className="text-orange-300">'ds_climate_2024'</span>,<br/>
+<span className="text-cyan-400">5</span>      <span className="text-green-400">purpose</span>: <span className="text-orange-300">'ML training'</span>,<br/>
+<span className="text-cyan-400">6</span>      <span className="text-green-400">duration</span>: <span className="text-orange-300">'90_days'</span><br/>
+<span className="text-cyan-400">7</span>  {'}'}{'}'});</code>
+                        </pre>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_25px_#00F0FF35]">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold">Python</span>
+                                <h3 className="text-lg font-semibold text-white">Get Confidence Score</h3>
                             </div>
-                        </details>
+                            <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_20px_#00F0FF40]">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <pre className="rounded-xl bg-[#0F172A] border border-cyan-500/20 p-4 text-sm overflow-x-auto font-mono">
+                            <code><span className="text-cyan-400">1</span>  score = <span className="text-gray-400">client</span>.<span className="text-yellow-300">datasets</span>.<span className="text-blue-300">confidence</span>(<br/>
+<span className="text-cyan-400">2</span>      <span className="text-green-400">dataset_id</span>=<span className="text-orange-300">"ds_finance_tick"</span><br/>
+<span className="text-cyan-400">3</span>  )<br/>
+<span className="text-cyan-400">4</span>  <span className="text-purple-400">print</span>(<span className="text-orange-300">f</span><span className="text-orange-300">"Score: </span>{'{'}<span className="text-gray-400">score</span>.<span className="text-yellow-300">overall</span>{'}'}<span className="text-orange-300">%"</span>)</code>
+                        </pre>
                     </div>
                 </section>
             )}
 
             {activeTab === 'downloads' && (
-                <section className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {[
-                        { title: 'OpenAPI Spec', desc: 'Download OpenAPI 3.0 spec for API clients.', href: '#openapi' },
-                        { title: 'Swagger UI', desc: 'Interactive endpoint explorer for testing.', href: '#swagger' },
-                        { title: 'Python SDK Repo', desc: 'Examples, changelog, and release notes.', href: '#python-sdk' },
-                        { title: 'JS SDK Repo', desc: 'Type-safe client, docs, and quickstarts.', href: '#js-sdk' }
-                    ].map(link => (
-                        <a
-                            key={link.title}
-                            href={link.href}
-                            className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-xl hover:border-blue-500/60 transition-colors"
-                        >
-                            <div className="text-base font-semibold text-white">{link.title}</div>
-                            <div className="text-sm text-slate-400 mt-1">{link.desc}</div>
-                            <div className="text-xs text-blue-300 mt-3">Open link</div>
-                        </a>
-                    ))}
+                <section className="space-y-8">
+                    <div>
+                        <h3 className="text-xl font-semibold text-white mb-6 border-t border-cyan-500/40 pt-4">Developer Resources</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">API Reference PDF</div>
+                                        <div className="text-xs text-slate-400">Complete endpoint documentation</div>
+                                    </div>
+                                </div>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50]">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">SDK Starter Pack</div>
+                                        <div className="text-xs text-slate-400">Python + JS SDK with examples</div>
+                                    </div>
+                                </div>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50]">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">Postman Collection</div>
+                                        <div className="text-xs text-slate-400">Pre-built API request collection</div>
+                                    </div>
+                                </div>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50]">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">Integration Guide</div>
+                                        <div className="text-xs text-slate-400">Step-by-step setup for Snowflake, Databricks</div>
+                                    </div>
+                                </div>
+                                <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50]">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-xl font-semibold text-white mb-6 border-t border-cyan-500/40 pt-4">External Links</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <a href="https://docs.breach.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">Documentation Portal</div>
+                                        <div className="text-xs text-cyan-300">docs.breach.io</div>
+                                    </div>
+                                </div>
+                                <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                            <a href="https://github.com/breach-io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">GitHub Repository</div>
+                                        <div className="text-xs text-cyan-300">github.com/breach-io</div>
+                                    </div>
+                                </div>
+                                <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                            <a href="https://status.breach.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">API Status Page</div>
+                                        <div className="text-xs text-cyan-300">status.breach.io</div>
+                                    </div>
+                                </div>
+                                <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-[0_0_25px_#00F0FF35]">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <div className="text-base font-medium text-white">Interested in deep integration with your data stack?</div>
+                                <div className="text-sm text-slate-400 mt-1">Our partnership team will help you get started.</div>
+                            </div>
+                            <button className="px-6 py-3 rounded-xl border border-cyan-500/50 text-cyan-300 text-sm font-medium bg-cyan-500/10 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_25px_#00F0FF60] whitespace-nowrap">
+                                Contact Partnership Team
+                            </button>
+                        </div>
+                    </div>
                 </section>
             )}
+            </div>
         </div>
     )
 }

@@ -152,20 +152,20 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <button className="w-full px-4 py-2.5 rounded-lg border border-slate-700 hover:border-blue-500 text-slate-100 font-medium transition-colors">
-                                Change Password
-                            </button>
-                            <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm text-slate-300">API Keys</p>
-                                    <EditIconButton label="Edit API key settings" />
+                        <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                                <div className="font-mono text-sm text-slate-300">br_live_••••••••••••••••••••••</div>
+                                <div className="flex gap-2">
+                                    <button className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">Generate New Key</button>
+                                    <button className="px-3 py-1.5 rounded-lg border border-rose-500/50 text-rose-400 text-sm font-medium hover:bg-rose-500/10 transition-colors">Revoke</button>
                                 </div>
-                                <p className="text-xs text-slate-500">Last key: `pk_live_****************`</p>
-                                <button className="w-full px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors">
-                                    Generate New Key
-                                </button>
                             </div>
+                            <div className="flex flex-wrap gap-4 text-xs text-slate-400 mb-2">
+                                <span>1,247 calls</span>
+                                <span>8 datasets</span>
+                                <span>2h ago</span>
+                            </div>
+                            <p className="text-xs text-slate-500">Your key is private. Never share it.</p>
                         </div>
                     </div>
                 </SectionCard>
@@ -252,20 +252,6 @@ export default function ProfilePage() {
                     </div>
                 </SectionCard>
             </div>
-
-            <section className="mt-5 rounded-2xl border border-rose-500/40 bg-rose-950/30 shadow-lg p-5 md:p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1.5">
-                        <h2 className="text-xl font-semibold text-rose-200">Delete My Participant Account</h2>
-                        <p className="text-sm text-rose-100/80">
-                            This action is irreversible and removes access credentials, trust history, and linked session data.
-                        </p>
-                    </div>
-                    <button className="px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition-colors">
-                        Delete Account
-                    </button>
-                </div>
-            </section>
         </div>
     )
 }

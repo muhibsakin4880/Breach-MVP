@@ -189,4 +189,17 @@
       transform: translateY(0);
     }
   }
+
+  .cyber-grid-bg {
+    background-image: 
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: cyberGridMove 20s linear infinite;
+  }
+
+  @keyframes cyberGridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+  }
 }
