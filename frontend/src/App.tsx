@@ -34,6 +34,7 @@ import RBACConsolePage from './pages/RBACConsolePage'
 import UsageAnalyticsPage from './pages/UsageAnalyticsPage'
 import IncidentResponsePage from './pages/IncidentResponsePage'
 import DataClassificationPage from './pages/DataClassificationPage'
+import SecureEnclavePage from './pages/SecureEnclavePage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -155,6 +156,7 @@ function App() {
                     <Route path="rbac-console" element={<RBACConsolePage />} />
                     <Route path="incident-response" element={<IncidentResponsePage />} />
                     <Route path="data-classification" element={<DataClassificationPage />} />
+                    <Route path="secure-enclave" element={<SecureEnclavePage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />
                     <Route path="compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />

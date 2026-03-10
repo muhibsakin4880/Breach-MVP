@@ -1,0 +1,231 @@
+import React from 'react'
+
+const sessionStats = [
+    { label: 'Session ID', value: 'enc_session_a3f8' },
+    { label: 'Dataset', value: 'Clinical Outcomes Delta' },
+    { label: 'Participant', value: 'part_anon_042' },
+    { label: 'Time Remaining', value: '02:47:33', highlight: true }
+]
+
+const egressRules = [
+    { label: 'Copy to clipboard', status: 'BLOCKED', allowed: false },
+    { label: 'Download raw data', status: 'BLOCKED', allowed: false },
+    { label: 'Screenshot', status: 'BLOCKED', allowed: false },
+    { label: 'External API calls', status: 'BLOCKED', allowed: false },
+    { label: 'Aggregated export', status: 'ALLOWED', allowed: true },
+    { label: 'Summary statistics', status: 'ALLOWED', allowed: true }
+]
+
+const activityLog = [
+    { time: '09:14:02', action: 'Session initiated', detail: 'Enclave provisioned', status: 'ok' },
+    { time: '09:15:44', action: 'Dataset loaded', detail: '12 fields, PHI masked', status: 'ok' },
+    { time: '09:18:23', action: 'Query executed', detail: 'Aggregation only', status: 'ok' },
+    { time: '09:22:11', action: 'Download attempted', detail: 'Blocked by egress policy', status: 'blocked' },
+    { time: '09:23:47', action: 'Summary export', detail: 'Allowed - watermarked', status: 'ok' }
+]
+
+export default function SecureEnclavePage() {
+    return (
+        <div className="relative min-h-screen bg-[#040812] text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(251,191,36,0.18),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_40%_80%,rgba(16,185,129,0.08),transparent_40%)]" />
+            <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Security & Compliance
+                        </div>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                            Secure Enclave & Clean Room
+                        </h1>
+                        <p className="mt-2 max-w-2xl text-slate-400">
+                            Isolated compute sessions with egress controls, watermarking, and temporary credentials.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100 shadow-[0_0_24px_rgba(245,158,11,0.25)]">
+                        Clean Room Session Active - Isolated compute environment
+                    </div>
+                </header>
+
+                <section className="mt-8">
+                    <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-6 py-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <div className="text-sm font-semibold text-white">Clean Room Session Active - Isolated compute environment</div>
+                                <div className="text-xs text-amber-100/80">Session expires in: 02:47:33</div>
+                            </div>
+                            <span className="rounded-full border border-amber-400/50 bg-amber-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-100">
+                                All egress rules enforced
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="mt-8">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        {sessionStats.map(stat => (
+                            <article
+                                key={stat.label}
+                                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+                            >
+                                <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_45%)]" />
+                                <div className="relative">
+                                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{stat.label}</p>
+                                    <p className={`mt-3 text-xl font-semibold ${stat.highlight ? 'text-amber-200' : 'text-white'}`}>{stat.value}</p>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 grid gap-6 lg:grid-cols-[2fr_1fr]">
+                    <article className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Egress Rules</h2>
+                                <p className="text-sm text-slate-400">Outbound controls for the clean room</p>
+                            </div>
+                            <span className="text-xs text-slate-500">6 rules active</span>
+                        </div>
+                        <div className="mt-5 space-y-3">
+                            {egressRules.map(rule => (
+                                <div key={rule.label} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800/80 bg-slate-900/60 px-4 py-3">
+                                    <div className="text-sm text-slate-200">{rule.label}</div>
+                                    <div className="flex items-center gap-3">
+                                        <span
+                                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                                                rule.allowed
+                                                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                                                    : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                                            }`}
+                                        >
+                                            {rule.status}
+                                        </span>
+                                        <div className={`relative h-5 w-11 rounded-full ${rule.allowed ? 'bg-emerald-500/40' : 'bg-rose-500/40'}`}>
+                                            <span
+                                                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${
+                                                    rule.allowed ? 'left-6' : 'left-1'
+                                                }`}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </article>
+
+                    <div className="space-y-6">
+                        <article className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">Watermarking Status</h3>
+                                    <p className="text-sm text-emerald-100/80">All data views watermarked</p>
+                                </div>
+                                <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                                    Active
+                                </span>
+                            </div>
+                            <div className="mt-4 space-y-2 text-sm text-emerald-100/90">
+                                <div className="flex items-center justify-between">
+                                    <span>Watermark ID</span>
+                                    <span className="font-semibold text-white">wm_042_enc_a3f8</span>
+                                </div>
+                                <p className="text-xs text-emerald-100/70">
+                                    Every record carries invisible participant fingerprint.
+                                </p>
+                            </div>
+                        </article>
+
+                        <article className="rounded-2xl border border-white/10 bg-[#0a1424] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">Temporary Credentials</h3>
+                                    <p className="text-sm text-slate-400">Short-lived access</p>
+                                </div>
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+                            </div>
+                            <div className="mt-4 space-y-2 text-sm text-slate-200">
+                                <div className="flex items-center justify-between">
+                                    <span>Credential type</span>
+                                    <span className="font-semibold text-white">Short-lived token</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Issued</span>
+                                    <span className="font-semibold text-white">09:14:02</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Expires</span>
+                                    <span className="font-semibold text-white">12:14:02</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Scope</span>
+                                    <span className="font-semibold text-white">Read-only, Clinical Outcomes Delta</span>
+                                </div>
+                            </div>
+                            <button className="mt-5 w-full rounded-xl border border-rose-400/60 bg-transparent px-4 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10">
+                                Revoke Credentials
+                            </button>
+                        </article>
+                    </div>
+                </section>
+
+                <section className="mt-10">
+                    <article className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 className="text-xl font-semibold text-white">Session Activity Log</h3>
+                                <p className="text-sm text-slate-400">Realtime enclave telemetry</p>
+                            </div>
+                            <span className="text-xs text-slate-500">5 events</span>
+                        </div>
+                        <div className="mt-5 overflow-hidden rounded-xl border border-cyan-500/20">
+                            <table className="w-full text-sm">
+                                <thead className="bg-cyan-500/10 text-xs uppercase tracking-[0.12em] text-slate-400">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left">Time</th>
+                                        <th className="px-4 py-3 text-left">Activity</th>
+                                        <th className="px-4 py-3 text-left">Detail</th>
+                                        <th className="px-4 py-3 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/70">
+                                    {activityLog.map(entry => (
+                                        <tr key={`${entry.time}-${entry.action}`} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-3 text-left text-slate-300">{entry.time}</td>
+                                            <td className="px-4 py-3 text-left text-white">{entry.action}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{entry.detail}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                <span
+                                                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                                        entry.status === 'blocked'
+                                                            ? 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                                                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                                                    }`}
+                                                >
+                                                    {entry.status === 'blocked' ? 'Blocked' : 'Allowed'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section className="mt-8">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-500">
+                            Extend Session
+                        </button>
+                        <button className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(225,29,72,0.35)] transition hover:bg-rose-500">
+                            Terminate Session
+                        </button>
+                        <button className="rounded-xl border border-slate-600 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-400 hover:text-white">
+                            Export Session Audit
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    )
+}

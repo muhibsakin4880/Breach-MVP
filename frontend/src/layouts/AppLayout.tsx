@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
             { label: 'Security', to: '/security-ops' },
             { label: 'Data Classification', to: '/data-classification' },
             { label: 'Incident Response', to: '/incident-response' },
+            { label: 'Secure Enclave', to: '/secure-enclave' },
             { label: 'Access Control', to: '/rbac-console' },
             { label: 'Compliance', to: '/compliance-locker' },
             { label: 'Audit Trail', to: '/audit-trail' },
