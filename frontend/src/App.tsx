@@ -30,6 +30,7 @@ import ComplianceLockerPage from './pages/ComplianceLockerPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import ConsentTrackerPage from './pages/ConsentTrackerPage'
 import RedTeamModePage from './pages/RedTeamModePage'
+import UsageAnalyticsPage from './pages/UsageAnalyticsPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -147,6 +148,7 @@ function App() {
                     <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
+                    <Route path="usage-analytics" element={<UsageAnalyticsPage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />
                     <Route path="compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />

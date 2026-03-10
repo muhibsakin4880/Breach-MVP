@@ -40,6 +40,7 @@ const navGroups: NavGroup[] = [
     {
         title: 'Developer',
         items: [
+            { label: 'Usage Analytics', to: '/usage-analytics' },
             { label: 'Pipelines', to: '/pipelines' },
         ]
     },
