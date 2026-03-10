@@ -33,6 +33,8 @@ export default function DatasetDetailPage() {
     const [usageScale, setUsageScale] = useState('medium')
     const [affiliation, setAffiliation] = useState('')
     const [complianceChecked, setComplianceChecked] = useState(false)
+    const [escrowWindow, setEscrowWindow] = useState('24')
+    const [escrowActive, setEscrowActive] = useState(false)
     const openRequestModal = () => setShowRequestModal(true)
 
     useEffect(() => {
@@ -43,6 +45,8 @@ export default function DatasetDetailPage() {
         setUsageScale('medium')
         setAffiliation('')
         setComplianceChecked(false)
+        setEscrowWindow('24')
+        setEscrowActive(false)
     }, [dataset])
 
     useEffect(() => {
@@ -245,38 +249,93 @@ export default function DatasetDetailPage() {
                             </div>
                         </div>
 
-                        <div className="w-full lg:w-80 bg-slate-900/80 border border-slate-700 rounded-xl p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="text-sm text-slate-400">Current status</div>
-                                <span
-                                    className={`px-3 py-1 rounded-full border text-xs ${requestStatus === 'approved'
-                                            ? 'bg-green-500/15 border-green-400 text-green-200'
-                                            : requestStatus === 'pending'
-                                                ? 'bg-yellow-500/15 border-yellow-400 text-yellow-200'
-                                                : 'bg-red-500/15 border-red-400 text-red-200'
-                                        }`}
-                                >
-                                    {requestStatus === 'approved'
-                                        ? 'Approved'
-                                        : requestStatus === 'pending'
-                                            ? 'Pending review'
-                                            : 'Rejected'}
-                                </span>
+                        <div className="w-full lg:w-[420px] space-y-4">
+                            <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-lg font-semibold text-white">Choose Access Method</h4>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="rounded-xl border border-emerald-500/30 bg-slate-950/60 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-base font-semibold text-white">Escrow Access</p>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    Payment held securely until you verify data quality
+                                                </p>
+                                            </div>
+                                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+                                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path d="M10 1.5l2.47 5 5.53.8-4 3.9.95 5.5L10 14.9 5.05 16.7l.95-5.5-4-3.9 5.53-.8L10 1.5z" />
+                                                </svg>
+                                                Recommended
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-4 space-y-3">
+                                            <div>
+                                                <label className="block text-xs uppercase tracking-[0.14em] text-slate-500 mb-2">
+                                                    Escrow window
+                                                </label>
+                                                <select
+                                                    value={escrowWindow}
+                                                    onChange={(event) => setEscrowWindow(event.target.value)}
+                                                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400"
+                                                >
+                                                    <option value="24">24 hours - Standard (default)</option>
+                                                    <option value="48">48 hours - Extended (+10%)</option>
+                                                    <option value="72">72 hours - Research (+20%)</option>
+                                                </select>
+                                            </div>
+                                            <p className="text-xs text-slate-400">If unsatisfied, full refund within window</p>
+                                            <button
+                                                className="w-full px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+                                                onClick={() => setEscrowActive(true)}
+                                            >
+                                                Put on Escrow
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-4">
+                                        <div>
+                                            <p className="text-base font-semibold text-white">Direct Access</p>
+                                            <p className="text-xs text-slate-400 mt-1">Immediate access, no refund guarantee</p>
+                                        </div>
+                                        <p className="mt-3 text-xs text-amber-200/80">
+                                            Higher risk - recommended only for known providers
+                                        </p>
+                                        <button className="mt-4 w-full px-4 py-2.5 rounded-lg border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition-colors">
+                                            Direct Access
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p className="mt-4 text-xs text-slate-500">
+                                    Breach holds payment in escrow and releases to provider only after buyer confirmation or
+                                    window expiry
+                                </p>
                             </div>
-                            <p className="text-slate-300 text-sm mb-4">
-                                {requestStatus === 'approved' && 'Access configured. Review scope and instructions below.'}
-                                {requestStatus === 'pending' && 'We received your request. A reviewer will follow up with controls and delivery steps.'}
-                                {requestStatus === 'rejected' && 'Request declined. We can suggest alternate sources or share summary stats.'}
-                            </p>
-                            <button
-                                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-                                onClick={openRequestModal}
-                            >
-                                Request Secure Access
-                            </button>
-                            <div className="text-xs text-slate-500 mt-3">
-                                Provider identity remains shielded; communication is routed through the platform.
-                            </div>
+
+                            {escrowActive && (
+                                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                                    <div className="flex items-center justify-between text-sm text-amber-200">
+                                        <span className="font-semibold">Escrow Active - 23:47:12 remaining</span>
+                                        <span className="inline-flex items-center gap-2 text-amber-300">
+                                            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                                            Countdown
+                                        </span>
+                                    </div>
+                                    <div className="mt-4 grid gap-2">
+                                        <button className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white">
+                                            Confirm & Release Payment
+                                        </button>
+                                        <button className="w-full rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">
+                                            Dispute & Refund
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
