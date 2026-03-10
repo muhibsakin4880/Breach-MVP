@@ -12,6 +12,7 @@ const workspaceNav: WorkspaceItem[] = [
     { label: 'Access Requests', to: '/access-requests' },
     { label: 'Trust Profile', to: '/trust-profile' },
     { label: 'Security', to: '/security-ops' },
+    { label: 'Compliance', to: '/compliance-locker' },
     { label: 'Contributions', to: '/contributions' },
     { label: 'Pipelines', to: '/pipelines' },
     { label: 'Profile / Settings', to: '/profile' }

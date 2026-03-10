@@ -26,6 +26,7 @@ import AccessRequestDetailPage from './pages/AccessRequestDetailPage'
 import TrustProfilePage from './pages/TrustProfilePage'
 import PipelinesPage from './pages/PipelinesPage'
 import SecurityOperationsPage from './pages/SecurityOperationsPage'
+import ComplianceLockerPage from './pages/ComplianceLockerPage'
 import { useAuth } from './contexts/AuthContext'
 
 type AccessIntentAuth = ReturnType<typeof useAuth> & {
@@ -143,6 +144,7 @@ function App() {
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />
+                    <Route path="compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
