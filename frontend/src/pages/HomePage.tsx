@@ -555,6 +555,95 @@ export default function HomePage() {
                 </section>
 
                 {/* ═══════════════════════════════════════
+                    WHY NOW SECTION
+                ═══════════════════════════════════════ */}
+                <section className="py-20" style={{ background: 'linear-gradient(180deg, #020817 0%, #050C1F 100%)' }}>
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-4xl mx-auto text-center mb-12">
+                            <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Why Now</p>
+                            <h2 className="breach-font text-3xl md:text-5xl font-bold text-white mb-4">
+                                The data trust crisis is here
+                            </h2>
+                            <p className="text-slate-400 text-base md:text-lg">
+                                Regulated industries are losing billions to data breaches, compliance failures, and unverified data pipelines
+                            </p>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+                                <div className="text-4xl font-bold text-white">$4.45M</div>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Average cost of a healthcare data breach in 2025
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+                                <div className="text-4xl font-bold text-white">68%</div>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Of AI models fail due to unverified training data
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+                                <div className="text-4xl font-bold text-white">3.2x</div>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Increase in data compliance violations since 2023
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="mt-6 text-center text-sm text-blue-300/70 italic">
+                            Breach exists because trust cannot be an afterthought.
+                        </p>
+                    </div>
+                </section>
+
+                {/* ═══════════════════════════════════════
+                    VALIDATED PARTNERS SECTION
+                ═══════════════════════════════════════ */}
+                <section className="py-20" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-4xl mx-auto text-center mb-12">
+                            <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Validated Partners & Early Adopters</p>
+                            <h2 className="breach-font text-3xl md:text-5xl font-bold text-white mb-4">
+                                Trusted by forward-thinking teams
+                            </h2>
+                            <p className="text-slate-400 text-base md:text-lg">
+                                Early access participants across healthcare, finance, and research
+                            </p>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {[
+                                { name: 'Northbridge Research Labs', category: 'Healthcare AI Research' },
+                                { name: 'Meridian Capital Group', category: 'Financial Risk Analytics' },
+                                { name: 'ClearPath Government Solutions', category: 'Public Sector Data' },
+                                { name: 'Atlas Climate Institute', category: 'Environmental Research' },
+                                { name: 'Vantage Health Systems', category: 'Clinical Data Science' },
+                                { name: 'Quantum Finance Ltd', category: 'Algorithmic Trading' }
+                            ].map((partner) => (
+                                <div key={partner.name} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white">{partner.name}</h3>
+                                            <span className="mt-2 inline-flex items-center rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs text-slate-300">
+                                                {partner.category}
+                                            </span>
+                                        </div>
+                                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                                            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                            Verified Participant
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <p className="mt-6 text-center text-xs text-slate-500">
+                            All partners are verified Breach participants. Logos are representative of participant categories.
+                        </p>
+                    </div>
+                </section>
+
+                {/* ═══════════════════════════════════════
                     FINAL CTA SECTION
                 ═══════════════════════════════════════ */}
                 <section className="py-24 relative overflow-hidden"
