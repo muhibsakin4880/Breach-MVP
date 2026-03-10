@@ -31,6 +31,45 @@ export default function DashboardPage() {
         { id: 'mit-collab', icon: '🤝', title: 'MIT Lab requested collaboration', subtitle: 'Review proposal', timestamp: 'Yesterday', action: 'View' }
     ]
 
+    const coreLoopSteps = [
+        {
+            id: 1,
+            title: 'Evaluate',
+            icon: 'search',
+            descriptionLines: ['Assess dataset trust', 'and confidence score']
+        },
+        {
+            id: 2,
+            title: 'Request',
+            icon: 'file',
+            descriptionLines: ['Submit access request', 'with purpose and risk scoring']
+        },
+        {
+            id: 3,
+            title: 'Consent',
+            icon: 'shield',
+            descriptionLines: ['Confirm legal basis', 'and escrow terms']
+        },
+        {
+            id: 4,
+            title: 'Access',
+            icon: 'lock',
+            descriptionLines: ['Controlled access via', 'RBAC and secure enclave']
+        },
+        {
+            id: 5,
+            title: 'Monitor',
+            icon: 'eye',
+            descriptionLines: ['Track usage, audit logs,', 'and policy compliance']
+        },
+        {
+            id: 6,
+            title: 'Resolve',
+            icon: 'refresh',
+            descriptionLines: ['Renew, revoke, or', 'dispute via escrow']
+        }
+    ]
+
     const breakdownGlyphs: Record<string, string> = { 'identity-verification': 'ID', 'data-contribution-quality': 'DQ', 'organization-credibility': 'OC', 'compliance-history': 'CH' }
     const feedThumbnailStyles: Record<string, string> = {
         'healthcare-verified': 'from-cyan-500/20 to-blue-500/15 text-cyan-200',
@@ -72,6 +111,92 @@ export default function DashboardPage() {
                         <p className="text-xs text-emerald-400/70">SOC2 Compliant • No breaches detected</p>
                     </div>
                 </div>
+
+                <section className="mb-10 rounded-3xl border border-white/[0.06] bg-slate-900/50 p-8 backdrop-blur-2xl">
+                    <div className="flex flex-col gap-2 mb-6">
+                        <h2 className="text-2xl font-bold text-white">How Breach Works</h2>
+                        <p className="text-sm text-slate-500">
+                            Every data transaction follows this trust-enforced lifecycle
+                        </p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[960px] flex items-stretch gap-3">
+                            {coreLoopSteps.map((step, index) => {
+                                const isActive = step.id === 4
+                                return (
+                                    <div key={step.id} className="flex items-center gap-3">
+                                        <div
+                                            className={`w-[170px] rounded-2xl border p-4 transition-colors ${
+                                                isActive
+                                                    ? 'border-blue-500/50 bg-blue-500/12 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
+                                                    : 'border-white/[0.08] bg-slate-900/70'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between mb-3">
+                                                <span
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-xl border text-sm ${
+                                                        isActive
+                                                            ? 'border-blue-400/40 bg-blue-500/15 text-blue-200'
+                                                            : 'border-white/10 bg-white/5 text-slate-300'
+                                                    }`}
+                                                >
+                                                    {step.icon === 'search' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5c1.93 0 3.68-.71 5.15-1.85z" />
+                                                        </svg>
+                                                    )}
+                                                    {step.icon === 'file' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3h6l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 3v6h6" />
+                                                        </svg>
+                                                    )}
+                                                    {step.icon === 'shield' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
+                                                        </svg>
+                                                    )}
+                                                    {step.icon === 'lock' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.1 0 2 .9 2 2v2a2 2 0 11-4 0v-2c0-1.1.9-2 2-2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11V8a5 5 0 0110 0v3" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 11h14v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8z" />
+                                                        </svg>
+                                                    )}
+                                                    {step.icon === 'eye' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
+                                                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={2} />
+                                                        </svg>
+                                                    )}
+                                                    {step.icon === 'refresh' && (
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 0115-6l2-2v6h-6l2-2a7 7 0 10-1 9" />
+                                                        </svg>
+                                                    )}
+                                                </span>
+                                                <span className={`text-xs font-semibold ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
+                                                    Step {step.id}
+                                                </span>
+                                            </div>
+                                            <div className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                                                {step.title}
+                                            </div>
+                                            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+                                                <span className="block">{step.descriptionLines[0]}</span>
+                                                <span className="block">{step.descriptionLines[1]}</span>
+                                            </p>
+                                        </div>
+                                        {index < coreLoopSteps.length - 1 && (
+                                            <span className="text-slate-600 text-xl">→</span>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </section>
 
                 <div className="grid gap-10 xl:grid-cols-[1fr_380px]">
                     <main className="space-y-10">
