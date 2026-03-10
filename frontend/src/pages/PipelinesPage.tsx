@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-type PipelinesTab = 'overview' | 'api' | 'sdks' | 'samples' | 'downloads'
+type PipelinesTab = 'overview' | 'api' | 'sdks' | 'samples' | 'downloads' | 'guardrails'
 
 type Endpoint = {
     method: 'GET' | 'POST' | 'PATCH'
@@ -14,7 +14,8 @@ const tabs: Array<{ id: PipelinesTab; label: string }> = [
     { id: 'api', label: 'API Reference' },
     { id: 'sdks', label: 'SDKs' },
     { id: 'samples', label: 'Code Samples' },
-    { id: 'downloads', label: 'Downloads / Links' }
+    { id: 'downloads', label: 'Downloads / Links' },
+    { id: 'guardrails', label: 'Guardrails' }
 ]
 
 const endpoints: Endpoint[] = [
@@ -712,6 +713,203 @@ export default function PipelinesPage() {
                             <button className="px-6 py-3 rounded-xl border border-cyan-500/50 text-cyan-300 text-sm font-medium bg-cyan-500/10 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_25px_#00F0FF60] whitespace-nowrap">
                                 Contact Partnership Team
                             </button>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {activeTab === 'guardrails' && (
+                <section className="space-y-8">
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="max-w-3xl">
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Pipeline Guardrails</h2>
+                            <p className="text-slate-400">
+                                Policy-as-code enforcement, preflight checks, and signed pipeline manifests
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <div className="text-sm font-semibold text-white">All pipeline policies active - 0 violations today</div>
+                                <div className="text-xs text-emerald-100/80">Last policy update: March 2026</div>
+                            </div>
+                            <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                                Active
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        {[
+                            { label: 'Active Policies', value: '12' },
+                            { label: 'Preflight Checks Today', value: '847' },
+                            { label: 'Blocked Operations', value: '3' },
+                            { label: 'Pending Approvals', value: '2' }
+                        ].map(stat => (
+                            <div key={stat.label} className="rounded-2xl border border-cyan-500/20 bg-black/70 p-5 shadow-[0_0_15px_#00F0FF20]">
+                                <div className="text-xs uppercase tracking-[0.12em] text-slate-500">{stat.label}</div>
+                                <div className="mt-3 text-3xl font-semibold text-white">{stat.value}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 className="text-xl font-semibold text-white">Active Policies</h3>
+                                <p className="text-sm text-slate-400">Enforced pipeline guardrails</p>
+                            </div>
+                            <span className="text-xs text-slate-500">5 policies</span>
+                        </div>
+                        <div className="mt-5 overflow-hidden rounded-xl border border-cyan-500/20">
+                            <table className="w-full text-sm">
+                                <thead className="bg-cyan-500/10 text-xs uppercase tracking-[0.12em] text-slate-400">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left">Policy</th>
+                                        <th className="px-4 py-3 text-left">Scope</th>
+                                        <th className="px-4 py-3 text-left">Action</th>
+                                        <th className="px-4 py-3 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/70">
+                                    {[
+                                        ['PHI Enclave Check', 'Healthcare datasets', 'Block if PHI leaves enclave'],
+                                        ['Export Volume Limit', 'All datasets', 'Block if >10GB per request'],
+                                        ['Geographic Residency', 'US-only datasets', 'Block cross-border transfer'],
+                                        ['API Rate Limiting', 'All pipelines', 'Block if >100 calls/minute'],
+                                        ['Raw Data Export', 'Critical datasets', 'Require dual approval']
+                                    ].map(row => (
+                                        <tr key={row[0]} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-3 text-left font-medium text-white">{row[0]}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[1]}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[2]}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-200">
+                                                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                                    Active
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 className="text-xl font-semibold text-white">Recent Preflight Results</h3>
+                                <p className="text-sm text-slate-400">Preflight check log</p>
+                            </div>
+                            <span className="text-xs text-slate-500">5 results</span>
+                        </div>
+                        <div className="mt-5 overflow-hidden rounded-xl border border-cyan-500/20">
+                            <table className="w-full text-sm">
+                                <thead className="bg-cyan-500/10 text-xs uppercase tracking-[0.12em] text-slate-400">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left">Result</th>
+                                        <th className="px-4 py-3 text-left">Dataset</th>
+                                        <th className="px-4 py-3 text-left">Check</th>
+                                        <th className="px-4 py-3 text-right">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/70">
+                                    {[
+                                        ['PASSED', 'Global Climate 2020-2024', 'Export volume check', '09:14:02'],
+                                        ['PASSED', 'Financial Tick Data', 'Residency check', '08:47:15'],
+                                        ['BLOCKED', 'Clinical Outcomes Delta', 'PHI enclave violation', '08:23:44'],
+                                        ['PASSED', 'Consumer Behavior Analytics', 'Rate limit check', '07:55:12'],
+                                        ['BLOCKED', 'Genomics Research Dataset', 'Raw export attempted', '07:34:28']
+                                    ].map(row => (
+                                        <tr key={`${row[0]}-${row[1]}`} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-3 text-left">
+                                                <span
+                                                    className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                                                        row[0] === 'BLOCKED'
+                                                            ? 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                                                            : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                                                    }`}
+                                                >
+                                                    {row[0]}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[1]}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[2]}</td>
+                                            <td className="px-4 py-3 text-right text-slate-300">{row[3]}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-xl font-semibold text-white mb-4">Signed Pipeline Manifests</h3>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {[
+                                ['Healthcare Ingest Pipeline v2.1', '2026-03-01', 'b7c2...e445'],
+                                ['Finance Export Pipeline v1.4', '2026-02-15', 'c9d1...f332'],
+                                ['Climate API Pipeline v3.0', '2026-03-08', 'a3f8...d291']
+                            ].map(manifest => (
+                                <div key={manifest[0]} className="rounded-2xl border border-cyan-500/20 bg-black/70 p-5 shadow-[0_0_15px_#00F0FF20]">
+                                    <div className="text-sm font-semibold text-white">{manifest[0]}</div>
+                                    <div className="mt-3 text-xs text-slate-400">Signed: {manifest[1]}</div>
+                                    <div className="text-xs text-slate-400">Hash: {manifest[2]}</div>
+                                    <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                                        <svg className="h-3 w-3 text-emerald-200" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M16.704 5.29a1 1 0 010 1.415l-7.25 7.25a1 1 0 01-1.414 0l-3.25-3.25a1 1 0 011.414-1.414l2.543 2.543 6.543-6.543a1 1 0 011.414 0z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                        Verified
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 shadow-[0_0_20px_#00F0FF20]">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 className="text-xl font-semibold text-white">Change Approval History</h3>
+                                <p className="text-sm text-slate-400">Recent approvals</p>
+                            </div>
+                            <span className="text-xs text-slate-500">3 entries</span>
+                        </div>
+                        <div className="mt-5 overflow-hidden rounded-xl border border-cyan-500/20">
+                            <table className="w-full text-sm">
+                                <thead className="bg-cyan-500/10 text-xs uppercase tracking-[0.12em] text-slate-400">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left">Change</th>
+                                        <th className="px-4 py-3 text-left">Owner</th>
+                                        <th className="px-4 py-3 text-left">Date</th>
+                                        <th className="px-4 py-3 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/70">
+                                    {[
+                                        ['Policy updated: Export Volume Limit', 'admin_001', '2026-03-05', 'Approved'],
+                                        ['Pipeline deployed: Healthcare v2.1', 'admin_002', '2026-03-01', 'Approved'],
+                                        ['Policy created: PHI Enclave Check', 'admin_001', '2026-02-20', 'Approved']
+                                    ].map(row => (
+                                        <tr key={row[0]} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-3 text-left font-medium text-white">{row[0]}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[1]}</td>
+                                            <td className="px-4 py-3 text-left text-slate-300">{row[2]}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-200">
+                                                    {row[3]}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
