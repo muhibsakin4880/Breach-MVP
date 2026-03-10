@@ -18,6 +18,7 @@ const navGroups: NavGroup[] = [
             { label: 'Dashboard', to: '/dashboard' },
             { label: 'Datasets', to: '/datasets' },
             { label: 'Access Requests', to: '/access-requests' },
+            { label: 'Escrow Center', to: '/escrow-center' },
             { label: 'Contributions', to: '/contributions' }
         ]
     },

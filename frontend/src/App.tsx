@@ -36,6 +36,7 @@ import IncidentResponsePage from './pages/IncidentResponsePage'
 import DataClassificationPage from './pages/DataClassificationPage'
 import SecureEnclavePage from './pages/SecureEnclavePage'
 import StatusPage from './pages/StatusPage'
+import EscrowCenterPage from './pages/EscrowCenterPage'
 import TrustGlossaryPage from './pages/TrustGlossaryPage'
 
 import { useAuth } from './contexts/AuthContext'
@@ -149,6 +150,7 @@ function App() {
                     <Route path="access-requests" element={<AccessRequestsPage />} />
                     <Route path="access-requests/:requestId" element={<AccessRequestDetailPage />} />
                     <Route path="requests" element={<Navigate to="/access-requests" replace />} />
+                    <Route path="escrow-center" element={<EscrowCenterPage />} />
                     <Route path="trust-profile" element={<TrustProfilePage />} />
                     <Route path="contributions" element={<ContributionsPage />} />
                     <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />
