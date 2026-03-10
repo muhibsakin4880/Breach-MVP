@@ -1,23 +1,50 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-type WorkspaceItem = {
+type NavItem = {
     label: string
     to: string
 }
 
-const workspaceNav: WorkspaceItem[] = [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'Datasets', to: '/datasets' },
-    { label: 'Access Requests', to: '/access-requests' },
-    { label: 'Trust Profile', to: '/trust-profile' },
-    { label: 'Security', to: '/security-ops' },
-    { label: 'Compliance', to: '/compliance-locker' },
-    { label: 'Audit Trail', to: '/audit-trail' },
-    { label: 'Consent', to: '/consent-tracker' },
-    { label: 'Contributions', to: '/contributions' },
-    { label: 'Pipelines', to: '/pipelines' },
-    { label: 'Profile / Settings', to: '/profile' }
+type NavGroup = {
+    title: string
+    items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+    {
+        title: 'Workspace',
+        items: [
+            { label: 'Dashboard', to: '/dashboard' },
+            { label: 'Datasets', to: '/datasets' },
+            { label: 'Access Requests', to: '/access-requests' },
+            { label: 'Contributions', to: '/contributions' }
+        ]
+    },
+    {
+        title: 'Trust & Identity',
+        items: [
+            { label: 'Trust Profile', to: '/trust-profile' },
+            { label: 'Consent', to: '/consent-tracker' }
+        ]
+    },
+    {
+        title: 'Security & Compliance',
+        items: [
+            { label: 'Security', to: '/security-ops' },
+            { label: 'Compliance', to: '/compliance-locker' },
+            { label: 'Audit Trail', to: '/audit-trail' },
+            { label: 'Red Team', to: '/red-team' }
+        ]
+    },
+    {
+        title: 'Developer',
+        items: [{ label: 'Pipelines', to: '/pipelines' }]
+    },
+    {
+        title: 'Account',
+        items: [{ label: 'Profile / Settings', to: '/profile' }]
+    }
 ]
 
 export default function AppLayout() {
@@ -41,21 +68,28 @@ export default function AppLayout() {
                     </Link>
                     <p className="text-xs text-slate-400 mt-1 ml-11">Participant Console</p>
                 </div>
-                <nav className="p-4 space-y-1">
-                    {workspaceNav.map(item => (
-                        <NavLink
-                            key={item.to}
-                            to={item.to}
-                            className={({ isActive }) =>
-                                `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
-                                    isActive
-                                        ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
-                                        : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
-                                }`
-                            }
-                        >
-                            {item.label}
-                        </NavLink>
+                <nav className="p-4 space-y-4">
+                    {navGroups.map((group, groupIndex) => (
+                        <div key={group.title} className={`${groupIndex > 0 ? 'border-t border-slate-800/80 pt-3' : ''} space-y-2`}>
+                            <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group.title}</p>
+                            <div className="space-y-1">
+                                {group.items.map(item => (
+                                    <NavLink
+                                        key={item.to}
+                                        to={item.to}
+                                        className={({ isActive }) =>
+                                            `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
+                                                isActive
+                                                    ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                                                    : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
+                                            }`
+                                        }
+                                    >
+                                        {item.label}
+                                    </NavLink>
+                                ))}
+                            </div>
+                        </div>
                     ))}
                 </nav>
             </aside>
