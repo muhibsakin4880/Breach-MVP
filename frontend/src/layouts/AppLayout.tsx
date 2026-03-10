@@ -32,6 +32,9 @@ const navGroups: NavGroup[] = [
         title: 'Security & Compliance',
         items: [
             { label: 'Security', to: '/security-ops' },
+            { label: 'Data Classification', to: '/data-classification' },
+            { label: 'Incident Response', to: '/incident-response' },
+            { label: 'Access Control', to: '/rbac-console' },
             { label: 'Compliance', to: '/compliance-locker' },
             { label: 'Audit Trail', to: '/audit-trail' },
             { label: 'Red Team', to: '/red-team' }

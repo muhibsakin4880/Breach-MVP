@@ -30,7 +30,10 @@ import ComplianceLockerPage from './pages/ComplianceLockerPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import ConsentTrackerPage from './pages/ConsentTrackerPage'
 import RedTeamModePage from './pages/RedTeamModePage'
+import RBACConsolePage from './pages/RBACConsolePage'
 import UsageAnalyticsPage from './pages/UsageAnalyticsPage'
+import IncidentResponsePage from './pages/IncidentResponsePage'
+import DataClassificationPage from './pages/DataClassificationPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -149,6 +152,9 @@ function App() {
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="usage-analytics" element={<UsageAnalyticsPage />} />
+                    <Route path="rbac-console" element={<RBACConsolePage />} />
+                    <Route path="incident-response" element={<IncidentResponsePage />} />
+                    <Route path="data-classification" element={<DataClassificationPage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />
                     <Route path="compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />
