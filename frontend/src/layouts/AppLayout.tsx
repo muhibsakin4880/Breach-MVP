@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
         title: 'Account',
         items: [
             { label: 'Profile / Settings', to: '/profile' },
+            { label: 'Trust Glossary', to: '/trust-glossary' },
             { label: 'Platform Status', to: '/status' }
         ]
     }

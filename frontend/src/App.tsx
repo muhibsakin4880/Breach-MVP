@@ -36,6 +36,7 @@ import IncidentResponsePage from './pages/IncidentResponsePage'
 import DataClassificationPage from './pages/DataClassificationPage'
 import SecureEnclavePage from './pages/SecureEnclavePage'
 import StatusPage from './pages/StatusPage'
+import TrustGlossaryPage from './pages/TrustGlossaryPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -164,6 +165,7 @@ function App() {
                     <Route path="consent-tracker" element={<ConsentTrackerPage />} />
                     <Route path="red-team" element={<RedTeamModePage />} />
                     <Route path="status" element={<StatusPage />} />
+                    <Route path="trust-glossary" element={<TrustGlossaryPage />} />
 
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
