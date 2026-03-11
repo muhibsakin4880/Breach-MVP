@@ -144,14 +144,14 @@ export default function ProfilePage() {
                 <SectionCard title="Security Settings">
                     <div className="space-y-5">
                         <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3">
-                            <div className="space-y-1">
-                                <p className="text-sm text-slate-300">Two-Factor Authentication</p>
-                                <p className="text-xs text-emerald-300">Enabled</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <EditIconButton label="Edit two-factor settings" />
+                            <div className="flex items-center gap-3">
                                 <ToggleSwitch enabled={isTwoFactorEnabled} onToggle={() => setIsTwoFactorEnabled((prev) => !prev)} />
+                                <div className="space-y-1">
+                                    <p className="text-sm text-slate-300">Two-Factor Authentication</p>
+                                    <p className="text-xs text-emerald-300">Enabled</p>
+                                </div>
                             </div>
+                            <EditIconButton label="Edit two-factor settings" />
                         </div>
 
                         <div className="space-y-3">
@@ -241,14 +241,14 @@ export default function ProfilePage() {
                                     key={notification.id}
                                     className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2.5"
                                 >
-                                    <span className="text-sm text-slate-300">{notification.label}</span>
-                                    <div className="flex items-center gap-2">
-                                        <EditIconButton label={`Edit ${notification.label}`} />
+                                    <div className="flex items-center gap-3">
                                         <ToggleSwitch
                                             enabled={notification.enabled}
                                             onToggle={() => toggleNotification(notification.id)}
                                         />
+                                        <span className="text-sm text-slate-300">{notification.label}</span>
                                     </div>
+                                    <EditIconButton label={`Edit ${notification.label}`} />
                                 </div>
                             ))}
                         </div>
@@ -362,11 +362,13 @@ function ToggleSwitch({ enabled, onToggle }: ToggleSwitchProps) {
             type="button"
             onClick={onToggle}
             aria-pressed={enabled}
-            className={`w-11 h-6 rounded-full transition-colors relative ${enabled ? 'bg-blue-600' : 'bg-slate-700'}`}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center overflow-hidden rounded-full p-0.5 transition-colors ${
+                enabled ? 'bg-blue-600' : 'bg-slate-700'
+            }`}
         >
             <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    enabled ? 'translate-x-5' : 'translate-x-0.5'
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    enabled ? 'translate-x-5' : 'translate-x-0'
                 }`}
             />
         </button>
