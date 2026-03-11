@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import LogoMark from './LogoMark'
@@ -15,6 +15,8 @@ const publicNav: NavItem[] = [
 export default function Header() {
     const [isMobileOpen, setIsMobileOpen] = useState(false)
     const { signOut } = useAuth()
+    const location = useLocation()
+    const isHome = location.pathname === '/'
 
     const renderLinks = (isMobile = false) => (
         <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-6'}`}>
@@ -44,13 +46,15 @@ export default function Header() {
     return (
         <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/80 border-b border-cyan-500/30" style={{ height: '88px' }}>
             <nav className="container mx-auto px-8 md:px-16 h-full">
-                <div className="flex items-center justify-between h-full">
-                    <Link to="/" className="flex items-center gap-5">
-                        <LogoMark className="w-8 h-8" />
-                        <div className="flex items-center">
-                            <span className="text-2xl text-white" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>
-                        </div>
-                    </Link>
+                <div className={`flex items-center ${isHome ? 'justify-end' : 'justify-between'} h-full`}>
+                    {!isHome && (
+                        <Link to="/" className="flex items-center gap-5">
+                            <LogoMark className="w-8 h-8" />
+                            <div className="flex items-center">
+                                <span className="text-2xl text-white" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>
+                            </div>
+                        </Link>
+                    )}
 
                     <div className="flex items-center gap-3 md:hidden">
                         <button
@@ -78,5 +82,10 @@ export default function Header() {
         </header>
     )
 }
+
+
+
+
+
 
 

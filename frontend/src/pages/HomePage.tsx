@@ -51,6 +51,7 @@ export default function HomePage() {
     const verifiedCount = useCountUp(98, 1200, statsRef.inView)
     const partnersCount = useCountUp(340, 1600, statsRef.inView)
 
+    // Hero animations handled via heroVisible state
     const handleRequestPlatformAccess = () => {
         startOnboarding()
         navigate('/onboarding')
@@ -169,10 +170,61 @@ export default function HomePage() {
                 }
 
                 .hero-bg {
-                    background:
-                        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.15) 0%, transparent 70%),
-                        radial-gradient(ellipse 40% 40% at 80% 60%, rgba(99,102,241,0.08) 0%, transparent 60%),
-                        linear-gradient(170deg, #020817 0%, #0a1628 40%, #020817 100%);
+                    background-color: #050C1F;
+                    background-image: linear-gradient(180deg, #050C1F 0%, #020817 100%);
+                }
+
+                .hero-glow {
+                    background: radial-gradient(closest-side at 50% 42%, rgba(70, 220, 230, 0.25) 0%, rgba(20, 30, 40, 0.1) 40%, transparent 70%);
+                    filter: blur(70px);
+                }
+
+                .hero-shield {
+                    filter: drop-shadow(0 0 30px rgba(72, 219, 229, 0.45)) drop-shadow(0 0 70px rgba(14, 42, 80, 0.45));
+                }
+
+                .hero-title {
+                    background: #00E5FF;
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    letter-spacing: 0.14em;
+                    text-shadow: 0 0 18px rgba(0, 229, 255, 0.35), 0 0 36px rgba(0, 229, 255, 0.22);
+                }
+
+                .hero-tagline {
+                    color: #4dd6d6;
+                    letter-spacing: 0.16em;
+                    text-shadow: 0 0 14px rgba(77, 214, 214, 0.25);
+                }
+
+                .hero-btn-primary {
+                    background: linear-gradient(135deg, #12305c 0%, #1f4f7a 100%);
+                    transition: all 0.3s ease;
+                    box-shadow: 0 16px 36px rgba(16, 60, 90, 0.45);
+                }
+                .hero-btn-primary:hover {
+                    background: linear-gradient(135deg, #1b4d7a 0%, #2ac3cf 100%);
+                    transform: translateY(-2px);
+                    box-shadow: 0 20px 44px rgba(42, 195, 207, 0.35);
+                }
+
+                .hero-btn-secondary {
+                    background: rgba(11, 18, 26, 0.75);
+                    border: 1px solid rgba(77, 214, 214, 0.35);
+                    transition: all 0.3s ease;
+                }
+                .hero-btn-secondary:hover {
+                    border-color: rgba(77, 214, 214, 0.65);
+                    background: rgba(77, 214, 214, 0.08);
+                    transform: translateY(-2px);
+                }
+
+                .hero-trust {
+                    color: #9aa3ad;
+                }
+                .hero-trust-check {
+                    color: #d7dde4;
                 }
 
                 .text-shimmer {
@@ -256,116 +308,112 @@ export default function HomePage() {
                 {/* ═══════════════════════════════════════
                     HERO SECTION
                 ═══════════════════════════════════════ */}
-                <section className="hero-bg relative min-h-screen flex items-center overflow-hidden" style={{ background: 'linear-gradient(180deg, #000000 0%, #020408 50%, #050C1F 100%)' }}>
-                    {/* Dark navy grid pattern */}
-                    <div className="absolute inset-0 opacity-10" style={{ 
-                        backgroundImage: 'linear-gradient(rgba(0,240,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.05) 1px, transparent 1px)', 
-                        backgroundSize: '50px 50px' 
-                    }} />
-
-                    {/* Animated grid background */}
-                    <div className="absolute inset-0 grid-bg opacity-40" />
-
-                    {/* Floating orbs */}
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full animate-orb"
-                         style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-                    <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full"
-                         style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)', filter: 'blur(40px)', animation: 'orb-drift 15s ease-in-out infinite reverse' }} />
-
-                    {/* Floating geometric shapes */}
-                    <div className="absolute top-20 right-20 w-32 h-32 opacity-10 animate-float"
-                         style={{ border: '1px solid rgba(59,130,246,0.5)', borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%', animationDelay: '0s' }} />
-                    <div className="absolute bottom-32 left-16 w-20 h-20 opacity-10 animate-float"
-                         style={{ border: '1px solid rgba(148,163,184,0.4)', borderRadius: '50%', animationDelay: '2s' }} />
-                    <div className="absolute top-1/2 right-12 w-12 h-12 opacity-15 animate-float"
-                         style={{ background: 'rgba(59,130,246,0.2)', borderRadius: '4px', transform: 'rotate(45deg)', animationDelay: '1s' }} />
+                <section className="hero-bg relative min-h-screen flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 hero-glow" aria-hidden="true" />
 
                     <div className="container mx-auto px-4 py-24 md:py-32 relative z-10">
-                        <div className="max-w-5xl mx-auto text-center">
-
-                            {/* Badge */}
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 backdrop-blur-xl border border-cyan-500/30 opacity-0-init ${heroVisible ? 'animate-fadeUp' : ''}`}
-                                 style={{ background: 'rgba(0,240,255,0.05)', animationDelay: '0s', opacity: heroVisible ? undefined : 0 }}>
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                                <span className="text-cyan-300 text-sm font-medium tracking-wide">Trusted Data Infrastructure</span>
+                        <div className="max-w-4xl mx-auto text-center">
+                            <div
+                                className={`relative mx-auto mb-3 md:mb-4 lg:mb-4 w-56 h-56 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] pb-14 md:pb-20 lg:pb-24 overflow-visible opacity-0-init ${heroVisible ? 'animate-fadeUp' : ''}`}
+                                style={{ opacity: heroVisible ? undefined : 0 }}
+                            >
+                                <svg viewBox="0 0 240 300" className="w-full h-full hero-shield overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="shieldOuter" x1="120" y1="0" x2="120" y2="280" gradientUnits="userSpaceOnUse">
+                                            <stop stopColor="#10294b"/>
+                                            <stop offset="1" stopColor="#0a1323"/>
+                                        </linearGradient>
+                                        <linearGradient id="shieldInner" x1="120" y1="40" x2="120" y2="240" gradientUnits="userSpaceOnUse">
+                                            <stop stopColor="#0f2442"/>
+                                            <stop offset="1" stopColor="#091322"/>
+                                        </linearGradient>
+                                        <filter id="circuitGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                        <filter id="shieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur stdDeviation="6" result="softGlow"/>
+                                            <feMerge>
+                                                <feMergeNode in="softGlow"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <path
+                                        d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
+                                        fill="url(#shieldOuter)"
+                                        stroke="#0f3a7a"
+                                        strokeWidth="4"
+                                        filter="url(#shieldGlow)"
+                                    />
+                                    <path
+                                        d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
+                                        fill="url(#shieldInner)"
+                                        stroke="#0b2552"
+                                        strokeWidth="3"
+                                    />
+                                    <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#circuitGlow)">
+                                        <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
+                                        <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
+                                        <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
+                                    </g>
+                                    <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#circuitGlow)" />
+                                    <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
+                                    <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
+                                    <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
+                                </svg>
                             </div>
 
-                            {/* Headline */}
-                            <h1 className={`Redoubt-font font-bold mb-6 leading-none tracking-tight opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
-                                style={{ opacity: heroVisible ? undefined : 0 }}>
-                                <span className="text-white flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl">
-                                    <svg className="w-16 h-16 text-cyan-400 cyber-glow" viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M12 2.5L4 7v10l8 4.5 8-4.5V7l-8-4.5z"
-                                            stroke="currentColor"
-                                            strokeWidth="1.6"
-                                            strokeLinejoin="round"
-                                        />
-                                        <path
-                                            d="M9 9.3h6v1.4H9z"
-                                            fill="currentColor"
-                                        />
-                                        <path
-                                            d="M9.5 10.7v4.2M12 10.7v4.2M14.5 10.7v4.2"
-                                            stroke="currentColor"
-                                            strokeWidth="1.6"
-                                            strokeLinecap="round"
-                                        />
-                                        <path
-                                            d="M9 15h6"
-                                            stroke="currentColor"
-                                            strokeWidth="1.6"
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    Redoubt
-                                </span>
-                                <span className="text-shimmer block text-base md:text-lg lg:text-xl mt-2 leading-tight whitespace-nowrap" style={{ textShadow: '0 0 30px rgba(0,240,255,0.4)' }}>Layered Defense for Data Confidence</span>
+                            <h1
+                                className={`Redoubt-font hero-title text-6xl md:text-7xl lg:text-8xl font-extrabold uppercase opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
+                                style={{ opacity: heroVisible ? undefined : 0 }}
+                            >
+                                REDOUBT
                             </h1>
 
-                            {/* Subtitle */}
-                            {/* <p className={`text-base md:text-xl text-[#A1A1AA] mb-10 max-w-2xl mx-auto leading-normal opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
-                               style={{ opacity: heroVisible ? undefined : 0 }}>
-                                Layered Defense for Data Confidence
-                            </p> */}
+                            <p
+                                className={`hero-tagline text-xs md:text-sm lg:text-base mt-5 uppercase font-semibold opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
+                                style={{ opacity: heroVisible ? undefined : 0 }}
+                            >
+                                LAYERED DEFENSE FOR DATA CONFIDENCE
+                            </p>
 
-                            {/* CTA Buttons */}
-                            <div className={`flex flex-col sm:flex-row gap-4 justify-center opacity-0-init ${heroVisible ? 'animate-fadeUp delay-300' : ''}`}
-                                 style={{ opacity: heroVisible ? undefined : 0 }}>
+                            <div
+                                className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center opacity-0-init ${heroVisible ? 'animate-fadeUp delay-300' : ''}`}
+                                style={{ opacity: heroVisible ? undefined : 0 }}
+                            >
                                 <Link
                                     to="/login"
                                     onClick={handleSignInFromLanding}
-                                    className="btn-primary relative z-10 px-8 py-4 text-[#050C1F] font-semibold rounded-xl text-lg cyber-glow"
+                                    className="hero-btn-primary px-8 py-4 text-white font-semibold rounded-xl text-lg"
                                 >
-                                    <span className="relative z-10">Sign In →</span>
+                                    Sign In →
                                 </Link>
                                 <button
                                     type="button"
                                     onClick={handleRequestPlatformAccess}
-                                    className="px-8 py-4 text-white font-semibold rounded-xl text-lg backdrop-blur-xl bg-black/50 border border-white/10 hover:border-cyan-500/50 transition-all duration-300"
+                                    className="hero-btn-secondary px-8 py-4 text-white/90 font-semibold rounded-xl text-lg"
                                 >
                                     Request Platform Access
                                 </button>
                             </div>
 
-                            {/* Trust indicators */}
-                            <div className={`mt-12 flex flex-wrap items-center justify-center gap-6 opacity-0-init ${heroVisible ? 'animate-fadeIn delay-400' : ''}`}
-                                 style={{ opacity: heroVisible ? undefined : 0 }}>
-                                {['SOC 2 Compliant', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
-                                    <div key={item} className="flex items-center gap-2 text-slate-500 text-sm">
-                                        <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        {item}
+                            <div
+                                className={`hero-trust mt-12 flex flex-wrap items-center justify-center gap-6 text-sm opacity-0-init ${heroVisible ? 'animate-fadeIn delay-400' : ''}`}
+                                style={{ opacity: heroVisible ? undefined : 0 }}
+                            >
+                                {['SOC2 Compliant', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
+                                    <div key={item} className="flex items-center gap-2">
+                                        <span className="hero-trust-check text-base">✓</span>
+                                        <span>{item}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
-
-                    {/* Bottom fade */}
-                    <div className="absolute bottom-0 left-0 right-0 h-32"
-                         style={{ background: 'linear-gradient(to bottom, transparent, #020817)' }} />
                 </section>
 
                 {/* ═══════════════════════════════════════
@@ -1138,4 +1186,12 @@ function Step3AccessIntent({ value, onToggleDomain, onChange, onBack, onSubmit }
         </form>
     )
 }
+
+
+
+
+
+
+
+
 
