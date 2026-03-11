@@ -16,6 +16,15 @@ const sessionData = [
     { id: 'session-3', device: 'Mobile Safari on iOS', location: 'Chicago, US', status: '7 days ago' }
 ]
 
+const generateInviteCode = (prefix = 'REDO') => {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let body = ''
+    for (let i = 0; i < 6; i += 1) {
+        body += alphabet[Math.floor(Math.random() * alphabet.length)]
+    }
+    return `${prefix}-${body}`
+}
+
 export default function ProfilePage() {
     const { signOut } = useAuth()
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true)
@@ -26,6 +35,8 @@ export default function ProfilePage() {
     ])
     const [selectedDomains, setSelectedDomains] = useState<DomainOption[]>(['Climate', 'Healthcare'])
     const [defaultAccessPreference, setDefaultAccessPreference] = useState<AccessPreference>('Aggregated / anonymized data')
+    const [inviteCode, setInviteCode] = useState<string | null>(null)
+    const [inviteCopied, setInviteCopied] = useState(false)
 
     const toggleDomain = (domain: DomainOption) => {
         setSelectedDomains((current) =>
@@ -37,6 +48,22 @@ export default function ProfilePage() {
         setNotifications((current) =>
             current.map((item) => (item.id === id ? { ...item, enabled: !item.enabled } : item))
         )
+    }
+
+    const handleGenerateInvite = () => {
+        setInviteCopied(false)
+        setInviteCode(generateInviteCode())
+    }
+
+    const handleCopyInvite = async () => {
+        if (!inviteCode) return
+        try {
+            await navigator.clipboard.writeText(inviteCode)
+            setInviteCopied(true)
+            setTimeout(() => setInviteCopied(false), 2000)
+        } catch {
+            setInviteCopied(false)
+        }
     }
 
     return (
@@ -172,6 +199,39 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-5 space-y-5">
+                <SectionCard title="Invitations">
+                    <div className="space-y-4">
+                        <p className="text-sm text-slate-400">
+                            Generate a single-use invite code for a vetted participant.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleGenerateInvite}
+                                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                            >
+                                Generate Invite Code
+                            </button>
+                            {inviteCode && (
+                                <button
+                                    type="button"
+                                    onClick={handleCopyInvite}
+                                    className="px-4 py-2 rounded-lg border border-slate-600 text-slate-200 text-sm font-semibold hover:border-blue-500 hover:text-white transition-colors"
+                                >
+                                    {inviteCopied ? 'Copied' : 'Copy code'}
+                                </button>
+                            )}
+                        </div>
+                        {inviteCode && (
+                            <div className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3 font-mono text-sm text-slate-100">
+                                {inviteCode}
+                            </div>
+                        )}
+                        <p className="text-xs text-slate-500">
+                            Invite codes are tied to your verified organization and expire after first use.
+                        </p>
+                    </div>
+                </SectionCard>
                 <SectionCard title="Preferences">
                     <div className="space-y-5">
                         <div className="space-y-2">
