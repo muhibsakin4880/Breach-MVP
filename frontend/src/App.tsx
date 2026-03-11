@@ -40,6 +40,7 @@ import EscrowCenterPage from './pages/EscrowCenterPage'
 import TrustGlossaryPage from './pages/TrustGlossaryPage'
 import DeploymentModelPage from './pages/DeploymentModelPage'
 import GuidedTourPage from './pages/GuidedTourPage'
+import DataLineagePage from './pages/DataLineagePage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -172,6 +173,7 @@ function App() {
                     <Route path="trust-glossary" element={<TrustGlossaryPage />} />
                     <Route path="deployment-model" element={<DeploymentModelPage />} />
                     <Route path="guided-tour" element={<GuidedTourPage />} />
+                    <Route path="data-lineage" element={<DataLineagePage />} />
 
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
