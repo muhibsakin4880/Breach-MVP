@@ -86,29 +86,59 @@ export default function AppLayout() {
             <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
                 <div className="px-5 py-5 border-b border-slate-800">
                     <Link to="/dashboard" className="flex items-center gap-3">
-                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.4))' }} viewBox="0 0 24 24" fill="none">
+                        <svg
+                            className="w-10 h-10 overflow-visible"
+                            viewBox="0 0 240 300"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            style={{ filter: 'drop-shadow(0 0 12px rgba(72, 219, 229, 0.5)) drop-shadow(0 0 24px rgba(14, 42, 80, 0.5))' }}
+                        >
+                            <defs>
+                                <linearGradient id="dashShieldOuter" x1="120" y1="0" x2="120" y2="300" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#10294b"/>
+                                    <stop offset="1" stopColor="#0a1323"/>
+                                </linearGradient>
+                                <linearGradient id="dashShieldInner" x1="120" y1="40" x2="120" y2="260" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#0f2442"/>
+                                    <stop offset="1" stopColor="#091322"/>
+                                </linearGradient>
+                                <filter id="dashCircuitGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                                <filter id="dashShieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="6" result="softGlow"/>
+                                    <feMerge>
+                                        <feMergeNode in="softGlow"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
                             <path
-                                d="M12 2.5L4 7v10l8 4.5 8-4.5V7l-8-4.5z"
-                                stroke="currentColor"
-                                strokeWidth="1.6"
-                                strokeLinejoin="round"
+                                d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
+                                fill="url(#dashShieldOuter)"
+                                stroke="#0f3a7a"
+                                strokeWidth="4"
+                                filter="url(#dashShieldGlow)"
                             />
                             <path
-                                d="M9 9.3h6v1.4H9z"
-                                fill="currentColor"
+                                d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
+                                fill="url(#dashShieldInner)"
+                                stroke="#0b2552"
+                                strokeWidth="3"
                             />
-                            <path
-                                d="M9.5 10.7v4.2M12 10.7v4.2M14.5 10.7v4.2"
-                                stroke="currentColor"
-                                strokeWidth="1.6"
-                                strokeLinecap="round"
-                            />
-                            <path
-                                d="M9 15h6"
-                                stroke="currentColor"
-                                strokeWidth="1.6"
-                                strokeLinecap="round"
-                            />
+                            <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#dashCircuitGlow)">
+                                <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
+                                <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
+                                <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
+                            </g>
+                            <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                            <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                            <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                            <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
                         </svg>
                         <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
                     </Link>
