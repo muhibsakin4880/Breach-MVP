@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { DatasetCardSkeleton } from '../components/LoadingSkeleton'
 
 type Dataset = {
     id: number
@@ -10,6 +11,7 @@ type Dataset = {
     dataType: string
     geography: string
     confidenceScore: number
+    providerTrustScore: number
     verificationStatus: 'Verified' | 'Under Review'
     lastUpdated: string
     size: string
@@ -34,6 +36,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Time-series',
         geography: 'Global',
         confidenceScore: 96,
+        providerTrustScore: 94,
         verificationStatus: 'Verified',
         lastUpdated: '2026-02-15',
         size: '2.4 TB',
@@ -61,6 +64,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Streaming',
         geography: 'North America, EU, APAC',
         confidenceScore: 91,
+        providerTrustScore: 87,
         verificationStatus: 'Verified',
         lastUpdated: '2026-02-14',
         size: '1.8 TB',
@@ -88,6 +92,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Tick / time-series',
         geography: 'US, EU',
         confidenceScore: 95,
+        providerTrustScore: 98,
         verificationStatus: 'Verified',
         lastUpdated: '2026-02-12',
         size: '3.2 TB',
@@ -115,6 +120,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Tabular',
         geography: 'Global',
         confidenceScore: 92,
+        providerTrustScore: 91,
         verificationStatus: 'Under Review',
         lastUpdated: '2026-02-10',
         size: '780 GB',
@@ -142,6 +148,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Geospatial',
         geography: 'Global',
         confidenceScore: 88,
+        providerTrustScore: 82,
         verificationStatus: 'Verified',
         lastUpdated: '2026-01-20',
         size: '450 GB',
@@ -171,6 +178,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Tabular',
         geography: 'North America',
         confidenceScore: 79,
+        providerTrustScore: 76,
         verificationStatus: 'Under Review',
         lastUpdated: '2026-01-25',
         size: '320 GB',
@@ -198,6 +206,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Genomic',
         geography: 'Global',
         confidenceScore: 94,
+        providerTrustScore: 96,
         verificationStatus: 'Verified',
         lastUpdated: '2026-02-01',
         size: '1.5 TB',
@@ -226,6 +235,7 @@ const DATASETS: Dataset[] = [
         dataType: 'Time-series',
         geography: 'US, EU',
         confidenceScore: 91,
+        providerTrustScore: 89,
         verificationStatus: 'Verified',
         lastUpdated: '2026-02-13',
         size: '890 GB',
@@ -276,6 +286,13 @@ const confidenceColor = (score: number) => {
     return 'text-rose-300'
 }
 
+const providerTrustColor = (score: number) => {
+    if (score >= 95) return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' }
+    if (score >= 85) return { text: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-400/40' }
+    if (score >= 75) return { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-400/40' }
+    return { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-400/40' }
+}
+
 const toShortTrustLabel = (trust: string) => {
     if (trust.toLowerCase().includes('high confidence')) return 'High confidence'
     if (trust.toLowerCase().includes('verified')) return 'Verified'
@@ -297,6 +314,14 @@ export default function DatasetsPage() {
     const [selectedVerification, setSelectedVerification] = useState<'All' | Dataset['verificationStatus']>('All')
     const [selectedFreshness, setSelectedFreshness] = useState('All')
     const [minConfidence, setMinConfidence] = useState(0)
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false)
+        }, 1500)
+        return () => clearTimeout(timer)
+    }, [])
 
     const filtered = useMemo(() => {
         return DATASETS.filter(d => {
@@ -324,22 +349,27 @@ export default function DatasetsPage() {
 
             {/* Search */}
             <div className="mb-6">
+                <label htmlFor="dataset-search" className="sr-only">Search datasets</label>
                 <input
+                    id="dataset-search"
                     type="text"
                     placeholder="Search by title or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                    aria-describedby="search-hint"
                 />
+                <span id="search-hint" className="sr-only">Type to filter datasets by title or description</span>
             </div>
 
             {/* Filters */}
-            <div className="mb-8 bg-slate-800 rounded-lg p-6 border border-slate-700">
+            <div className="mb-8 bg-slate-800 rounded-lg p-6 border border-slate-700" role="search" aria-label="Dataset filters">
                 <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Domain</label>
+                        <label htmlFor="filter-domain" className="block text-sm text-slate-300 mb-2">Domain</label>
                         <select
+                            id="filter-domain"
                             value={selectedDomain}
                             onChange={(e) => setSelectedDomain(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -348,8 +378,9 @@ export default function DatasetsPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Data type</label>
+                        <label htmlFor="filter-type" className="block text-sm text-slate-300 mb-2">Data type</label>
                         <select
+                            id="filter-type"
                             value={selectedType}
                             onChange={(e) => setSelectedType(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -358,8 +389,9 @@ export default function DatasetsPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Geography</label>
+                        <label htmlFor="filter-geo" className="block text-sm text-slate-300 mb-2">Geography</label>
                         <select
+                            id="filter-geo"
                             value={selectedGeo}
                             onChange={(e) => setSelectedGeo(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -368,8 +400,9 @@ export default function DatasetsPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Freshness</label>
+                        <label htmlFor="filter-freshness" className="block text-sm text-slate-300 mb-2">Freshness</label>
                         <select
+                            id="filter-freshness"
                             value={selectedFreshness}
                             onChange={(e) => setSelectedFreshness(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -378,8 +411,9 @@ export default function DatasetsPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Verification</label>
+                        <label htmlFor="filter-verification" className="block text-sm text-slate-300 mb-2">Verification</label>
                         <select
+                            id="filter-verification"
                             value={selectedVerification}
                             onChange={(e) => setSelectedVerification(e.target.value as typeof selectedVerification)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -388,8 +422,9 @@ export default function DatasetsPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-300 mb-2">Minimum confidence</label>
+                        <label htmlFor="filter-confidence" className="block text-sm text-slate-300 mb-2">Minimum confidence</label>
                         <select
+                            id="filter-confidence"
                             value={minConfidence}
                             onChange={(e) => setMinConfidence(Number(e.target.value))}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -402,94 +437,138 @@ export default function DatasetsPage() {
                 </div>
             </div>
 
-            <div className="mb-6 text-slate-400">
-                Showing <span className="text-white font-semibold">{filtered.length}</span> of{' '}
-                <span className="text-white font-semibold">{DATASETS.length}</span> datasets
+            <div className="mb-6 text-slate-400" role="status" aria-live="polite">
+                {isLoading ? (
+                    <span>Loading datasets...</span>
+                ) : (
+                    <>
+                        Showing <span className="text-white font-semibold">{filtered.length}</span> of{' '}
+                        <span className="text-white font-semibold">{DATASETS.length}</span> datasets
+                    </>
+                )}
             </div>
 
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 md:gap-9">
-                {filtered.map(dataset => (
-                    <div
-                        key={dataset.id}
-                        className="h-full rounded-2xl border border-slate-700/80 bg-slate-800/70 px-4 py-4 shadow-[0_12px_28px_-20px_rgba(2,132,199,0.35)] backdrop-blur-sm flex flex-col"
-                    >
-                        <div className="mb-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-3">
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Confidence</span>
-                                <span className={`text-2xl font-bold leading-none ${confidenceColor(dataset.confidenceScore)}`}>{dataset.confidenceScore}%</span>
+            {isLoading ? (
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 md:gap-9" aria-busy="true" aria-label="Loading datasets">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <DatasetCardSkeleton key={i} />
+                    ))}
+                </div>
+            ) : filtered.length > 0 ? (
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 md:gap-9">
+                    {filtered.map(dataset => (
+                        <div
+                            key={dataset.id}
+                            className="h-full rounded-2xl border border-slate-700/80 bg-slate-800/70 px-4 py-4 shadow-[0_12px_28px_-20px_rgba(2,132,199,0.35)] backdrop-blur-sm flex flex-col"
+                        >
+                            <div className="mb-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-3">
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Confidence</span>
+                                    <span className={`text-2xl font-bold leading-none ${confidenceColor(dataset.confidenceScore)}`}>{dataset.confidenceScore}%</span>
+                                </div>
+                                <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-slate-700/80">
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400"
+                                        style={{ width: `${dataset.confidenceScore}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-slate-700/80">
-                                <div
-                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400"
-                                    style={{ width: `${dataset.confidenceScore}%` }}
-                                />
-                            </div>
-                        </div>
 
-                        <div className="mb-3 flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h3 className="text-[15px] font-bold leading-tight text-white">{dataset.title}</h3>
-                                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{dataset.description}</p>
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end gap-1.5">
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${badgeColors[dataset.verificationStatus]}`}>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-90" />
-                                    {dataset.verificationStatus}
-                                </span>
-                                <span className="inline-flex items-center rounded-full border border-slate-600 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-200">
-                                    {toShortTrustLabel(dataset.contributorTrust)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="mb-3 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[11px] text-slate-300">
-                            <span className="rounded-full border border-slate-600/80 bg-slate-900/70 px-2.5 py-1">Domain: {dataset.domain}</span>
-                            <span className="rounded-full border border-slate-600/80 bg-slate-900/70 px-2.5 py-1">Type: {dataset.dataType}</span>
-                        </div>
-
-                        <div className="mb-4 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 text-[11px]">
-                                {([
-                                    { label: 'Completeness', value: dataset.completeness, short: 'C' },
-                                    { label: 'Freshness', value: dataset.freshness, short: 'F' },
-                                    { label: 'Consistency', value: dataset.consistency, short: 'S' }
-                                ] as const).map(metric => (
-                                    <span
-                                        key={metric.label}
-                                        title={`${metric.label}: ${metric.value}%`}
-                                        aria-label={`${metric.label}: ${metric.value}%`}
-                                        className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-2 font-semibold cursor-help ${compactMetricPillClasses[metric.label]}`}
-                                    >
-                                        {metric.short}
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <h3 className="text-[15px] font-bold leading-tight text-white">{dataset.title}</h3>
+                                    <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{dataset.description}</p>
+                                </div>
+                                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${badgeColors[dataset.verificationStatus]}`} role="status">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-90" />
+                                        {dataset.verificationStatus}
                                     </span>
-                                ))}
+                                </div>
                             </div>
-                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] ${accessBadgeColors[dataset.accessType]}`}>
-                                {dataset.accessType}
-                            </span>
-                        </div>
 
-                        <div className="text-[11px] text-slate-500">
-                            <span>Range: {dataset.timeRange}</span>
-                            <span className="mx-2 text-slate-600">|</span>
-                            <span>{dataset.geography}</span>
-                        </div>
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[11px] text-slate-300" role="list" aria-label="Dataset attributes">
+                                    <span className="rounded-full border border-slate-600/80 bg-slate-900/70 px-2.5 py-1" role="listitem">Domain: {dataset.domain}</span>
+                                    <span className="rounded-full border border-slate-600/80 bg-slate-900/70 px-2.5 py-1" role="listitem">Type: {dataset.dataType}</span>
+                                </div>
+                            </div>
 
-                        <div className="mt-auto pt-4 flex justify-center">
-                            <Link
-                                to={`/datasets/${dataset.id}`}
-                                className="inline-flex w-full items-center justify-center rounded-xl border border-blue-500 bg-transparent px-6 py-3.5 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                            >
-                                View Details
-                            </Link>
+                            <div className="mb-3">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Provider Trust</span>
+                                    <span className={`text-sm font-bold ${providerTrustColor(dataset.providerTrustScore).text}`}>
+                                        {dataset.providerTrustScore}%
+                                    </span>
+                                </div>
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-700/80">
+                                    <div
+                                        className={`h-full rounded-full bg-gradient-to-r ${
+                                            dataset.providerTrustScore >= 90 ? 'from-emerald-500 to-cyan-400' :
+                                            dataset.providerTrustScore >= 80 ? 'from-cyan-500 to-blue-400' :
+                                            'from-amber-500 to-orange-400'
+                                        }`}
+                                        style={{ width: `${dataset.providerTrustScore}%` }}
+                                    />
+                                </div>
+                                <div className="mt-1.5 flex items-center justify-between">
+                                    <span className="text-[10px] text-slate-400">
+                                        {toShortTrustLabel(dataset.contributorTrust)}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500">
+                                        {dataset.contributionHistory}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-[11px]" role="list" aria-label="Quality metrics">
+                                    {([
+                                        { label: 'Completeness', value: dataset.completeness, short: 'C' },
+                                        { label: 'Freshness', value: dataset.freshness, short: 'F' },
+                                        { label: 'Consistency', value: dataset.consistency, short: 'S' }
+                                    ] as const).map(metric => (
+                                        <span
+                                            key={metric.label}
+                                            title={`${metric.label}: ${metric.value}%`}
+                                            aria-label={`${metric.label}: ${metric.value}%`}
+                                            className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-2 font-semibold cursor-help ${compactMetricPillClasses[metric.label]}`}
+                                            role="listitem"
+                                        >
+                                            {metric.short}
+                                        </span>
+                                    ))}
+                                </div>
+                                <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] ${accessBadgeColors[dataset.accessType]}`}>
+                                    {dataset.accessType}
+                                </span>
+                            </div>
+
+                            <div className="text-[11px] text-slate-500">
+                                <span>Range: {dataset.timeRange}</span>
+                                <span className="mx-2 text-slate-600">|</span>
+                                <span>{dataset.geography}</span>
+                            </div>
+
+                            <div className="mt-auto pt-4 flex justify-center">
+                                <Link
+                                    to={`/datasets/${dataset.id}`}
+                                    className="inline-flex w-full items-center justify-center rounded-xl border border-blue-500 bg-transparent px-6 py-3.5 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                                    aria-label={`View details for ${dataset.title}`}
+                                >
+                                    View Details
+                                </Link>
+                            </div>
                         </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12" role="status">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
-                ))}
-            </div>
-
-            {filtered.length === 0 && (
-                <div className="text-center py-12">
-                    <div className="text-slate-500 text-4xl mb-4">🔒</div>
                     <h3 className="text-xl font-semibold text-white mb-2">No datasets match these filters</h3>
                     <p className="text-slate-400">Adjust filters to discover verified datasets. Data stays locked until approved.</p>
                 </div>
