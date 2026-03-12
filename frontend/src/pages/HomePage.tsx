@@ -423,23 +423,30 @@ export default function HomePage() {
                     <div ref={statsRef.ref} className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto grid grid-cols-3 gap-6">
                             {[
-                                { value: datasetsCount.toLocaleString() + '+', label: 'Verified Datasets', icon: (
+                                { value: datasetsCount.toLocaleString() + '+', label: 'Verified Datasets', demo: true, icon: (
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 )},
-                                { value: verifiedCount + '%', label: 'Accuracy Rate', icon: (
+                                { value: verifiedCount + '%', label: 'Accuracy Rate', demo: true, icon: (
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 )},
-                                { value: partnersCount + '+', label: 'Trusted Partners', icon: (
+                                { value: partnersCount + '+', label: 'Trusted Partners', demo: true, icon: (
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 )},
                             ].map((stat) => (
-                                <div key={stat.label} className="glass rounded-2xl p-6 text-center cyber-glow">
+                                <div key={stat.label} className="glass rounded-2xl p-6 text-center cyber-glow relative">
+                                    {stat.demo && (
+                                        <div className="absolute top-3 right-3">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/40 text-[10px] font-medium text-amber-300">
+                                                Demo
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="w-10 h-10 mx-auto mb-3 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                                         {stat.icon}
                                     </div>
@@ -682,28 +689,47 @@ export default function HomePage() {
 
                         <div className="grid gap-6 md:grid-cols-3">
                             {[
-                                { name: 'Northbridge Research Labs', category: 'Healthcare AI Research' },
-                                { name: 'Meridian Capital Group', category: 'Financial Risk Analytics' },
-                                { name: 'ClearPath Government Solutions', category: 'Public Sector Data' },
-                                { name: 'Atlas Climate Institute', category: 'Environmental Research' },
-                                { name: 'Vantage Health Systems', category: 'Clinical Data Science' },
-                                { name: 'Quantum Finance Ltd', category: 'Algorithmic Trading' }
+                                { name: 'Northbridge Research Labs', category: 'Healthcare AI Research', logo: 'NR' },
+                                { name: 'Meridian Capital Group', category: 'Financial Risk Analytics', logo: 'MC' },
+                                { name: 'ClearPath Government Solutions', category: 'Public Sector Data', logo: 'CG' },
+                                { name: 'Atlas Climate Institute', category: 'Environmental Research', logo: 'AC' },
+                                { name: 'Vantage Health Systems', category: 'Clinical Data Science', logo: 'VH' },
+                                { name: 'Quantum Finance Ltd', category: 'Algorithmic Trading', logo: 'QF' }
                             ].map((partner) => (
                                 <div key={partner.name} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-white">{partner.name}</h3>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-lg font-bold text-cyan-400 shrink-0">
+                                            {partner.logo}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-semibold text-white truncate">{partner.name}</h3>
                                             <span className="mt-2 inline-flex items-center rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs text-slate-300">
                                                 {partner.category}
                                             </span>
                                         </div>
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 shrink-0">
                                             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                            Verified Participant
+                                            Verified
                                         </span>
                                     </div>
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="mt-10 max-w-md mx-auto">
+                            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-6 text-center">
+                                <h3 className="text-lg font-semibold text-white mb-2">Become a Partner</h3>
+                                <p className="text-sm text-slate-400 mb-4">
+                                    Join our network of verified data providers and researchers
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={handleRequestPlatformAccess}
+                                    className="w-full sm:w-auto px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
+                                >
+                                    Join Waitlist
+                                </button>
+                            </div>
                         </div>
 
                         <p className="mt-6 text-center text-xs text-slate-500">
