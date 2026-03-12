@@ -200,37 +200,46 @@ export default function DatasetDetailPage() {
             </div>
 
             {/* Access Section */}
-            <div className="container mx-auto px-4 pb-10">
-                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-8 space-y-6">
-                    <div className="flex flex-col lg:flex-row gap-6">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-xl font-semibold">Access</h3>
-                                <span className="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400 text-blue-200 text-xs">
-                                    Guided process
-                                </span>
-                            </div>
-                            <p className="text-slate-300 max-w-2xl mb-3">
-                                Request access with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.
-                            </p>
-                            <ul className="text-slate-400 text-sm space-y-2 list-disc list-inside">
-                                {dataset.accessNotes.map(note => (
-                                    <li key={note}>{note}</li>
-                                ))}
-                            </ul>
-
-                            <div className="mt-6">
+            <div className="container mx-auto px-4 pb-14">
+                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.22)]">
+                    <svg className="h-4 w-4 text-cyan-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold text-white">All Access Requests are Audited</span>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-9">
+                    <div className="flex flex-col lg:flex-row gap-10">
+                        {/* Left Column - Access Info, Request Status, Provider Transparency */}
+                        <div className="lg:w-2/3 space-y-8">
+                            <div>
                                 <div className="flex items-center gap-3 mb-3">
+                                    <h3 className="text-xl font-semibold">Access</h3>
+                                    <span className="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400 text-blue-200 text-xs">
+                                        Guided process
+                                    </span>
+                                </div>
+                                <p className="text-slate-300 max-w-2xl mb-4">
+                                    Request access with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.
+                                </p>
+                                <ul className="text-slate-400 text-sm space-y-2 list-disc list-inside">
+                                    {dataset.accessNotes.map(note => (
+                                        <li key={note}>{note}</li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center gap-3 mb-4">
                                     <h4 className="text-lg font-semibold text-white">Request status</h4>
                                     <span className="text-slate-500 text-sm">Transparent milestones, no provider exposure.</span>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     {STATUS_STEPS.map(step => {
                                         const isActive = step.id === requestStatus
                                         return (
                                             <div
                                                 key={step.id}
-                                                className={`rounded-lg border p-4 ${isActive
+                                                className={`rounded-xl border p-5 ${isActive
                                                         ? 'border-blue-400 bg-blue-500/10 shadow-lg'
                                                         : 'border-slate-700 bg-slate-900/60'
                                                     }`}
@@ -247,73 +256,104 @@ export default function DatasetDetailPage() {
                                     })}
                                 </div>
                             </div>
+
+                            <div className="rounded-2xl border border-slate-700 bg-slate-900/40 p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <span className="px-3 py-1 rounded-full bg-green-500/15 border border-green-400 text-green-200 text-xs">
+                                        Provider verified
+                                    </span>
+                                    <span className="text-slate-400 text-sm">Identity protected; delivery handled by platform.</span>
+                                </div>
+                                <h3 className="text-xl font-semibold mb-2">Provider Transparency</h3>
+                                <p className="text-slate-300 mb-5">
+                                    Essential information to evaluate trust without exposing the provider's identity.
+                                </p>
+                                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                    {dataset.providerNotes.map(note => (
+                                        <div key={note} className="bg-slate-950/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-200">
+                                            {note}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="w-full lg:w-80 bg-slate-900/80 border border-slate-700 rounded-xl p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="text-sm text-slate-400">Current status</div>
-                                <span
-                                    className={`px-3 py-1 rounded-full border text-xs ${requestStatus === 'approved'
-                                            ? 'bg-green-500/15 border-green-400 text-green-200'
-                                            : requestStatus === 'pending'
-                                                ? 'bg-yellow-500/15 border-yellow-400 text-yellow-200'
-                                                : 'bg-red-500/15 border-red-400 text-red-200'
-                                        }`}
-                                >
-                                    {requestStatus === 'approved'
-                                        ? 'Approved'
-                                        : requestStatus === 'pending'
-                                            ? 'Pending review'
-                                            : 'Rejected'}
-                                </span>
-                            </div>
-                            <p className="text-slate-300 text-sm mb-4">
-                                {requestStatus === 'approved' && 'Access configured. Review scope and instructions below.'}
-                                {requestStatus === 'pending' && 'We received your request. A reviewer will follow up with controls and delivery steps.'}
-                                {requestStatus === 'rejected' && 'Request declined. We can suggest alternate sources or share summary stats.'}
-                            </p>
-
-                            <div className="border-t border-slate-800 pt-4">
+                        {/* Right Column - Current Status & Secure Access Options */}
+                        <div className="lg:w-1/3 space-y-6">
+                            <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm font-semibold text-white">Choose Access Method</h4>
+                                    <div className="text-sm text-slate-400">Current status</div>
+                                    <span
+                                        className={`px-3 py-1 rounded-full border text-xs ${requestStatus === 'approved'
+                                                ? 'bg-green-500/15 border-green-400 text-green-200'
+                                                : requestStatus === 'pending'
+                                                    ? 'bg-yellow-500/15 border-yellow-400 text-yellow-200'
+                                                    : 'bg-red-500/15 border-red-400 text-red-200'
+                                            }`}
+                                    >
+                                        {requestStatus === 'approved'
+                                            ? 'Approved'
+                                            : requestStatus === 'pending'
+                                                ? 'Pending review'
+                                                : 'Rejected'}
+                                    </span>
+                                </div>
+                                <p className="text-slate-300 text-sm">
+                                    {requestStatus === 'approved' && 'Access configured. Review scope and instructions below.'}
+                                    {requestStatus === 'pending' && 'We received your request. A reviewer will follow up with controls and delivery steps.'}
+                                    {requestStatus === 'rejected' && 'Request declined. We can suggest alternate sources or share summary stats.'}
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5 space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-base font-semibold text-white">Secure Access Options</h4>
                                     <span className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Access Options</span>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div className="rounded-xl border border-emerald-500/30 bg-slate-950/60 p-4">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-white">Escrow Access</p>
-                                                <p className="text-xs text-slate-400 mt-1">
-                                                    Payment held securely until you verify data quality
-                                                </p>
+                                {/* Side-by-side access option cards */}
+                                <div className="grid grid-cols-1 gap-4">
+                                    {/* Escrow Access */}
+                                    <div className="rounded-2xl border border-emerald-500/30 bg-slate-950/60 p-5">
+                                        <div className="flex items-start justify-between gap-3 mb-4">
+                                            <div className="flex items-start gap-3">
+                                                <span className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.12)]">
+                                                    <svg className="h-4 w-4 text-emerald-200/90" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                        <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                                <div>
+                                                    <p className="text-base font-semibold text-white">Escrow Access</p>
+                                                    <p className="text-xs text-slate-400 mt-1">
+                                                        Payment held until you verify data quality
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
-                                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                    <path d="M10 1.5l2.47 5 5.53.8-4 3.9.95 5.5L10 14.9 5.05 16.7l.95-5.5-4-3.9 5.53-.8L10 1.5z" />
-                                                </svg>
-                                                Recommended
-                                            </span>
                                         </div>
-
-                                        <div className="mt-3 space-y-3">
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-200 mb-3">
+                                            <svg className="w-2.5 h-2.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path d="M10 1.5l2.47 5 5.53.8-4 3.9.95 5.5L10 14.9 5.05 16.7l.95-5.5-4-3.9 5.53-.8L10 1.5z" />
+                                            </svg>
+                                            Recommended
+                                        </span>
+                                        <div className="space-y-3">
                                             <div>
-                                                <label className="block text-xs uppercase tracking-[0.14em] text-slate-500 mb-2">
+                                                <label className="block text-xs uppercase tracking-[0.12em] text-slate-500 mb-1.5">
                                                     Escrow window
                                                 </label>
                                                 <select
                                                     value={escrowWindow}
                                                     onChange={(event) => setEscrowWindow(event.target.value)}
-                                                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400"
+                                                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400"
                                                 >
-                                                    <option value="24 hours">24 hours - Standard (default)</option>
-                                                    <option value="48 hours">48 hours - Extended (+10%)</option>
-                                                    <option value="72 hours">72 hours - Research (+20%)</option>
+                                                    <option value="24 hours">24 hours</option>
+                                                    <option value="48 hours">48 hours (+10%)</option>
+                                                    <option value="72 hours">72 hours (+20%)</option>
                                                 </select>
                                             </div>
-                                            <p className="text-xs text-slate-400">If unsatisfied, full refund within window</p>
+                                            <p className="text-xs text-slate-400">Full refund if unsatisfied</p>
                                             <button
-                                                className="w-full px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+                                                className="w-full px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-semibold transition-colors"
                                                 onClick={() => setEscrowActive(true)}
                                             >
                                                 Put on Escrow
@@ -321,36 +361,43 @@ export default function DatasetDetailPage() {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-xl border border-slate-700 bg-slate-950/50 p-4">
-                                        <div>
-                                            <p className="text-sm font-semibold text-white">Direct Purchase</p>
-                                            <p className="text-xs text-slate-400 mt-1">Immediate access, no refund guarantee</p>
+                                    {/* Direct Secure Access */}
+                                    <div className="rounded-2xl border border-slate-600/50 bg-slate-950/40 p-5">
+                                        <div className="flex items-start gap-3 mb-3">
+                                            <span className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/60">
+                                                <svg className="h-4 w-4 text-slate-200/90" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
+                                                </svg>
+                                            </span>
+                                            <div>
+                                                <p className="text-base font-semibold text-white">Direct Secure Access</p>
+                                                <p className="text-xs text-slate-400 mt-1">Immediate access, no refund</p>
+                                            </div>
                                         </div>
-                                        <p className="mt-3 text-xs text-amber-200/80">
-                                            Higher risk - recommended only for known providers
+                                        <p className="text-xs text-amber-200/70 mb-3">
+                                            Higher risk - known providers only
                                         </p>
-                                        <button className="mt-4 w-full px-4 py-2.5 rounded-lg border border-slate-600 text-slate-200 hover:border-slate-400 hover:text-white transition-colors">
-                                            Direct Purchase
+                                        <button className="w-full px-3 py-2.5 rounded-lg border border-slate-600 text-sm text-slate-200 hover:border-slate-400 hover:text-white transition-colors">
+                                            Direct Secure Access
                                         </button>
                                     </div>
                                 </div>
 
-                                <p className="mt-3 text-[11px] text-slate-500">
-                                    Redoubt holds payment in escrow and releases to provider only after buyer confirmation or
-                                    window expiry
+                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                    Redoubt holds payment in escrow and releases to provider only after buyer confirmation or window expiry.
                                 </p>
 
                                 {escrowActive && (
-                                    <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-                                        <div className="flex items-center justify-between text-sm text-amber-200">
+                                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                                        <div className="flex items-center justify-between text-sm text-amber-200 mb-3">
                                             <span className="font-semibold">Escrow Active - 23:47:12 remaining</span>
                                             <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                                         </div>
-                                        <div className="mt-3 grid gap-2">
-                                            <button className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white">
+                                        <div className="grid gap-2">
+                                            <button className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">
                                                 Confirm & Release Payment
                                             </button>
-                                            <button className="w-full rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">
+                                            <button className="w-full rounded-lg border border-rose-500/60 px-3 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">
                                                 Dispute & Refund
                                             </button>
                                         </div>
@@ -358,7 +405,7 @@ export default function DatasetDetailPage() {
                                 )}
                             </div>
 
-                            <div className="text-xs text-slate-500 mt-3">
+                            <div className="text-xs text-slate-500">
                                 Provider identity remains shielded; communication is routed through the platform.
                             </div>
                         </div>
@@ -401,28 +448,6 @@ export default function DatasetDetailPage() {
                 </div>
             </div>
 
-            {/* Provider Transparency */}
-                    <div className="container mx-auto px-4 pb-14">
-                        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-8">
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="px-3 py-1 rounded-full bg-green-500/15 border border-green-400 text-green-200 text-xs">
-                                    Provider verified
-                                </span>
-                                <span className="text-slate-400 text-sm">Identity protected; delivery handled by platform.</span>
-                            </div>
-                            <h3 className="text-xl font-semibold mb-2">Provider Transparency</h3>
-                            <p className="text-slate-300 mb-4">
-                                Essential information to evaluate trust without exposing the provider's identity.
-                            </p>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                {dataset.providerNotes.map(note => (
-                                    <div key={note} className="bg-slate-900/60 border border-slate-700 rounded-xl p-4 text-slate-200">
-                                        {note}
-                            </div>
-                        ))}
-                    </div>
-                        </div>
-                    </div>
             {showRequestModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
                     <div

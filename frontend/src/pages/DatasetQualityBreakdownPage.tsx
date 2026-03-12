@@ -177,14 +177,16 @@ export default function DatasetQualityBreakdownPage() {
                     </div>
                 </div>
 
-                <div className="grid lg:grid-cols-2 gap-6">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-semibold">AI insight summary</h3>
-                            <span className="text-xs text-slate-400">Ollama-backed</span>
+                <div className="grid lg:grid-cols-[1.35fr_0.65fr] gap-10">
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-[0_0_40px_rgba(56,189,248,0.06)]">
+                        <div className="flex items-center justify-between gap-4">
+                            <h3 className="text-xl font-semibold">AI Insight</h3>
+                            <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-200">
+                                AI Evaluation Powered by Ollama
+                            </span>
                         </div>
                         <p className="text-slate-200 text-sm leading-relaxed">{dataset.preview.aiSummary}</p>
-                        <div className="bg-slate-900/60 border border-slate-700 rounded-xl overflow-hidden">
+                        <div className="bg-slate-900/60 border border-slate-600/60 rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(56,189,248,0.15),0_0_30px_rgba(56,189,248,0.1)]">
                             <div className="px-4 py-3 border-b border-slate-700/80 flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-white">Ask AI about this dataset</h4>
                                 <span className="text-[11px] text-slate-400">Model: {ollamaConfig.model}</span>
@@ -194,7 +196,7 @@ export default function DatasetQualityBreakdownPage() {
                                 {chatMessages.map(message => (
                                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                         <div
-                                            className={`max-w-[86%] rounded-2xl px-3 py-2 text-sm leading-relaxed border ${
+                                            className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm leading-relaxed border ${
                                                 message.role === 'user'
                                                     ? 'bg-blue-600/20 border-blue-500/40 text-blue-100'
                                                     : 'bg-slate-800/90 border-slate-700 text-slate-200'
@@ -209,7 +211,7 @@ export default function DatasetQualityBreakdownPage() {
                                 ))}
                                 {isThinking && (
                                     <div className="flex justify-start">
-                                        <div className="max-w-[86%] rounded-2xl px-3 py-2 text-sm border bg-slate-800/90 border-slate-700 text-slate-300">
+                                        <div className="max-w-[90%] rounded-2xl px-3 py-2 text-sm border bg-slate-800/90 border-slate-700 text-slate-300">
                                             AI is thinking...
                                         </div>
                                     </div>
@@ -250,7 +252,7 @@ export default function DatasetQualityBreakdownPage() {
                         </p>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-5">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-semibold">AI Confidence Engine</h3>
                             <button
@@ -262,36 +264,42 @@ export default function DatasetQualityBreakdownPage() {
                         </div>
 
                         {showConfidence && (
-                            <div className="space-y-4">
-                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm text-slate-300">Confidence level</span>
+                            <div className="space-y-5">
+                                <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-6">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <div className="text-sm text-slate-300">Confidence Level</div>
+                                            <div className="mt-1 flex items-baseline gap-2">
+                                                <div className="text-5xl font-bold text-white">{dataset.confidenceScore}%</div>
+                                                <div className="text-xs text-slate-500">overall</div>
+                                            </div>
+                                        </div>
                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${confidenceLevel(dataset.confidenceScore).classes}`}>
                                             {confidenceLevel(dataset.confidenceScore).label}
                                         </span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
+
+                                    <div className="mt-6">
+                                        <div className="w-full bg-slate-800 rounded-full h-5 overflow-hidden">
+                                            <div className="h-full bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400" style={{ width: `${dataset.confidenceScore}%` }} />
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                                            <span>Low</span>
+                                            <span>High</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 grid grid-cols-3 gap-3">
                                         {[
-                                            { label: 'Completeness', value: dataset.preview.structureQuality },
                                             { label: 'Freshness', value: dataset.quality.freshnessScore },
                                             { label: 'Consistency', value: dataset.quality.consistency },
-                                            { label: 'Structure quality', value: dataset.preview.structureQuality }
+                                            { label: 'Structure', value: dataset.preview.structureQuality }
                                         ].map(item => (
-                                            <div key={item.label}>
-                                                <div className="text-slate-400">{item.label}</div>
-                                                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                                                    <div className="h-full bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400" style={{ width: `${item.value}%` }} />
-                                                </div>
-                                                <div className="text-xs text-slate-300 mt-1">{item.value}%</div>
+                                            <div key={item.label} className="bg-slate-950/40 border border-slate-700/50 rounded-lg p-3 text-center">
+                                                <div className="text-xs text-slate-400 mb-1">{item.label}</div>
+                                                <div className="text-lg font-bold text-white">{item.value}%</div>
                                             </div>
                                         ))}
-                                        <div>
-                                            <div className="text-slate-400">Anomaly risk</div>
-                                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                                                <div className="h-full bg-amber-400" style={{ width: `${dataset.preview.anomalyRisk}%` }} />
-                                            </div>
-                                            <div className="text-xs text-slate-300 mt-1">{dataset.preview.anomalyRisk}% flagged</div>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -317,62 +325,77 @@ export default function DatasetQualityBreakdownPage() {
                                     )}
                                 </div>
 
-                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-4 space-y-3">
+                                <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-semibold text-white">Preview safety</span>
                                         <span className="text-xs text-slate-400">No raw rows shown</span>
                                     </div>
-                                    <div className="text-xs text-slate-300">Record count range: {dataset.preview.recordCountRange}</div>
-                                    <div className="text-xs uppercase tracking-wide text-slate-500">Schema glimpse</div>
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full text-xs">
-                                            <thead className="text-[10px] uppercase tracking-[0.1em] text-slate-400 border-b border-slate-700">
-                                                <tr>
-                                                    <th className="py-2 pr-3 text-left font-medium">Field</th>
-                                                    <th className="py-2 px-3 text-left font-medium">Type</th>
-                                                    <th className="py-2 px-3 text-left font-medium">Sample Value</th>
-                                                    <th className="py-2 pl-3 text-left font-medium">Description</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-800">
-                                                <tr>
-                                                    <td className="py-2 pr-3 text-white">station_id</td>
-                                                    <td className="py-2 px-3 text-slate-300">string</td>
-                                                    <td className="py-2 px-3 text-slate-300">"STN-00142"</td>
-                                                    <td className="py-2 pl-3 text-slate-400">Unique station identifier</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="py-2 pr-3 text-white">timestamp_utc</td>
-                                                    <td className="py-2 px-3 text-slate-300">datetime</td>
-                                                    <td className="py-2 px-3 text-slate-300">"2026-01-15 08:00:00"</td>
-                                                    <td className="py-2 pl-3 text-slate-400">UTC timestamp of reading</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="py-2 pr-3 text-white">temperature_c</td>
-                                                    <td className="py-2 px-3 text-slate-300">float</td>
-                                                    <td className="py-2 px-3 text-slate-300">"23.4"</td>
-                                                    <td className="py-2 pl-3 text-slate-400">Temperature in Celsius</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="py-2 pr-3 text-white">precip_mm</td>
-                                                    <td className="py-2 px-3 text-slate-300">float</td>
-                                                    <td className="py-2 px-3 text-slate-300">"0.0"</td>
-                                                    <td className="py-2 pl-3 text-slate-400">Precipitation in millimeters</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="py-2 pr-3 text-white">wind_speed_ms</td>
-                                                    <td className="py-2 px-3 text-slate-300">float</td>
-                                                    <td className="py-2 px-3 text-slate-300">"4.2"</td>
-                                                    <td className="py-2 pl-3 text-slate-400">Wind speed in meters/second</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs">
+                                        <span className="text-slate-400">Record count range</span>
+                                        <span className="text-slate-200">{dataset.preview.recordCountRange}</span>
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
+
+                <details className="mt-8 rounded-2xl border border-slate-700 bg-slate-800/60 overflow-hidden">
+                    <summary className="cursor-pointer select-none px-6 py-5 flex items-center justify-between">
+                        <div>
+                            <div className="text-base font-semibold text-white">Schema Glimpse</div>
+                            <div className="text-xs text-slate-400 mt-1">Preview-only fields (no raw rows)</div>
+                        </div>
+                        <span className="text-xs text-slate-400">Click to expand</span>
+                    </summary>
+                    <div className="border-t border-slate-700 bg-slate-900/40 px-6 py-5">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs">
+                                <thead className="text-[10px] uppercase tracking-[0.1em] text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th className="py-2 pr-3 text-left font-medium">Field</th>
+                                        <th className="py-2 px-3 text-left font-medium">Type</th>
+                                        <th className="py-2 px-3 text-left font-medium">Sample Value</th>
+                                        <th className="py-2 pl-3 text-left font-medium">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    <tr>
+                                        <td className="py-2 pr-3 text-white">station_id</td>
+                                        <td className="py-2 px-3 text-slate-300">string</td>
+                                        <td className="py-2 px-3 text-slate-300">"STN-00142"</td>
+                                        <td className="py-2 pl-3 text-slate-400">Unique station identifier</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-2 pr-3 text-white">timestamp_utc</td>
+                                        <td className="py-2 px-3 text-slate-300">datetime</td>
+                                        <td className="py-2 px-3 text-slate-300">"2026-01-15 08:00:00"</td>
+                                        <td className="py-2 pl-3 text-slate-400">UTC timestamp of reading</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-2 pr-3 text-white">temperature_c</td>
+                                        <td className="py-2 px-3 text-slate-300">float</td>
+                                        <td className="py-2 px-3 text-slate-300">"23.4"</td>
+                                        <td className="py-2 pl-3 text-slate-400">Temperature in Celsius</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-2 pr-3 text-white">precip_mm</td>
+                                        <td className="py-2 px-3 text-slate-300">float</td>
+                                        <td className="py-2 px-3 text-slate-300">"0.0"</td>
+                                        <td className="py-2 pl-3 text-slate-400">Precipitation in millimeters</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-2 pr-3 text-white">wind_speed_ms</td>
+                                        <td className="py-2 px-3 text-slate-300">float</td>
+                                        <td className="py-2 px-3 text-slate-300">"4.2"</td>
+                                        <td className="py-2 pl-3 text-slate-400">Wind speed in meters/second</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </details>
+
             </div>
         </div>
     )
