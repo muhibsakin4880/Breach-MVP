@@ -73,6 +73,65 @@ export default function ApplicationStatusPage() {
                     </p>
                 </div>
 
+                <div className="mb-8 overflow-x-auto pb-1">
+                    <div className="min-w-[760px] flex items-start">
+                        {[
+                            'Organization & Identity',
+                            'Intended Platform Usage',
+                            'Participation Intent',
+                            'Verification & Credentials',
+                            'Zero-Trust Pipeline Agreement'
+                        ].map((title, idx) => {
+                            const currentStep = idx + 1
+                            const done = currentStep < 5
+                            return (
+                                <div key={title} className="flex items-center flex-1 last:flex-none">
+                                    <div className="w-32">
+                                        <div
+                                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-bold ${
+                                                done
+                                                    ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
+                                                    : 'border-slate-700 bg-slate-900 text-slate-500'
+                                            }`}
+                                        >
+                                            {done ? (
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    className="w-6 h-6"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.75"
+                                                >
+                                                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            ) : (
+                                                currentStep
+                                            )}
+                                        </div>
+                                        <div className="mt-2 text-[11px] uppercase tracking-[0.1em] text-slate-500">
+                                            Step {currentStep}
+                                        </div>
+                                        <div
+                                            className={`mt-1 text-xs font-semibold leading-4 ${
+                                                done ? 'text-emerald-200' : 'text-slate-500'
+                                            }`}
+                                        >
+                                            {title}
+                                        </div>
+                                    </div>
+                                    {idx < 4 && (
+                                        <div
+                                            className={`h-[2px] flex-1 mx-2 rounded-full ${
+                                                done ? 'bg-emerald-400/70' : 'bg-slate-700'
+                                            }`}
+                                        />
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
                 <div className="bg-[#020817] border border-slate-800 rounded-2xl p-6 md:p-8 space-y-8 shadow-[0_24px_60px_rgba(2,8,23,0.55)]">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-3">
