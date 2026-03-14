@@ -14,10 +14,54 @@ type OnboardingFormState = {
     responsibleDataUsage: boolean
     noUnauthorizedSharing: boolean
     platformCompliancePolicies: boolean
+    customOperationText: string
+    processingJurisdiction: string
+    dataTTL: string
+    externalAPIs: boolean
+    externalAPIDetails: string
+    electronicSignature: string
 }
 
-const usageOptions = ['Research', 'AI/ML training', 'Analytics', 'Product development', 'Other usage']
-const participationOptions = ['Access datasets', 'Contribute datasets', 'Collaborate', 'Research participation']
+const usageCategories = [
+    {
+        id: 'algorithmic',
+        label: 'Algorithmic Training & Fine-Tuning',
+        subOptions: ['Computer Vision Models', 'NLP & Text Analysis', 'Recommendation Systems', 'Predictive Analytics', 'Anomaly Detection'],
+        riskTier: 'high' as const
+    },
+    {
+        id: 'internal',
+        label: 'Internal Business Intelligence',
+        subOptions: ['Dashboards & Reporting', 'Performance Metrics', 'Customer Analytics', 'Supply Chain Optimization', 'Workforce Analytics'],
+        riskTier: 'standard' as const
+    },
+    {
+        id: 'financial',
+        label: 'Financial & Quantitative Modeling',
+        subOptions: ['Algorithmic Trading', 'Credit Risk Scoring', 'Fraud Detection', 'Portfolio Optimization', 'Market Simulation'],
+        riskTier: 'high' as const
+    },
+    {
+        id: 'academic',
+        label: 'Academic / Non-Profit Research',
+        subOptions: ['Public Policy Studies', 'Epidemiological Research', 'Environmental Analysis', 'Social Science Studies', 'Open Data Initiatives'],
+        riskTier: 'standard' as const
+    },
+    {
+        id: 'commercial',
+        label: 'Commercial Product Integration',
+        subOptions: ['SaaS Platform Features', 'Mobile Application', 'Embedded Analytics', 'API Services', 'Enterprise Solutions'],
+        riskTier: 'high' as const
+    },
+    {
+        id: 'custom',
+        label: 'Custom Operation',
+        subOptions: [],
+        riskTier: 'high' as const
+    }
+]
+
+const participationOptions = ['Data Consumer (Ingest & Analyze)', 'Data Provider (Contribute & Monetize)', 'Compliance / Legal Auditor']
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
 
@@ -36,8 +80,7 @@ const stepTitles = [
     'Intended Platform Usage',
     'Participation Intent',
     'Verification & Credentials',
-    'Compliance Commitment',
-    'Submission Confirmation'
+    'Zero-Trust Pipeline Agreement'
 ]
 
 const isWorkEmail = (value: string) => /^[^\s@]+@[^\s@]+$/.test(value)
@@ -48,7 +91,7 @@ const isCorporateEmail = (value: string) => {
 }
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-const generateReferenceId = () => `#BRE-2026-${Math.floor(1000 + Math.random() * 9000)}`
+const generateReferenceId = () => `#RDT-2026-${Math.floor(1000 + Math.random() * 9000)}`
 
 const formatSubmissionDate = (date: Date) =>
     date.toLocaleDateString('en-US', {
@@ -94,8 +137,16 @@ export default function OnboardingPage() {
         participationIntent: [],
         responsibleDataUsage: false,
         noUnauthorizedSharing: false,
-        platformCompliancePolicies: false
+        platformCompliancePolicies: false,
+        customOperationText: '',
+        processingJurisdiction: '',
+        dataTTL: '',
+        externalAPIs: false,
+        externalAPIDetails: '',
+        electronicSignature: ''
     })
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+    const [showAdvancedCompliance, setShowAdvancedCompliance] = useState(false)
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isLinkedInLoading, setIsLinkedInLoading] = useState(false)
     const [isLinkedInConnected, setIsLinkedInConnected] = useState(false)
@@ -104,6 +155,8 @@ export default function OnboardingPage() {
     const [affiliationError, setAffiliationError] = useState<string | null>(null)
     const [authorizationError, setAuthorizationError] = useState<string | null>(null)
     const [dragTarget, setDragTarget] = useState<'affiliation' | 'authorization' | null>(null)
+    const [isDNSVerifying, setIsDNSVerifying] = useState(false)
+    const [isDomainVerified, setIsDomainVerified] = useState(false)
 
     useEffect(() => {
         return () => {
@@ -123,6 +176,43 @@ export default function OnboardingPage() {
         })
     }
 
+    const toggleCategory = (categoryId: string) => {
+        setExpandedCategories(prev => {
+            const next = new Set(prev)
+            if (next.has(categoryId)) {
+                next.delete(categoryId)
+            } else {
+                next.add(categoryId)
+            }
+            return next
+        })
+    }
+
+    const handleCategorySelect = (category: typeof usageCategories[0]) => {
+        const categoryFullLabel = category.label
+        const isSelected = state.intendedUsage.includes(categoryFullLabel)
+        
+        if (isSelected) {
+            setState(prev => ({
+                ...prev,
+                intendedUsage: prev.intendedUsage.filter(u => u !== categoryFullLabel)
+            }))
+            if (category.id === 'custom') {
+                setState(prev => ({ ...prev, customOperationText: '' }))
+            }
+        } else {
+            setState(prev => ({
+                ...prev,
+                intendedUsage: [...prev.intendedUsage, categoryFullLabel]
+            }))
+            setExpandedCategories(prev => new Set([...prev, category.id]))
+        }
+    }
+
+    const handleSubOptionSelect = (subOption: string, categoryLabel: string) => {
+        toggleValue('intendedUsage', subOption)
+    }
+
     const handleLinkedInConnect = () => {
         if (isLinkedInLoading || isLinkedInConnected) return
         setIsLinkedInLoading(true)
@@ -130,6 +220,15 @@ export default function OnboardingPage() {
             setIsLinkedInLoading(false)
             setIsLinkedInConnected(true)
         }, 1600)
+    }
+
+    const handleDNSVerification = () => {
+        if (isDNSVerifying || isDomainVerified) return
+        setIsDNSVerifying(true)
+        setTimeout(() => {
+            setIsDNSVerifying(false)
+            setIsDomainVerified(true)
+        }, 2000)
     }
 
     const handleFileSelection = (file: File | null | undefined, target: 'affiliation' | 'authorization') => {
@@ -180,18 +279,21 @@ export default function OnboardingPage() {
     const fillMockStep2 = () => {
         setState(prev => ({
             ...prev,
-            intendedUsage: ['Research', 'AI/ML training']
+            intendedUsage: ['Algorithmic Training & Fine-Tuning', 'Computer Vision Models', 'Internal Business Intelligence', 'Dashboards & Reporting'],
+            customOperationText: ''
         }))
+        setExpandedCategories(new Set(['algorithmic', 'internal']))
         setShowStepError(false)
     }
 
     const fillMockStep3 = () => {
         setState(prev => ({
             ...prev,
-            participationIntent: ['Access datasets', 'Collaborate'],
+            participationIntent: ['Data Consumer (Ingest & Analyze)'],
             responsibleDataUsage: true,
             noUnauthorizedSharing: true,
-            platformCompliancePolicies: true
+            platformCompliancePolicies: true,
+            electronicSignature: 'John Mitchell'
         }))
         setShowStepError(false)
     }
@@ -209,8 +311,9 @@ export default function OnboardingPage() {
         state.participationIntent.length > 0 &&
         state.responsibleDataUsage &&
         state.noUnauthorizedSharing &&
-        state.platformCompliancePolicies
-    const stepFourReady = isLinkedInConnected && Boolean(affiliationFileName) && Boolean(authorizationFileName)
+        state.platformCompliancePolicies &&
+        state.electronicSignature.trim().length > 0
+    const stepFourReady = isDomainVerified && Boolean(affiliationFileName) && Boolean(authorizationFileName)
     const stepFiveReady = state.responsibleDataUsage && state.noUnauthorizedSharing && state.platformCompliancePolicies
 
     const stepReady =
@@ -222,19 +325,18 @@ export default function OnboardingPage() {
                     ? stepThreeReady
                     : step === 4
                         ? stepFourReady
-                        : step === 5
-                            ? stepFiveReady
-                            : true
+                        : stepFiveReady
 
     useEffect(() => {
         if (stepReady) setShowStepError(false)
     }, [stepReady, step])
 
-    useEffect(() => {
-        if (accessStatus === 'pending' && step !== 6) {
-            navigate('/onboarding/confirmation', { replace: true })
-        }
-    }, [accessStatus, navigate, step])
+    // Temporarily disabled to debug redirect issue
+    // useEffect(() => {
+    //     if (accessStatus === 'pending' && step === 1) {
+    //         navigate('/onboarding/confirmation', { replace: true })
+    //     }
+    // }, [accessStatus, navigate, step])
 
     const next = () => {
         if (step >= 5) return
@@ -244,12 +346,11 @@ export default function OnboardingPage() {
         }
         setShowStepError(false)
         if (step === 4) {
-            // Prevent accidental immediate submit when users double-click Continue.
             setStep5SubmitUnlockAt(Date.now() + 400)
             setStep(5)
             return
         }
-        setStep(prev => Math.min(prev + 1, 6))
+        setStep(prev => Math.min(prev + 1, 5))
     }
 
     const back = () => {
@@ -282,7 +383,7 @@ export default function OnboardingPage() {
         setApplicationReference(referenceId)
         setSubmittedDate(submissionDate)
         setShowStepError(false)
-        setStep(6)
+        navigate('/application-status')
     }
 
     return (
@@ -436,25 +537,173 @@ export default function OnboardingPage() {
                                     Use mock data
                                 </button>
                             </div>
-                            <p className="text-sm text-slate-400">Select all that apply.</p>
-                            <div className="flex flex-wrap gap-2">
-                                {usageOptions.map(option => {
-                                    const active = state.intendedUsage.includes(option)
+                            <p className="text-sm text-slate-400">Select a category to view sub-options.</p>
+                            <div className="space-y-3">
+                                {usageCategories.map(category => {
+                                    const isCategorySelected = state.intendedUsage.includes(category.label)
+                                    const isExpanded = expandedCategories.has(category.id)
                                     return (
-                                        <button
-                                            key={option}
-                                            type="button"
-                                            onClick={() => toggleValue('intendedUsage', option)}
-                                            className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                                                active
-                                                    ? 'bg-blue-500/15 border-blue-400 text-blue-200 shadow-[0_0_0_1px_rgba(96,165,250,0.45),0_0_18px_rgba(59,130,246,0.35)]'
-                                                    : 'border-slate-700/80 bg-slate-900/70 text-slate-300 hover:border-slate-500'
-                                            }`}
-                                        >
-                                            {option}
-                                        </button>
+                                        <div key={category.id} className="space-y-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCategorySelect(category)}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-semibold transition-colors ${
+                                                    isCategorySelected
+                                                        ? 'bg-blue-500/15 border-blue-400 text-blue-200 shadow-[0_0_0_1px_rgba(96,165,250,0.45),0_0_18px_rgba(59,130,246,0.35)]'
+                                                        : 'border-slate-700/80 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                                }`}
+                                            >
+                                                <span>{category.label}</span>
+                                                <svg
+                                                    className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            {isExpanded && category.subOptions.length > 0 && (
+                                                <div className="ml-4 pl-4 border-l-2 border-slate-700/80 py-2">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {category.subOptions.map(subOption => {
+                                                            const isSubSelected = state.intendedUsage.includes(subOption)
+                                                            return (
+                                                                <button
+                                                                    key={subOption}
+                                                                    type="button"
+                                                                    onClick={() => handleSubOptionSelect(subOption, category.label)}
+                                                                    className={`px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors ${
+                                                                        isSubSelected
+                                                                            ? 'bg-cyan-500/15 border-cyan-400/50 text-cyan-300'
+                                                                            : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+                                                                    }`}
+                                                                >
+                                                                    {subOption}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {isExpanded && category.id === 'custom' && (
+                                                <div className="ml-4 pl-4 border-l-2 border-slate-700/80 py-2">
+                                                    <textarea
+                                                        value={state.customOperationText}
+                                                        onChange={(e) => setState(prev => ({ ...prev, customOperationText: e.target.value }))}
+                                                        placeholder="Describe your intended data usage for DPO review..."
+                                                        rows={3}
+                                                        className="w-full px-3 py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 resize-none font-mono"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     )
                                 })}
+                            </div>
+                            {state.intendedUsage.length > 0 && (
+                                <div className="pt-2">
+                                    {state.intendedUsage.some(u => 
+                                        usageCategories.find(c => c.label === u)?.riskTier === 'high'
+                                    ) ? (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium">
+                                            <span>⚠️</span> Clearance: High Compliance Tier (Stricter Audit Applied)
+                                        </div>
+                                    ) : (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
+                                            <span>✓</span> Clearance: Standard Tier
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <div className="pt-2 border-t border-slate-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAdvancedCompliance(!showAdvancedCompliance)}
+                                    className="flex items-center gap-2 text-xs text-slate-500 hover:text-cyan-400 transition-colors"
+                                >
+                                    <span className={`transition-transform ${showAdvancedCompliance ? 'rotate-90' : ''}`}>▶</span>
+                                    {showAdvancedCompliance ? 'Hide' : '+'} Configure Advanced Compliance (PDPL/GDPR)
+                                </button>
+                                
+                                {showAdvancedCompliance && (
+                                    <div className="mt-3 p-4 bg-slate-900/60 border border-slate-700/80 rounded-lg space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-2">Processing Jurisdiction</label>
+                                                <select
+                                                    value={state.processingJurisdiction}
+                                                    onChange={(e) => setState(prev => ({ ...prev, processingJurisdiction: e.target.value }))}
+                                                    className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                                >
+                                                    <option value="">Select jurisdiction...</option>
+                                                    <option value="uae">UAE Local</option>
+                                                    <option value="eu">EU GDPR Zone</option>
+                                                    <option value="us">US</option>
+                                                    <option value="global">Global/Distributed</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-2">Data Time-to-Live (TTL)</label>
+                                                <select
+                                                    value={state.dataTTL}
+                                                    onChange={(e) => setState(prev => ({ ...prev, dataTTL: e.target.value }))}
+                                                    className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                                >
+                                                    <option value="">Select TTL...</option>
+                                                    <option value="ephemeral">Ephemeral &lt;24h</option>
+                                                    <option value="30days">30 Days</option>
+                                                    <option value="1year">1 Year</option>
+                                                    <option value="perpetual">Perpetual</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-2">External APIs / LLMs</label>
+                                                <div className="flex items-center gap-3 h-[34px]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setState(prev => ({ ...prev, externalAPIs: true }))}
+                                                        className={`flex-1 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                                                            state.externalAPIs
+                                                                ? 'bg-cyan-500/15 border-cyan-400/50 text-cyan-300'
+                                                                : 'border-slate-700 bg-slate-800/50 text-slate-500 hover:border-slate-600'
+                                                        }`}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setState(prev => ({ ...prev, externalAPIs: false, externalAPIDetails: '' }))}
+                                                        className={`flex-1 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                                                            !state.externalAPIs && state.externalAPIs !== undefined
+                                                                ? 'bg-rose-500/15 border-rose-400/50 text-rose-300'
+                                                                : 'border-slate-700 bg-slate-800/50 text-slate-500 hover:border-slate-600'
+                                                        }`}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+                                                {state.externalAPIs && (
+                                                    <div className="mt-2">
+                                                        <input
+                                                            type="text"
+                                                            value={state.externalAPIDetails}
+                                                            onChange={(e) => setState(prev => ({ ...prev, externalAPIDetails: e.target.value }))}
+                                                            placeholder="Specify external APIs/LLMs..."
+                                                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="pt-2 border-t border-slate-800">
+                                            <p className="text-[10px] text-slate-600 font-mono">
+                                                ⟪ Layered Defense ⟫ These parameters form the core of your 'Layered Defense' escrow agreement.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </section>
                     )}
@@ -471,7 +720,7 @@ export default function OnboardingPage() {
                                     Use mock data
                                 </button>
                             </div>
-                            <p className="text-sm text-slate-400">Choose how your team plans to participate.</p>
+                            <p className="text-sm text-slate-400">Select your enterprise role.</p>
                             <div className="flex flex-wrap gap-2">
                                 {participationOptions.map(option => {
                                     const active = state.participationIntent.includes(option)
@@ -492,60 +741,61 @@ export default function OnboardingPage() {
                                 })}
                             </div>
 
-                            <div className="pt-2 space-y-4">
+                            <div className="pt-4 space-y-4">
                                 <h3 className="text-lg font-semibold text-white">Legal &amp; Governance Acknowledgment</h3>
 
-                                <label className="flex items-start gap-3 text-[13px] text-slate-400">
+                                <label className="flex items-start gap-3 text-[13px] text-slate-300">
                                     <input
                                         type="checkbox"
-                                        className="mt-0.5"
+                                        className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                         checked={state.responsibleDataUsage}
                                         onChange={(e) =>
                                             setState(prev => ({ ...prev, responsibleDataUsage: e.target.checked }))
                                         }
                                     />
                                     <span>
-                                        I confirm that I am authorised to represent [Organisation Name] on this platform.
+                                        I declare under penalty of perjury that I am the authorized legal signatory for this organization.
                                     </span>
                                 </label>
 
-                                <label className="flex items-start gap-3 text-[13px] text-slate-400">
+                                <label className="flex items-start gap-3 text-[13px] text-slate-300">
                                     <input
                                         type="checkbox"
-                                        className="mt-0.5"
+                                        className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                         checked={state.noUnauthorizedSharing}
                                         onChange={(e) =>
                                             setState(prev => ({ ...prev, noUnauthorizedSharing: e.target.checked }))
                                         }
                                     />
                                     <span>
-                                        I agree to the{' '}
-                                        <a
-                                            href="#"
-                                            onClick={(e) => e.preventDefault()}
-                                            className="text-blue-400 underline underline-offset-2"
-                                        >
-                                            Redoubt Data Governance Policy
-                                        </a>{' '}
-                                        and accept that all data access is logged, governed, and subject to contributor
-                                        permissions.
+                                        I accept Redoubt's Zero-Trust Governance Policy. I understand that all platform actions are cryptographically logged and subject to instant access revocation.
                                     </span>
                                 </label>
 
-                                <label className="flex items-start gap-3 text-[13px] text-slate-400">
+                                <label className="flex items-start gap-3 text-[13px] text-slate-300">
                                     <input
                                         type="checkbox"
-                                        className="mt-0.5"
+                                        className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                         checked={state.platformCompliancePolicies}
                                         onChange={(e) =>
                                             setState(prev => ({ ...prev, platformCompliancePolicies: e.target.checked }))
                                         }
                                     />
                                     <span>
-                                        I acknowledge that data obtained through this platform may not be redistributed,
-                                        resold, or used beyond the stated purpose without explicit written consent.
+                                        I acknowledge strict legal liability for any unauthorized data exfiltration, resale, or usage outside the declared scope, enforcing the 'Layered Defense' protocol.
                                     </span>
                                 </label>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-700">
+                                <label className="block text-[11px] uppercase tracking-wider text-cyan-400 mb-2">Electronic Signature</label>
+                                <input
+                                    type="text"
+                                    value={state.electronicSignature}
+                                    onChange={(e) => setState(prev => ({ ...prev, electronicSignature: e.target.value }))}
+                                    placeholder="Type your full legal name to execute this agreement..."
+                                    className="w-full px-4 py-3 bg-slate-900/80 border border-slate-600 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 font-mono"
+                                />
                             </div>
                         </section>
                     )}
@@ -565,25 +815,37 @@ export default function OnboardingPage() {
                             <div className="grid gap-4 md:grid-cols-2">
                                 <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <h3 className="text-base font-semibold text-white">Connect LinkedIn</h3>
+                                        <h3 className="text-base font-semibold text-white">Corporate Domain Verification</h3>
                                         <span className="text-xs text-amber-300">Required</span>
                                     </div>
-                                    <p className="mt-1 text-sm text-slate-400">Instantly verify your organizational affiliation.</p>
+                                    <p className="mt-1 text-sm text-slate-400">Verify your organizational identity via DNS TXT record or Corporate IdP (Okta/Entra).</p>
 
                                     <div className="mt-4">
-                                        {isLinkedInConnected ? (
+                                        {isDomainVerified ? (
                                             <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
                                                 <span aria-hidden="true">✓</span>
-                                                <span>Affiliation Confirmed</span>
+                                                <span>Domain Verified</span>
                                             </div>
                                         ) : (
                                             <button
                                                 type="button"
-                                                onClick={handleLinkedInConnect}
-                                                disabled={isLinkedInLoading}
-                                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-600/60"
+                                                onClick={handleDNSVerification}
+                                                disabled={isDNSVerifying}
+                                                className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 disabled:cursor-not-allowed ${
+                                                    isDNSVerifying
+                                                        ? 'bg-slate-600'
+                                                        : 'bg-blue-600 hover:bg-blue-700'
+                                                }`}
                                             >
-                                                {isLinkedInLoading ? 'Connecting...' : 'Connect LinkedIn'}
+                                                {isDNSVerifying ? (
+                                                    <span className="flex items-center gap-2">
+                                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                        </svg>
+                                                        Querying DNS...
+                                                    </span>
+                                                ) : 'Verify DNS Record'}
                                             </button>
                                         )}
                                     </div>
@@ -591,10 +853,10 @@ export default function OnboardingPage() {
 
                                 <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <h3 className="text-base font-semibold text-white">Upload Proof of Affiliation</h3>
+                                        <h3 className="text-base font-semibold text-white">Corporate Registry Document</h3>
                                         <span className="text-xs text-amber-300">Required</span>
                                     </div>
-                                    <p className="mt-1 text-sm text-slate-400">PDF, JPG or PNG only. Max 5MB.</p>
+                                    <p className="mt-1 text-sm text-slate-400">Upload UAE Trade License, Certificate of Incorporation, or equivalent government registry. PDF/JPG only. Max 10MB.</p>
 
                                     <label
                                         htmlFor="affiliation-proof-upload"
@@ -635,12 +897,19 @@ export default function OnboardingPage() {
 
                             <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
                                 <div className="flex items-center justify-between gap-2">
-                                    <h3 className="text-base font-semibold text-white">Upload Authorization / Compliance Letter</h3>
+                                    <h3 className="text-base font-semibold text-white">Signed DPO / Legal Mandate</h3>
                                     <span className="text-xs text-amber-300">Required</span>
                                 </div>
                                 <p className="mt-1 text-sm text-slate-400">
-                                    Examples: DPA, IRB approval, or letter of authority.
+                                    Upload the official Data Processing Agreement (DPA) signed by your Data Protection Officer.
                                 </p>
+                                <a
+                                    href="#"
+                                    onClick={(e) => e.preventDefault()}
+                                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                                >
+                                    <span>📎</span> Download Redoubt Standard Mandate Template (.docx)
+                                </a>
 
                                 <label
                                     htmlFor="authorization-proof-upload"
@@ -683,106 +952,38 @@ export default function OnboardingPage() {
                     {step === 5 && (
 
                         <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4">
-                            <h2 className="text-xl font-semibold">Compliance Commitment</h2>
-                            <p className="text-sm text-slate-400">All commitments are required before application submission.</p>
+                            <h2 className="text-xl font-semibold">Zero-Trust Pipeline Agreement</h2>
+                            <p className="text-sm text-slate-400">Acknowledge technical and legal constraints before initializing the secure escrow handshake.</p>
 
                             <label className="flex items-start gap-3 text-sm text-slate-200">
                                 <input
                                     type="checkbox"
-                                    className="mt-1"
+                                    className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                     checked={state.responsibleDataUsage}
                                     onChange={(e) => setState(prev => ({ ...prev, responsibleDataUsage: e.target.checked }))}
                                 />
-                                <span>I agree to responsible data usage.</span>
+                                <span>I acknowledge that all queries, extractions, and API interactions will be cryptographically hashed and logged in Redoubt's immutable audit trail.</span>
                             </label>
 
                             <label className="flex items-start gap-3 text-sm text-slate-200">
                                 <input
                                     type="checkbox"
-                                    className="mt-1"
+                                    className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                     checked={state.noUnauthorizedSharing}
                                     onChange={(e) => setState(prev => ({ ...prev, noUnauthorizedSharing: e.target.checked }))}
                                 />
-                                <span>I agree to no unauthorized sharing.</span>
+                                <span>I consent to Redoubt's automated Kill-Switch protocol, which will instantly sever pipeline access upon detection of schema drift, geo-fencing violations, or unauthorized PII extraction.</span>
                             </label>
 
                             <label className="flex items-start gap-3 text-sm text-slate-200">
                                 <input
                                     type="checkbox"
-                                    className="mt-1"
+                                    className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                     checked={state.platformCompliancePolicies}
                                     onChange={(e) => setState(prev => ({ ...prev, platformCompliancePolicies: e.target.checked }))}
                                 />
-                                <span>I agree to platform compliance policies.</span>
+                                <span>I assume full legal and financial liability for compliance with UAE PDPL and international data sovereignty laws regarding any data ingested through this node.</span>
                             </label>
-                        </section>
-                    )}
-
-                    {step === 6 && (
-                        <section className="rounded-xl border border-slate-700/80 bg-[#0a1628]/85 backdrop-blur-md p-5 space-y-4 shadow-[0_16px_48px_rgba(2,8,23,0.45)]">
-                            <div className="relative mx-auto w-36 h-36">
-                                <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-2xl animate-pulse" />
-                                <div className="absolute inset-1 rounded-full border-2 border-emerald-300/35 animate-ping" />
-                                <div className="absolute inset-4 rounded-full border border-emerald-300/50" />
-                                <div className="relative w-full h-full rounded-full bg-emerald-500/15 border-2 border-emerald-400/70 flex items-center justify-center text-emerald-300">
-                                    <svg viewBox="0 0 24 24" className="w-20 h-20" fill="none" stroke="currentColor" strokeWidth="2.75">
-                                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <div className="text-center space-y-2">
-                                <h2 className="text-xl font-semibold text-white">Application Submitted Successfully</h2>
-                                <p className="text-sm text-slate-300">
-                                    Your application is under review by the Redoubt trust committee.
-                                </p>
-                            </div>
-
-                            <div className="bg-[#020817] border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
-                                <div className="flex items-center justify-between gap-3 text-sm">
-                                    <span className="text-slate-400">Reference ID</span>
-                                    <span className="font-semibold text-slate-100">{applicationReference}</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-3 text-sm">
-                                    <span className="text-slate-400">Submitted</span>
-                                    <span className="font-semibold text-slate-100">{submittedDate}</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-3 text-sm">
-                                    <span className="text-slate-400">Status</span>
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 border border-amber-400/40 text-amber-200">
-                                        Pending Review
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-3 text-sm">
-                                    <span className="text-slate-400">Estimated review time</span>
-                                    <span className="font-semibold text-slate-100">2-3 business days</span>
-                                </div>
-                            </div>
-
-                            <div className="bg-slate-900/55 border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
-                                <h3 className="text-lg font-semibold text-white">What happens next</h3>
-                                <ol className="space-y-2 text-sm text-slate-300">
-                                    <li>1. Identity &amp; organization verification</li>
-                                    <li>2. Trust committee review</li>
-                                    <li>3. Access credentials issued via email</li>
-                                </ol>
-                            </div>
-
-                            <div className="pt-1 flex flex-wrap gap-3">
-                                <Link
-                                    to="/"
-                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
-                                >
-                                    Return to Home
-                                </Link>
-                                <button
-                                    type="button"
-                                    onClick={() => navigate('/application-status')}
-                                    className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-200 hover:text-white font-semibold transition-colors"
-                                >
-                                    Check Application Status
-                                </button>
-                            </div>
                         </section>
                     )}
 
@@ -809,11 +1010,20 @@ export default function OnboardingPage() {
                                 <button
                                     type="submit"
                                     disabled={!stepFiveReady}
-                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                                 >
-                                    Submit Application
+                                    <span>🔒</span>
+                                    <span>Execute Secure Handshake & Submit</span>
                                 </button>
                             )}
+                        </div>
+                    )}
+                    {step === 2 && (
+                        <div className="mt-4 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                            <p className="text-xs text-slate-500 font-mono">
+                                <span className="uppercase tracking-wider font-semibold">Declaration: </span>
+                                By proceeding, you legally bind your organization to the selected usage scopes. Any data utilization outside these parameters violates Redoubt's Zero-Trust policy and will trigger an automatic access revocation (Kill Switch).
+                            </p>
                         </div>
                     )}
                     {showStepError && !stepReady && step === 1 && (

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-const generateReferenceId = () => `#BRE-2026-${Math.floor(1000 + Math.random() * 9000)}`
+const generateReferenceId = () => `#RDT-2026-${Math.floor(1000 + Math.random() * 9000)}`
 
 const formatSubmissionDate = (date: Date) =>
     date.toLocaleDateString('en-US', {
@@ -17,7 +17,7 @@ export default function OnboardingConfirmation() {
         'Intended Platform Usage',
         'Participation Intent',
         'Verification & Credentials',
-        'Compliance Commitment',
+        'Zero-Trust Pipeline Agreement',
         'Submission Confirmation'
     ]
     const finalStep = stepTitles.length
@@ -113,33 +113,42 @@ export default function OnboardingConfirmation() {
                         <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-2xl animate-pulse" />
                         <div className="absolute inset-1 rounded-full border-2 border-emerald-300/35 animate-ping" />
                         <div className="absolute inset-4 rounded-full border border-emerald-300/50" />
-                        <div className="relative w-full h-full rounded-full bg-emerald-500/15 border-2 border-emerald-400/70 flex items-center justify-center text-emerald-300">
-                            <svg viewBox="0 0 24 24" className="w-20 h-20" fill="none" stroke="currentColor" strokeWidth="2.75">
+                        <div className="relative w-full h-full rounded-full bg-emerald-500/15 border-2 border-emerald-400/70 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <svg className="w-24 h-24 text-emerald-400/20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                                </svg>
+                            </div>
+                            <svg viewBox="0 0 24 24" className="w-16 h-16 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </div>
                     </div>
 
                     <div className="text-center space-y-2">
-                        <h2 className="text-xl font-semibold text-white">Application Submitted Successfully</h2>
+                        <h2 className="text-xl font-semibold text-white">Zero-Trust Vetting Initiated</h2>
                         <p className="text-sm text-slate-300">
-                            Your application is under review by the Redoubt trust committee.
+                            Your cryptographic footprint and legal mandate have been securely logged. The Redoubt Compliance Ops team is auditing your submission.
                         </p>
                     </div>
 
                     <div className="bg-[#020817] border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
                         <div className="flex items-center justify-between gap-3 text-sm">
                             <span className="text-slate-400">Reference ID</span>
-                            <span className="font-semibold text-slate-100">{submissionMeta.referenceId}</span>
+                            <span className="font-semibold text-slate-100 font-mono">{submissionMeta.referenceId}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 text-sm">
                             <span className="text-slate-400">Submitted</span>
                             <span className="font-semibold text-slate-100">{submissionMeta.submittedDate}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-slate-400">Encryption State</span>
+                            <span className="font-semibold text-emerald-400 font-mono text-xs">SHA-256 Secured</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 text-sm">
                             <span className="text-slate-400">Status</span>
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 border border-amber-400/40 text-amber-200">
-                                Pending Review
+                                Awaiting DPO Clearance
                             </span>
                         </div>
                         <div className="flex items-center justify-between gap-3 text-sm">
@@ -151,9 +160,9 @@ export default function OnboardingConfirmation() {
                     <div className="bg-slate-900/55 border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
                         <h3 className="text-lg font-semibold text-white">What happens next</h3>
                         <ol className="space-y-2 text-sm text-slate-300">
-                            <li>1. Identity &amp; organization verification</li>
-                            <li>2. Trust committee review</li>
-                            <li>3. Access credentials issued via email</li>
+                            <li><span className="text-cyan-400 font-mono text-xs">[1]</span> Automated DNS & Corporate Entity Verification (KYB).</li>
+                            <li><span className="text-cyan-400 font-mono text-xs">[2]</span> Human-in-the-loop DPO & Legal Mandate Audit.</li>
+                            <li><span className="text-cyan-400 font-mono text-xs">[3]</span> Upon clearance, you will receive a Secure Enclave setup link via email to configure your cryptographic keys and vault access.</li>
                         </ol>
                     </div>
 

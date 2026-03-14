@@ -58,7 +58,7 @@ export default function OnboardingStep5() {
             }
         }
 
-        const referenceId = `#BRE-2026-${Math.floor(1000 + Math.random() * 9000)}`
+        const referenceId = `#RDT-2026-${Math.floor(1000 + Math.random() * 9000)}`
         const submissionDate = formatSubmissionDate(new Date())
         localStorage.setItem(
             SUBMISSION_META_STORAGE_KEY,
