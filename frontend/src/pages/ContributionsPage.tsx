@@ -31,7 +31,7 @@ type UploadedDataset = {
 
 const uploadSteps = [
     'Dataset info',
-    'File upload',
+    'Secure Payload Ingestion',
     'Schema preview',
     'Privacy & access controls',
     'Submission confirmation'
@@ -149,6 +149,7 @@ export default function ContributionsPage() {
     const [activeStep, setActiveStep] = useState(0)
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
+    const [interrogationAcknowledged, setInterrogationAcknowledged] = useState(false)
     const [anonymitySettings, setAnonymitySettings] = useState({
         anonymousUpload: true,
         pseudonymization: false,
@@ -255,13 +256,55 @@ export default function ContributionsPage() {
             )
         },
         {
-            title: 'File upload',
-            description: 'Attach files and check package size before validation starts.',
+            title: 'Secure Payload Ingestion',
+            description: 'Initialize encrypted transfer. All payloads are subjected to automated compliance interrogation.',
             body: (
-                <div className="space-y-3 text-sm">
-                    <div className="border border-dashed border-slate-600 rounded-lg p-6 text-center bg-slate-900/60">
-                        <div className="text-slate-200 font-semibold">Drop files here or browse (mock)</div>
-                        <div className="text-slate-400 text-xs mt-1">Accepted: CSV, Parquet, JSONL - max 15 GB per upload</div>
+                <div className="space-y-4 text-sm">
+                    <div className="border-2 border-amber-600/70 bg-slate-950 rounded-lg p-4 font-mono text-xs">
+                        <div className="text-amber-500 font-bold mb-3 flex items-center gap-2">
+                            <span className="animate-pulse">⚠️</span> SYSTEM ALERT: 6-LAYER AI INTERROGATION ACTIVE
+                        </div>
+                        <ul className="space-y-2 text-slate-300">
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">1.</span>
+                                <span>Semantic PII Hunter: Deep-scanning cell values for obfuscated PII.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">2.</span>
+                                <span>Schema Poisoning Detection: Flagging synthetic padding and schema drift.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">3.</span>
+                                <span>Canary Token Check: Cross-referencing against global honeypot signatures.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">4.</span>
+                                <span>Payload Sanitization: Neutralizing hidden SQL injections and XSS payloads.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">5.</span>
+                                <span>IP Scan: Verifying text against copyrighted archives.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-amber-500">6.</span>
+                                <span>Zero-Tolerance Quarantine: Toxic payloads trigger automatic IP blacklisting.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={interrogationAcknowledged}
+                            onChange={(e) => setInterrogationAcknowledged(e.target.checked)}
+                            className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                        />
+                        <span className="text-slate-300 text-xs">
+                            I acknowledge the 6-Layer Interrogation Protocol and confirm this payload contains no unauthorized PII or malicious code.
+                        </span>
+                    </label>
+                    <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-300 ${interrogationAcknowledged ? 'border-cyan-500/50 bg-slate-900/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'border-slate-600 bg-slate-900/30 opacity-40 blur-[0.5px] pointer-events-none'}`}>
+                        <div className={`font-semibold ${interrogationAcknowledged ? 'text-cyan-200' : 'text-slate-400'}`}>Drop files here or browse (mock)</div>
+                        <div className="text-slate-500 text-xs mt-1">Accepted: CSV, Parquet, JSONL - max 15 GB per upload</div>
                     </div>
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 text-slate-300">
                         `city_sensors_q1.parquet` - 6.3 GB - checksum verified
@@ -808,7 +851,8 @@ type="button"
                                 {activeStep < uploadSteps.length - 1 && (
                                     <button
                                         onClick={() => setActiveStep(prev => Math.min(prev + 1, uploadSteps.length - 1))}
-                                        className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 transition-colors"
+                                        disabled={activeStep === 1 && !interrogationAcknowledged}
+                                        className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-700"
                                     >
                                         Next
                                     </button>
