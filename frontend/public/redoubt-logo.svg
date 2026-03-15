@@ -1,0 +1,67 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="50%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="innerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.1"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background (optional - remove for transparent) -->
+  <rect width="400" height="400" fill="#010915" rx="20"/>
+  
+  <!-- Outer hexagon -->
+  <path 
+    d="M200 40 L340 115 L340 285 L200 360 L60 285 L60 115 Z" 
+    stroke="url(#hexGradient)" 
+    stroke-width="6" 
+    fill="none"
+    filter="url(#glow)"
+  />
+  
+  <!-- Inner hexagon -->
+  <path 
+    d="M200 70 L310 130 L310 270 L200 330 L90 270 L90 130 Z" 
+    stroke="url(#hexGradient)" 
+    stroke-width="3" 
+    fill="url(#innerGlow)"
+    opacity="0.6"
+  />
+  
+  <!-- Center core -->
+  <circle cx="200" cy="200" r="45" fill="url(#hexGradient)" opacity="0.15"/>
+  <circle cx="200" cy="200" r="30" stroke="#22d3ee" stroke-width="2" fill="none" filter="url(#softGlow)"/>
+  
+  <!-- Inner node points -->
+  <circle cx="200" cy="155" r="4" fill="#22d3ee" filter="url(#softGlow)"/>
+  <circle cx="200" cy="245" r="4" fill="#10b981" filter="url(#softGlow)"/>
+  <circle cx="160" cy="200" r="4" fill="#22d3ee" filter="url(#softGlow)"/>
+  <circle cx="240" cy="200" r="4" fill="#10b981" filter="url(#softGlow)"/>
+  
+  <!-- Connection lines -->
+  <line x1="200" y1="155" x2="200" y2="170" stroke="#22d3ee" stroke-width="1.5" opacity="0.5"/>
+  <line x1="200" y1="230" x2="200" y2="245" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="160" y1="200" x2="175" y2="200" stroke="#22d3ee" stroke-width="1.5" opacity="0.5"/>
+  <line x1="225" y1="200" x2="240" y2="200" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+  
+  <!-- Center dot -->
+  <circle cx="200" cy="200" r="6" fill="#22d3ee" filter="url(#glow)"/>
+</svg>

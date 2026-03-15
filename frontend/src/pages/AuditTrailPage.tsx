@@ -24,14 +24,14 @@ const eventTypes = ['All Event Types', 'Access', 'Request', 'Contribution', 'Sec
 const timeRanges = ['All Time', 'Today', 'Last 7 days', 'Last 30 days']
 
 const auditRows: AuditRow[] = [
-    { timestamp: '2026-03-10 09:14', event: 'Dataset Access', participant: 'part_anon_042', dataset: 'Global Climate 2020-2024', purpose: 'ML Training', status: '200 OK', hash: 'a3f8...d291', verified: true },
-    { timestamp: '2026-03-10 08:47', event: 'Access Request', participant: 'part_anon_017', dataset: 'Financial Tick Data', purpose: 'Risk Modeling', status: 'Approved', hash: 'b7c2...e445', verified: true },
-    { timestamp: '2026-03-10 07:23', event: 'Dataset Access', participant: 'part_anon_089', dataset: 'Consumer Behavior Analytics', purpose: 'Research', status: '200 OK', hash: 'c9d1...f332', verified: true },
-    { timestamp: '2026-03-09 22:11', event: 'Security Alert', participant: 'part_anon_031', dataset: 'Genomics Research Dataset', purpose: '—', status: 'Flagged', hash: 'd2e4...a118', verified: false },
-    { timestamp: '2026-03-09 18:34', event: 'Contribution', participant: 'part_anon_056', dataset: 'Smart Grid Energy Data', purpose: '—', status: 'Submitted', hash: 'e5f7...b229', verified: true },
-    { timestamp: '2026-03-09 15:02', event: 'Access Request', participant: 'part_anon_008', dataset: 'Clinical Outcomes Delta', purpose: 'Healthcare Analytics', status: 'Pending', hash: 'f8a3...c440', verified: true },
-    { timestamp: '2026-03-09 11:47', event: 'Dataset Access', participant: 'part_anon_073', dataset: 'Satellite Land Use 2024', purpose: 'Urban Planning', status: '200 OK', hash: 'g1b6...d551', verified: true },
-    { timestamp: '2026-03-09 09:15', event: 'Compliance Event', participant: 'part_anon_019', dataset: 'Financial Tick Data', purpose: '—', status: 'Policy Updated', hash: 'h4c9...e662', verified: true }
+    { timestamp: '2026-03-10 09:14', event: 'Dataset Access', participant: 'part_anon_042', dataset: 'Global Climate 2020-2024', purpose: 'ML Training', status: 'CLEARED', hash: 'a3f8...d291', verified: true },
+    { timestamp: '2026-03-10 08:47', event: 'Access Request', participant: 'part_anon_017', dataset: 'Financial Tick Data', purpose: 'Risk Modeling', status: 'CLEARED', hash: 'b7c2...e445', verified: true },
+    { timestamp: '2026-03-10 07:23', event: 'Dataset Access', participant: 'part_anon_089', dataset: 'Consumer Behavior Analytics', purpose: 'Research', status: 'CLEARED', hash: 'c9d1...f332', verified: true },
+    { timestamp: '2026-03-09 22:11', event: 'Security Alert', participant: 'part_anon_031', dataset: 'Genomics Research Dataset', purpose: '—', status: 'PII ANOMALY', hash: 'd2e4...a118', verified: false },
+    { timestamp: '2026-03-09 18:34', event: 'Contribution', participant: 'part_anon_056', dataset: 'Smart Grid Energy Data', purpose: '—', status: 'CLEARED', hash: 'e5f7...b229', verified: true },
+    { timestamp: '2026-03-09 15:02', event: 'Access Request', participant: 'part_anon_008', dataset: 'Clinical Outcomes Delta', purpose: 'Healthcare Analytics', status: 'PENDING', hash: 'f8a3...c440', verified: true },
+    { timestamp: '2026-03-09 11:47', event: 'Dataset Access', participant: 'part_anon_073', dataset: 'Satellite Land Use 2024', purpose: 'Urban Planning', status: 'CLEARED', hash: 'g1b6...d551', verified: true },
+    { timestamp: '2026-03-09 09:15', event: 'Compliance Event', participant: 'part_anon_019', dataset: 'Financial Tick Data', purpose: '—', status: 'CLEARED', hash: 'h4c9...e662', verified: true }
 ]
 
 const badgeTone: Record<EventTone, string> = {
@@ -146,7 +146,7 @@ export default function AuditTrailPage() {
                         <table className="min-w-full text-left">
                             <thead className="bg-white/5 text-xs uppercase tracking-[0.14em] text-slate-500">
                                 <tr>
-                                    {['Timestamp', 'Event', 'Participant', 'Dataset', 'Purpose', 'Status', 'Hash'].map(head => (
+                                    {['Timestamp', 'Event', 'Participant', 'Dataset', 'Purpose', 'Compliance Status', 'Hash', 'Action'].map(head => (
                                         <th key={head} className="px-4 py-3 whitespace-nowrap">{head}</th>
                                     ))}
                                 </tr>
@@ -159,7 +159,26 @@ export default function AuditTrailPage() {
                                         <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{row.participant}</td>
                                         <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{row.dataset}</td>
                                         <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{row.purpose}</td>
-                                        <td className="px-4 py-3 text-slate-200 whitespace-nowrap">{row.status}</td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            {row.status === 'CLEARED' && (
+                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                                    CLEARED
+                                                </span>
+                                            )}
+                                            {row.status === 'PII ANOMALY' && (
+                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-300 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                                                    PII ANOMALY
+                                                </span>
+                                            )}
+                                            {row.status === 'PENDING' && (
+                                                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                                    PENDING
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3 font-mono text-xs text-emerald-200 whitespace-nowrap flex items-center gap-2">
                                             <span className="truncate max-w-[140px] inline-block">{row.hash}</span>
                                             {row.verified ? (
@@ -174,6 +193,21 @@ export default function AuditTrailPage() {
                                                 </span>
                                             )}
                                         </td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            {(row.status === 'CLEARED' || row.event === 'Dataset Access') && (
+                                                <button 
+                                                    className="group relative rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-red-400 hover:bg-red-500/20 hover:border-red-500/50"
+                                                    title="Revoke Escrow Access"
+                                                >
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                        Revoke Escrow Access
+                                                    </span>
+                                                </button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -183,7 +217,7 @@ export default function AuditTrailPage() {
 
                 <section className="mt-6 flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3">
-                        <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">Export to SIEM</button>
+                        <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">Push to SIEM (Splunk / QRadar)</button>
                         <button className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">Download CSV</button>
                     </div>
                     <p className="text-xs text-slate-500">Logs are append-only and tamper-evident</p>

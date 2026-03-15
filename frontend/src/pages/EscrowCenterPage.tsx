@@ -73,6 +73,30 @@ const escrowTransactions: EscrowTransaction[] = [
         provider: 'anon_provider_002',
         amount: '$249',
         status: 'ESCROW_DISPUTE'
+    },
+    {
+        id: 'ESC-2026-007',
+        dataset: 'Healthcare Claims 2023',
+        buyer: 'part_anon_015',
+        provider: 'anon_provider_011',
+        amount: '$899',
+        status: 'ESCROW_ACTIVE'
+    },
+    {
+        id: 'ESC-2026-008',
+        dataset: 'IoT Sensor Network Data',
+        buyer: 'part_anon_028',
+        provider: 'anon_provider_004',
+        amount: '$349',
+        status: 'ESCROW_PENDING'
+    },
+    {
+        id: 'ESC-2026-009',
+        dataset: 'Retail Transaction Logs',
+        buyer: 'part_anon_063',
+        provider: 'anon_provider_008',
+        amount: '$449',
+        status: 'REQUEST_SUBMITTED'
     }
 ]
 
@@ -114,11 +138,13 @@ const timelineSteps = [
         detail: ['Controlled access granted', 'Monitoring active']
     },
     { label: 'Escrow Released', timestamp: 'Pending', state: 'pending' },
-    { label: 'Trust Score Updated', timestamp: 'Pending', state: 'pending' }
+    { label: 'Clearance Ledger Updated', timestamp: 'Pending', state: 'pending' }
 ]
 
 export default function EscrowCenterPage() {
     const [selectedId, setSelectedId] = useState('ESC-2026-003')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
 
     const selectedTransaction = useMemo(() => {
         return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[2]
@@ -155,7 +181,7 @@ export default function EscrowCenterPage() {
                     ))}
                 </section>
 
-                <section className="mt-10 grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">
+                <section className="mt-10 grid gap-6 lg:grid-cols-[2fr_1fr]">
                     <div className="rounded-2xl border border-white/10 bg-[#0a1628] shadow-[0_10px_40px_rgba(0,0,0,0.25)] overflow-hidden">
                         <div className="px-5 py-4 border-b border-white/10">
                             <h2 className="text-lg font-semibold text-white">Escrow Transactions</h2>
@@ -201,7 +227,55 @@ export default function EscrowCenterPage() {
                                         )
                                     })}
                                 </tbody>
+                                <tfoot className="bg-white/5 border-t border-white/10">
+                                    <tr>
+                                        <td colSpan={5} className="px-4 py-3 text-sm font-semibold text-slate-300">
+                                            Total Escrow Value (this page):
+                                        </td>
+                                        <td className="px-4 py-3 text-sm font-mono font-semibold text-cyan-300">
+                                            $4,540
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
+                        </div>
+                        <div className="flex items-center justify-between px-5 py-4 border-t border-white/10 bg-white/[0.02]">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs text-slate-500">Show</span>
+                                <select 
+                                    value={rowsPerPage}
+                                    onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                                    className="rounded-lg bg-slate-900 border border-white/10 px-2 py-1.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                                >
+                                    <option value={5}>5 per page</option>
+                                    <option value={10}>10 per page</option>
+                                    <option value={20}>20 per page</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button 
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    ← Prev
+                                </button>
+                                <button className="rounded-lg bg-cyan-500/20 border border-cyan-500/40 px-3 py-1.5 text-xs text-cyan-300">
+                                    1
+                                </button>
+                                <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:bg-white/10">
+                                    2
+                                </button>
+                                <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:bg-white/10">
+                                    3
+                                </button>
+                                <button 
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-400 hover:bg-white/10"
+                                >
+                                    Next →
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -295,10 +369,10 @@ export default function EscrowCenterPage() {
 
                         <div className="grid gap-2">
                             <button className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white">
-                                Release Payment
+                                Disburse Escrow Funds
                             </button>
                             <button className="w-full rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">
-                                Raise Dispute
+                                Initiate Legal Dispute
                             </button>
                             <button className="w-full rounded-lg border border-blue-500/60 px-4 py-2.5 text-sm font-semibold text-blue-200 hover:bg-blue-500/10">
                                 Extend Window
@@ -334,10 +408,10 @@ export default function EscrowCenterPage() {
                                 View Evidence
                             </button>
                             <button className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-semibold text-white">
-                                Resolve in favor of Buyer
+                                Arbitrate: Refund Node
                             </button>
                             <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-xs font-semibold text-white">
-                                Resolve in favor of Provider
+                                Arbitrate: Disburse Funds
                             </button>
                         </div>
                     </div>

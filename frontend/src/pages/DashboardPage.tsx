@@ -10,32 +10,32 @@ export default function DashboardPage() {
 
     const executiveStats = [
         {
-            id: 'trust-score',
-            label: 'Trust Score',
-            value: `${netTrustScore}%`,
-            hint: trustSummary.label,
+            id: 'entity-clearance',
+            label: 'Entity Clearance Level',
+            value: 'Tier-1 (Verified)',
+            hint: 'Full access',
             tone: 'emerald'
         },
         {
-            id: 'pending-requests',
-            label: 'Pending Requests',
+            id: 'inbound-pipeline',
+            label: 'Inbound Pipeline Requests',
             value: `${pendingRequests}`,
             hint: 'Awaiting review',
             tone: 'amber'
         },
         {
-            id: 'approved-access',
-            label: 'Approved Access',
-            value: `${approvedAccess}`,
-            hint: 'Active approvals',
-            tone: 'blue'
-        },
-        {
             id: 'active-escrows',
             label: 'Active Escrows',
             value: '2',
-            hint: 'Payments protected',
+            hint: '1.4M Rows Processed this week',
             tone: 'cyan'
+        },
+        {
+            id: 'threats-blocked',
+            label: 'Threats & Anomalies Blocked',
+            value: '0',
+            hint: 'All clear',
+            tone: 'emerald'
         }
     ]
 
@@ -59,45 +59,6 @@ export default function DashboardPage() {
             label: 'Residency coverage',
             value: 'US-East + EU-West active',
             tone: 'cyan'
-        }
-    ]
-
-    const coreLoopSteps = [
-        {
-            id: 1,
-            title: 'Evaluate',
-            icon: 'search',
-            descriptionLines: ['Assess dataset trust', 'and confidence score']
-        },
-        {
-            id: 2,
-            title: 'Request',
-            icon: 'file',
-            descriptionLines: ['Submit access request', 'with purpose and risk scoring']
-        },
-        {
-            id: 3,
-            title: 'Consent',
-            icon: 'shield',
-            descriptionLines: ['Confirm legal basis', 'and escrow terms']
-        },
-        {
-            id: 4,
-            title: 'Access',
-            icon: 'lock',
-            descriptionLines: ['Controlled access via', 'RBAC and secure enclave']
-        },
-        {
-            id: 5,
-            title: 'Monitor',
-            icon: 'eye',
-            descriptionLines: ['Track usage, audit logs,', 'and policy compliance']
-        },
-        {
-            id: 6,
-            title: 'Resolve',
-            icon: 'refresh',
-            descriptionLines: ['Renew, revoke, or', 'dispute via escrow']
         }
     ]
 
@@ -162,87 +123,178 @@ export default function DashboardPage() {
 
                 <section className="mb-10 rounded-3xl border border-white/[0.06] bg-slate-900/50 p-8 backdrop-blur-2xl">
                     <div className="flex flex-col gap-2 mb-6">
-                        <h2 className="text-2xl font-bold text-white">How Redoubt Works</h2>
+                        <h2 className="text-2xl font-bold text-white">Live Escrow Telemetry & Pipeline Traffic</h2>
                         <p className="text-sm text-slate-500">
-                            Every data transaction follows this trust-enforced lifecycle
+                            Real-time API ping activity, data throughput, and anomaly detection
                         </p>
                     </div>
-                    <div className="overflow-x-auto">
-                        <div className="min-w-[960px] flex items-stretch gap-3">
-                            {coreLoopSteps.map((step, index) => {
-                                const isActive = step.id === 4
-                                return (
-                                    <div key={step.id} className="flex items-center gap-3">
-                                        <div
-                                            className={`w-[170px] rounded-2xl border p-4 transition-colors ${
-                                                isActive
-                                                    ? 'border-blue-500/50 bg-blue-500/12 shadow-[0_0_25px_rgba(59,130,246,0.2)]'
-                                                    : 'border-white/[0.08] bg-slate-900/70'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between mb-3">
-                                                <span
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-xl border text-sm ${
-                                                        isActive
-                                                            ? 'border-blue-400/40 bg-blue-500/15 text-blue-200'
-                                                            : 'border-white/10 bg-white/5 text-slate-300'
-                                                    }`}
-                                                >
-                                                    {step.icon === 'search' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5c1.93 0 3.68-.71 5.15-1.85z" />
-                                                        </svg>
-                                                    )}
-                                                    {step.icon === 'file' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3h6l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 3v6h6" />
-                                                        </svg>
-                                                    )}
-                                                    {step.icon === 'shield' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" />
-                                                        </svg>
-                                                    )}
-                                                    {step.icon === 'lock' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.1 0 2 .9 2 2v2a2 2 0 11-4 0v-2c0-1.1.9-2 2-2z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11V8a5 5 0 0110 0v3" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 11h14v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8z" />
-                                                        </svg>
-                                                    )}
-                                                    {step.icon === 'eye' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" />
-                                                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={2} />
-                                                        </svg>
-                                                    )}
-                                                    {step.icon === 'refresh' && (
-                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 0115-6l2-2v6h-6l2-2a7 7 0 10-1 9" />
-                                                        </svg>
-                                                    )}
-                                                </span>
-                                                <span className={`text-xs font-semibold ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
-                                                    Step {step.id}
-                                                </span>
-                                            </div>
-                                            <div className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-200'}`}>
-                                                {step.title}
-                                            </div>
-                                            <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-                                                <span className="block">{step.descriptionLines[0]}</span>
-                                                <span className="block">{step.descriptionLines[1]}</span>
-                                            </p>
-                                        </div>
-                                        {index < coreLoopSteps.length - 1 && (
-                                            <span className="text-slate-600 text-xl">→</span>
-                                        )}
-                                    </div>
-                                )
-                            })}
+                    <div className="relative h-[280px] w-full rounded-2xl border border-white/10 bg-[#0a1628] p-4 overflow-hidden">
+                        <div className="absolute inset-0 opacity-40">
+                            <svg className="h-full w-full" preserveAspectRatio="none">
+                                <defs>
+                                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
+                                    </pattern>
+                                    <linearGradient id="throughputGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.5"/>
+                                        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.05"/>
+                                    </linearGradient>
+                                    <filter id="glow">
+                                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur"/>
+                                            <feMergeNode in="SourceGraphic"/>
+                                        </feMerge>
+                                    </filter>
+                                    <filter id="redGlow">
+                                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur"/>
+                                            <feMergeNode in="SourceGraphic"/>
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#grid)" />
+                            </svg>
                         </div>
+                        <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4"/>
+                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <path 
+                                d="M0,200 C30,180 60,160 90,140 C120,120 150,100 180,90 C210,80 240,70 270,55 C300,40 330,35 360,30 C390,25 420,20 450,25 C480,30 510,40 540,50 C570,60 600,75 630,85 C660,95 690,100 720,95 C750,90 780,80 810,75 C840,70 870,65 900,60 C930,55 960,50 990,48 C1020,46 1050,44 1080,42"
+                                fill="url(#areaGradient)" 
+                                stroke="#3b82f6" 
+                                strokeWidth="3"
+                                filter="url(#glow)"
+                            />
+                            <path 
+                                d="M0,140 C60,135 120,130 180,125 C240,120 300,115 360,105 C420,95 480,85 540,80 C600,75 660,70 720,65 C780,60 840,55 900,52 C960,49 1020,48 1080,45"
+                                fill="none" 
+                                stroke="#64748b" 
+                                strokeWidth="1.5" 
+                                strokeDasharray="6 4"
+                                opacity="0.7"
+                            />
+                            <circle cx="360" cy="55" r="6" fill="#ef4444" filter="url(#redGlow)">
+                                <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/>
+                            </circle>
+                            <circle cx="720" cy="65" r="5" fill="#ef4444" filter="url(#redGlow)">
+                                <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                            </circle>
+                            <circle cx="1080" cy="42" r="4" fill="#ef4444" filter="url(#redGlow)">
+                                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite"/>
+                            </circle>
+                        </svg>
+                        <div className="absolute top-4 left-4 flex items-center gap-6">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                <span className="text-xs text-slate-400">Data Throughput</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="h-0.5 w-4 bg-slate-500" style={{ borderStyle: 'dashed' }} />
+                                <span className="text-xs text-slate-400">API Pings</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse" />
+                                <span className="text-xs text-slate-400">Anomalies Blocked</span>
+                            </div>
+                        </div>
+                        <div className="absolute top-4 right-4 flex items-center gap-4 text-xs text-slate-500">
+                            <div className="flex items-center gap-2">
+                                <span className="text-slate-400">Throughput:</span>
+                                <span className="font-mono text-blue-400">847 KB/s</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-slate-400">Anomalies:</span>
+                                <span className="font-mono text-red-400">3</span>
+                            </div>
+                        </div>
+                        <div className="absolute bottom-4 right-4 flex items-center gap-2 text-xs text-slate-500">
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                            Live
+                        </div>
+                    </div>
+                </section>
+
+                <section className="mb-10 rounded-3xl border border-white/[0.06] bg-slate-900/50 p-6 backdrop-blur-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
+                                <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-white">Immutable Audit Logs (Live)</h3>
+                                <p className="text-xs text-slate-500">Real-time event stream from distributed ledger</p>
+                            </div>
+                        </div>
+                        <span className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Streaming
+                        </span>
+                    </div>
+                    <div className="rounded-xl border border-white/5 bg-[#0a1628]/80 overflow-hidden">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-white/5 text-xs uppercase tracking-[0.14em] text-slate-500">
+                                    <th className="px-4 py-3 text-left font-medium">Timestamp</th>
+                                    <th className="px-4 py-3 text-left font-medium">Action Triggered</th>
+                                    <th className="px-4 py-3 text-left font-medium">Node/Entity ID</th>
+                                    <th className="px-4 py-3 text-left font-medium">Cryptographic Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                                <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td className="px-4 py-3 font-mono text-slate-400">10:42:18 AM</td>
+                                    <td className="px-4 py-3 text-blue-300">Deep-Scan Initiated</td>
+                                    <td className="px-4 py-3 font-mono text-slate-300">Node: #UAE-Alpha</td>
+                                    <td className="px-4 py-3">
+                                        <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                            Cleared
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td className="px-4 py-3 font-mono text-slate-400">10:38:47 AM</td>
+                                    <td className="px-4 py-3 text-red-300">API Exfiltration Blocked</td>
+                                    <td className="px-4 py-3 font-mono text-slate-300">IP: 192.168.x.x</td>
+                                    <td className="px-4 py-3">
+                                        <span className="inline-flex items-center gap-1.5 text-red-400">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                                            Geo-Fence Violation
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                    <td className="px-4 py-3 font-mono text-slate-400">10:35:22 AM</td>
+                                    <td className="px-4 py-3 text-cyan-300">Escrow Settlement</td>
+                                    <td className="px-4 py-3 font-mono text-slate-300">Tx: #8F2A9C</td>
+                                    <td className="px-4 py-3">
+                                        <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                            Verified
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr className="hover:bg-white/5 transition-colors">
+                                    <td className="px-4 py-3 font-mono text-slate-400">10:31:05 AM</td>
+                                    <td className="px-4 py-3 text-amber-300">Policy Refresh</td>
+                                    <td className="px-4 py-3 font-mono text-slate-300">Policy: PDPL-v3</td>
+                                    <td className="px-4 py-3">
+                                        <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                            Hash Confirmed
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -250,7 +302,7 @@ export default function DashboardPage() {
                     <div className="rounded-3xl border border-white/[0.06] bg-slate-900/50 p-8 backdrop-blur-2xl">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <h3 className="text-2xl font-bold text-white">Executive Brief</h3>
+                                <h3 className="text-2xl font-bold text-white">Active Compliance Surface</h3>
                                 <p className="mt-1 text-sm text-slate-500">High-level signals across trust, access, and risk.</p>
                             </div>
                             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-slate-400">
@@ -261,10 +313,43 @@ export default function DashboardPage() {
                             {executiveSignals.map(signal => (
                                 <div
                                     key={signal.label}
-                                    className="rounded-2xl border border-white/10 bg-[#0a1628] p-5"
+                                    className={`rounded-2xl border p-5 ${
+                                        signal.label === 'Residency coverage'
+                                            ? 'border-emerald-500/30 bg-emerald-500/5 relative overflow-hidden'
+                                            : 'border-white/10 bg-[#0a1628]'
+                                    }`}
                                 >
-                                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{signal.label}</p>
-                                    <p className="mt-3 text-lg font-semibold text-white">{signal.value}</p>
+                                    {signal.label === 'Residency coverage' && (
+                                        <div className="absolute inset-0 opacity-15">
+                                            <svg className="h-full w-full" preserveAspectRatio="none">
+                                                <defs>
+                                                    <pattern id="world-map" width="60" height="30" patternUnits="userSpaceOnUse">
+                                                        <circle cx="8" cy="15" r="1.5" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="18" cy="12" r="1" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="25" cy="18" r="1.2" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="35" cy="8" r="0.8" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="42" cy="14" r="1" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="50" cy="10" r="1.3" fill="currentColor" className="text-emerald-400"/>
+                                                        <circle cx="55" cy="16" r="0.7" fill="currentColor" className="text-emerald-400"/>
+                                                        <path d="M5 15 Q15 10 25 15 T45 12 T58 18" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-emerald-400"/>
+                                                        <path d="M8 20 Q20 18 35 22 T55 20" stroke="currentColor" strokeWidth="0.4" fill="none" className="text-emerald-400" opacity="0.6"/>
+                                                        <circle cx="30" cy="20" r="2" fill="currentColor" className="text-emerald-300"/>
+                                                        <circle cx="45" cy="22" r="1.5" fill="currentColor" className="text-cyan-400"/>
+                                                    </pattern>
+                                                </defs>
+                                                <rect width="100%" height="100%" fill="url(#world-map)" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{signal.label}</p>
+                                        {signal.label === 'Residency coverage' && (
+                                            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-[10px] font-semibold text-emerald-300">
+                                                UAE Local Enclave - Active
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="mt-3 text-lg font-semibold text-white relative z-10">{signal.value}</p>
                                     <div className={`mt-3 h-1.5 rounded-full ${statToneStyles[signal.tone]}`} />
                                 </div>
                             ))}

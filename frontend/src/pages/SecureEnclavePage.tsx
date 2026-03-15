@@ -42,7 +42,7 @@ export default function SecureEnclavePage() {
                         </p>
                     </div>
                     <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100 shadow-[0_0_24px_rgba(245,158,11,0.25)]">
-                        Clean Room Session Active - Isolated compute environment
+                        🔒 SOC2 / PDPL Insulated Node
                     </div>
                 </header>
 
@@ -98,7 +98,7 @@ export default function SecureEnclavePage() {
                                                     : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
                                             }`}
                                         >
-                                            {rule.status}
+                                            {!rule.allowed && <span className="mr-1">🔒</span>}{rule.status}
                                         </span>
                                         <div className={`relative h-5 w-11 rounded-full ${rule.allowed ? 'bg-emerald-500/40' : 'bg-rose-500/40'}`}>
                                             <span
@@ -161,7 +161,10 @@ export default function SecureEnclavePage() {
                                     <span className="font-semibold text-white">Read-only, Clinical Outcomes Delta</span>
                                 </div>
                             </div>
-                            <button className="mt-5 w-full rounded-xl border border-rose-400/60 bg-transparent px-4 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10">
+                            <button className="mt-5 w-full rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.35)] transition">
+                                🚀 Launch Jupyter Sandbox
+                            </button>
+                            <button className="mt-3 w-full rounded-xl border border-rose-400/60 bg-transparent px-4 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/10">
                                 Revoke Credentials
                             </button>
                         </article>
