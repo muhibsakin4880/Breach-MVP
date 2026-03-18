@@ -415,7 +415,7 @@ export default function HomePage() {
                                     {[
                                         { title: 'SOC 2 Type II', subtitle: 'Inherited via AWS', type: 'blue' },
                                         { title: 'ISO 27001', subtitle: 'Inherited via AWS', type: 'blue' },
-                                        { title: 'HIPAA + GDPR', subtitle: 'Infrastructure compliant', type: 'green' }
+                                        { title: 'HIPAA + GDPR', subtitle: 'HIPAA eligible via AWS. GDPR aligned via EU-West-1 data residency.', type: 'green' }
                                     ].map((badge) => (
                                         <div
                                             key={badge.title}
