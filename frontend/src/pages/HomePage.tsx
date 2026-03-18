@@ -402,15 +402,45 @@ export default function HomePage() {
                             </div>
 
                             <div
-                                className={`hero-trust mt-12 flex flex-wrap items-center justify-center gap-6 text-sm opacity-0-init ${heroVisible ? 'animate-fadeIn delay-400' : ''}`}
+                                className={`mt-12 opacity-0-init ${heroVisible ? 'animate-fadeIn delay-400' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}
                             >
-                                {['SOC2 Compliant', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
-                                    <div key={item} className="flex items-center gap-2">
-                                        <span className="hero-trust-check text-base">✓</span>
-                                        <span>{item}</span>
-                                    </div>
-                                ))}
+                                <h3 className="text-center text-xl font-semibold text-white mb-6">
+                                    Enterprise-Grade Compliance, Inherited by Design
+                                </h3>
+                                <p className="text-center text-sm text-slate-400 max-w-xl mx-auto mb-8">
+                                    Redoubt is built entirely on AWS Enterprise infrastructure — inheriting SOC 2 Type II, ISO 27001, HIPAA eligibility, and GDPR alignment without compromise.
+                                </p>
+                                <div className="flex flex-wrap items-center justify-center gap-4">
+                                    {[
+                                        { title: 'SOC 2 Type II', subtitle: 'Inherited via AWS', type: 'blue' },
+                                        { title: 'ISO 27001', subtitle: 'Inherited via AWS', type: 'blue' },
+                                        { title: 'HIPAA + GDPR', subtitle: 'Infrastructure compliant', type: 'green' }
+                                    ].map((badge) => (
+                                        <div
+                                            key={badge.title}
+                                            className={`flex flex-col items-center rounded-xl border px-6 py-4 min-w-[160px] ${
+                                                badge.type === 'blue'
+                                                    ? 'border-blue-500/40 bg-blue-500/10'
+                                                    : 'border-emerald-500/40 bg-emerald-500/10'
+                                            }`}
+                                        >
+                                            <span className={`text-sm font-semibold ${
+                                                badge.type === 'blue' ? 'text-blue-200' : 'text-emerald-200'
+                                            }`}>
+                                                {badge.title}
+                                            </span>
+                                            <span className={`text-xs mt-1 ${
+                                                badge.type === 'blue' ? 'text-blue-300/70' : 'text-emerald-300/70'
+                                            }`}>
+                                                {badge.subtitle}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-center text-xs text-slate-500 italic mt-6">
+                                    Technical security liability rests with AWS. Redoubt focuses on trust, access, and audit integrity.
+                                </p>
                             </div>
                         </div>
                     </div>
