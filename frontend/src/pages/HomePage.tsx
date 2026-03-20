@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { ChangeEvent, DragEvent, FormEvent, useState, useEffect, useRef } from 'react'
+import { ChangeEvent, DragEvent, FormEvent, useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 // --- Animated counter hook ---
@@ -34,6 +34,102 @@ function useInView(threshold = 0.2) {
     return { ref, inView }
 }
 
+// --- Typing effect hook ---
+function useTypingEffect(text: string, speed = 50, start = false) {
+    const [displayed, setDisplayed] = useState('')
+    useEffect(() => {
+        if (!start) { setDisplayed(''); return }
+        let i = 0
+        const interval = setInterval(() => {
+            setDisplayed(text.slice(0, i + 1))
+            i++
+            if (i >= text.length) clearInterval(interval)
+        }, speed)
+        return () => clearInterval(interval)
+    }, [text, speed, start])
+    return displayed
+}
+
+// --- 3D Tilt component ---
+function TiltCard({ children, className }: { children: React.ReactNode, className?: string }) {
+    const cardRef = useRef<HTMLDivElement>(null)
+    const [transform, setTransform] = useState('')
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!cardRef.current) return
+        const rect = cardRef.current.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        const centerX = rect.width / 2
+        const centerY = rect.height / 2
+        const rotateX = (y - centerY) / 20
+        const rotateY = (centerX - x) / 20
+        setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`)
+    }, [])
+
+    const handleMouseLeave = useCallback(() => setTransform(''), [])
+
+    return (
+        <div
+            ref={cardRef}
+            className={`transition-all duration-200 ease-out ${className}`}
+            style={{ transform: transform || undefined }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+        >
+            {children}
+        </div>
+    )
+}
+
+// --- Particle canvas component ---
+function ParticleCanvas() {
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+    useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        let animationId: number
+        const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = []
+        const resize = () => {
+            canvas.width = canvas.offsetWidth
+            canvas.height = canvas.offsetHeight
+        }
+        resize()
+        window.addEventListener('resize', resize)
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 0.5,
+                opacity: Math.random() * 0.3 + 0.1
+            })
+        }
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            particles.forEach(p => {
+                p.x += p.vx
+                p.y += p.vy
+                if (p.x < 0) p.x = canvas.width
+                if (p.x > canvas.width) p.x = 0
+                if (p.y < 0) p.y = canvas.height
+                if (p.y > canvas.height) p.y = 0
+                ctx.beginPath()
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+                ctx.fillStyle = `rgba(77, 214, 214, ${p.opacity})`
+                ctx.fill()
+            })
+            animationId = requestAnimationFrame(animate)
+        }
+        animate()
+        return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(animationId) }
+    }, [])
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-40" />
+}
+
 export default function HomePage() {
     const { startOnboarding, signIn, signOut } = useAuth()
     const navigate = useNavigate()
@@ -41,6 +137,9 @@ export default function HomePage() {
     const [wizardStep, setWizardStep] = useState(1)
     const [heroVisible, setHeroVisible] = useState(false)
     const statsRef = useInView()
+    const complianceRef = useInView()
+    const whoCanJoinRef = useInView()
+    const trustRef = useInView()
 
     useEffect(() => {
         const timer = setTimeout(() => setHeroVisible(true), 100)
@@ -50,6 +149,8 @@ export default function HomePage() {
     const datasetsCount = useCountUp(12400, 1800, statsRef.inView)
     const verifiedCount = useCountUp(98, 1200, statsRef.inView)
     const partnersCount = useCountUp(340, 1600, statsRef.inView)
+
+    const taglineTyped = useTypingEffect('LAYERED DEFENSE FOR DATA CONFIDENCE', 40, heroVisible)
 
     // Hero animations handled via heroVisible state
     const handleRequestPlatformAccess = () => {
@@ -128,6 +229,38 @@ export default function HomePage() {
                     33% { transform: translate(30px, -20px) scale(1.05); }
                     66% { transform: translate(-20px, 15px) scale(0.95); }
                 }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(60px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes slideUpWave1 { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes slideUpWave2 { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes slideUpWave3 { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes badgePulse {
+                    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+                    70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+                }
+                @keyframes emojiBounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.8); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes shieldPulse {
+                    0%, 100% { filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 60px rgba(0, 180, 216, 0.35)) drop-shadow(0 0 100px rgba(0, 140, 180, 0.2)); }
+                    50% { filter: drop-shadow(0 0 45px rgba(0, 229, 255, 0.85)) drop-shadow(0 0 80px rgba(0, 180, 216, 0.5)) drop-shadow(0 0 130px rgba(0, 140, 180, 0.3)); }
+                }
+                @keyframes shieldFloat {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-18px); }
+                }
+                @keyframes vaultLayer1 { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                @keyframes vaultLayer2 { from { opacity: 0; transform: scale(0.85) translateY(15px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                @keyframes vaultLayer3 { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                @keyframes iconPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
                 .animate-fadeUp { animation: fadeUp 0.7s ease forwards; }
                 .animate-fadeIn { animation: fadeIn 0.6s ease forwards; }
@@ -139,12 +272,84 @@ export default function HomePage() {
                     animation: shimmer 3s linear infinite;
                 }
                 .animate-orb { animation: orb-drift 12s ease-in-out infinite; }
+                .animate-slideUp { animation: slideUp 0.5s ease forwards; }
+                .animate-badgePulse { animation: badgePulse 0.6s ease-out; }
+                .animate-emojiBounce { animation: emojiBounce 0.5s ease-out; }
+                .animate-scaleIn { animation: scaleIn 0.4s ease forwards; }
+                .animate-shieldPulse { animation: shieldPulse 4s ease-in-out infinite; }
+                .animate-shieldFloat { animation: shieldFloat 7s ease-in-out infinite; }
+
+                .hero-title-glow {
+                    color: #00E5FF;
+                    font-weight: 900;
+                    text-shadow:
+                        0 0 10px rgba(0, 229, 255, 0.9),
+                        0 0 20px rgba(0, 229, 255, 0.7),
+                        0 0 40px rgba(0, 229, 255, 0.5),
+                        0 0 80px rgba(0, 180, 216, 0.3),
+                        0 0 120px rgba(0, 140, 180, 0.15);
+                    letter-spacing: 0.12em;
+                }
+
+                .hero-tagline-text {
+                    color: #4dd6d6;
+                    letter-spacing: 0.2em;
+                    text-shadow: 0 0 12px rgba(77, 214, 214, 0.4), 0 0 24px rgba(77, 214, 214, 0.2);
+                }
+
+                .hero-btn-primary-new {
+                    background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
+                    border: 1px solid rgba(0, 229, 255, 0.5);
+                    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+                    transition: all 0.3s ease;
+                }
+                .hero-btn-primary-new:hover {
+                    background: linear-gradient(135deg, #0096c7 0%, #00e5ff 100%);
+                    box-shadow: 0 0 35px rgba(0, 229, 255, 0.5), 0 0 70px rgba(0, 229, 255, 0.2), 0 12px 40px rgba(0, 0, 0, 0.4);
+                    transform: translateY(-3px);
+                }
+
+                .hero-btn-outline-new {
+                    background: rgba(0, 20, 40, 0.6);
+                    border: 1px solid rgba(0, 229, 255, 0.35);
+                    backdrop-filter: blur(12px);
+                    transition: all 0.3s ease;
+                }
+                .hero-btn-outline-new:hover {
+                    border-color: rgba(0, 229, 255, 0.7);
+                    background: rgba(0, 229, 255, 0.06);
+                    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3);
+                    transform: translateY(-3px);
+                }
+
+                .hero-shield-wrapper {
+                    overflow: visible !important;
+                    padding-bottom: 0 !important;
+                    margin-bottom: 0 !important;
+                }
+                .animate-iconPulse { animation: iconPulse 2s ease-in-out infinite; }
+                .animate-vaultLayer1 { animation: vaultLayer1 0.6s ease forwards; animation-delay: 0.1s; opacity: 0; }
+                .animate-vaultLayer2 { animation: vaultLayer2 0.6s ease forwards; animation-delay: 0.2s; opacity: 0; }
+                .animate-vaultLayer3 { animation: vaultLayer3 0.6s ease forwards; animation-delay: 0.3s; opacity: 0; }
 
                 .delay-100 { animation-delay: 0.1s; }
                 .delay-200 { animation-delay: 0.2s; }
                 .delay-300 { animation-delay: 0.3s; }
                 .delay-400 { animation-delay: 0.4s; }
                 .delay-500 { animation-delay: 0.5s; }
+
+                .compliance-card-1 { animation: slideUpWave1 0.5s ease forwards; animation-delay: 0.1s; opacity: 0; }
+                .compliance-card-2 { animation: slideUpWave2 0.5s ease forwards; animation-delay: 0.2s; opacity: 0; }
+                .compliance-card-3 { animation: slideUpWave3 0.5s ease forwards; animation-delay: 0.3s; opacity: 0; }
+                .who-card-1 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.05s; opacity: 0; }
+                .who-card-2 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.1s; opacity: 0; }
+                .who-card-3 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.15s; opacity: 0; }
+                .who-card-4 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.2s; opacity: 0; }
+                .who-card-5 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.25s; opacity: 0; }
+                .who-card-6 { animation: scaleIn 0.4s ease forwards; animation-delay: 0.3s; opacity: 0; }
+
+                .compliance-card:hover { box-shadow: 0 0 40px rgba(59, 130, 246, 0.2), 0 20px 60px rgba(0, 0, 0, 0.3); transform: translateY(-4px); }
+                .who-card:hover { box-shadow: 0 0 40px rgba(16, 185, 129, 0.15), 0 20px 60px rgba(0, 0, 0, 0.3); border-color: rgba(16, 185, 129, 0.5); }
 
                 .glass-card {
                     background: rgba(15, 23, 42, 0.6);
@@ -171,16 +376,11 @@ export default function HomePage() {
 
                 .hero-bg {
                     background-color: #050C1F;
-                    background-image: linear-gradient(180deg, #050C1F 0%, #020817 100%);
-                }
-
-                .hero-glow {
-                    background: radial-gradient(closest-side at 50% 42%, rgba(70, 220, 230, 0.25) 0%, rgba(20, 30, 40, 0.1) 40%, transparent 70%);
-                    filter: blur(70px);
+                    background-image: linear-gradient(180deg, #050C1F 0%, #020817 60%);
                 }
 
                 .hero-shield {
-                    filter: drop-shadow(0 0 30px rgba(72, 219, 229, 0.45)) drop-shadow(0 0 70px rgba(14, 42, 80, 0.45));
+                    filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.4)) drop-shadow(0 0 50px rgba(0, 180, 216, 0.25));
                 }
 
                 .hero-title {
@@ -309,99 +509,120 @@ export default function HomePage() {
                     HERO SECTION
                 ═══════════════════════════════════════ */}
                 <section className="hero-bg relative min-h-screen flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 hero-glow" aria-hidden="true" />
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(0, 229, 255, 0.06) 0%, rgba(0, 100, 140, 0.03) 40%, transparent 70%)' }}
+                        aria-hidden="true"
+                    />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 60%, rgba(0, 150, 200, 0.08) 0%, transparent 60%)' }} aria-hidden="true" />
+                    <ParticleCanvas />
 
-                    <div className="container mx-auto px-4 py-24 md:py-32 relative z-10">
+                    <div className="container mx-auto px-4 relative z-10">
                         <div className="max-w-4xl mx-auto text-center">
+
                             <div
-                                className={`relative mx-auto mb-3 md:mb-4 lg:mb-4 w-56 h-56 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] pb-14 md:pb-20 lg:pb-24 overflow-visible opacity-0-init ${heroVisible ? 'animate-fadeUp' : ''}`}
-                                style={{ opacity: heroVisible ? undefined : 0 }}
+                                className={`relative mx-auto mb-8 md:mb-10 hero-shield-wrapper opacity-0-init ${heroVisible ? 'animate-shieldFloat animate-shieldPulse' : ''}`}
+                                style={{
+                                    opacity: heroVisible ? undefined : 0,
+                                    width: '220px',
+                                    height: '270px',
+                                    marginBottom: '0',
+                                    filter: 'drop-shadow(0 0 30px rgba(0, 229, 255, 0.5)) drop-shadow(0 0 70px rgba(0, 180, 216, 0.3))',
+                                }}
                             >
-                                <svg viewBox="0 0 240 300" className="w-full h-full hero-shield overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg viewBox="0 0 240 290" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
                                     <defs>
-                                        <linearGradient id="shieldOuter" x1="120" y1="0" x2="120" y2="280" gradientUnits="userSpaceOnUse">
-                                            <stop stopColor="#10294b"/>
-                                            <stop offset="1" stopColor="#0a1323"/>
+                                        <linearGradient id="shieldOuterNew" x1="120" y1="5" x2="120" y2="280" gradientUnits="userSpaceOnUse">
+                                            <stop stopColor="#0d2a4a"/>
+                                            <stop offset="1" stopColor="#081020"/>
                                         </linearGradient>
-                                        <linearGradient id="shieldInner" x1="120" y1="40" x2="120" y2="240" gradientUnits="userSpaceOnUse">
+                                        <linearGradient id="shieldInnerNew" x1="120" y1="38" x2="120" y2="238" gradientUnits="userSpaceOnUse">
                                             <stop stopColor="#0f2442"/>
-                                            <stop offset="1" stopColor="#091322"/>
+                                            <stop offset="1" stopColor="#060e1a"/>
                                         </linearGradient>
-                                        <filter id="circuitGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                            <feMerge>
-                                                <feMergeNode in="coloredBlur"/>
-                                                <feMergeNode in="SourceGraphic"/>
-                                            </feMerge>
-                                        </filter>
-                                        <filter id="shieldGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                            <feGaussianBlur stdDeviation="6" result="softGlow"/>
+                                        <filter id="shieldGlowNew" x="-80%" y="-80%" width="260%" height="260%">
+                                            <feGaussianBlur stdDeviation="8" result="softGlow"/>
                                             <feMerge>
                                                 <feMergeNode in="softGlow"/>
                                                 <feMergeNode in="SourceGraphic"/>
                                             </feMerge>
                                         </filter>
+                                        <filter id="circuitGlowNew" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                        <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop stopColor="#00E5FF"/>
+                                            <stop offset="1" stopColor="#0096c7"/>
+                                        </linearGradient>
                                     </defs>
                                     <path
-                                        d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
-                                        fill="url(#shieldOuter)"
+                                        d="M120 10L24 58v88c0 76 46 130 96 142 50-12 96-66 96-142V58L120 10z"
+                                        fill="url(#shieldOuterNew)"
                                         stroke="#0f3a7a"
-                                        strokeWidth="4"
-                                        filter="url(#shieldGlow)"
+                                        strokeWidth="3"
+                                        filter="url(#shieldGlowNew)"
                                     />
                                     <path
-                                        d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
-                                        fill="url(#shieldInner)"
+                                        d="M120 44L66 74v72c0 56 34 96 54 106 20-10 54-50 54-106V74L120 44z"
+                                        fill="url(#shieldInnerNew)"
                                         stroke="#0b2552"
-                                        strokeWidth="3"
+                                        strokeWidth="2"
                                     />
-                                    <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#circuitGlow)">
-                                        <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
-                                        <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
-                                        <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
+                                    <g stroke="url(#circuitGrad)" strokeLinecap="round" strokeLinejoin="round" filter="url(#circuitGlowNew)">
+                                        <path d="M56 198 C94 192 112 172 132 150" strokeWidth="7" />
+                                        <path d="M48 160 C88 156 108 138 128 120" strokeWidth="7" />
+                                        <path d="M60 124 C98 120 120 104 146 90" strokeWidth="7" />
                                     </g>
-                                    <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#circuitGlow)" />
-                                    <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
-                                    <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
-                                    <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#circuitGlow)" />
+                                    <path d="M146 90 L178 78 L160 108 Z" fill="url(#circuitGrad)" filter="url(#circuitGlowNew)" />
+                                    <circle cx="56" cy="198" r="6" fill="#00E5FF" filter="url(#circuitGlowNew)" />
+                                    <circle cx="48" cy="160" r="6" fill="#00E5FF" filter="url(#circuitGlowNew)" />
+                                    <circle cx="60" cy="124" r="6" fill="#00E5FF" filter="url(#circuitGlowNew)" />
                                 </svg>
                             </div>
 
-                            <h1
-                                className={`Redoubt-font hero-title text-6xl md:text-7xl lg:text-8xl font-extrabold uppercase opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
+                            <div
+                                className={`opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}
                             >
-                                REDOUBT
-                            </h1>
-
-                            <p
-                                className={`hero-tagline text-xs md:text-sm lg:text-base mt-5 uppercase font-semibold opacity-0-init ${heroVisible ? 'animate-fadeUp delay-200' : ''}`}
-                                style={{ opacity: heroVisible ? undefined : 0 }}
-                            >
-                                LAYERED DEFENSE FOR DATA CONFIDENCE
-                            </p>
+                                <h1 className="hero-title-glow Redoubt-font text-5xl md:text-7xl lg:text-8xl mb-4 md:mb-5" style={{ fontFamily: "'Syne', sans-serif" }}>
+                                    REDOUBT
+                                </h1>
+                                <div className="flex items-center justify-center gap-4 mb-5 md:mb-6">
+                                    <div className="h-px w-16 md:w-24 bg-gradient-to-r from-transparent to-cyan-400/60" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-70" style={{ boxShadow: '0 0 8px #00E5FF' }} />
+                                    <div className="h-px w-16 md:w-24 bg-gradient-to-l from-transparent to-cyan-400/60" />
+                                </div>
+                                <p className="hero-tagline-text text-[11px] md:text-sm uppercase tracking-[0.22em] font-semibold">
+                                    Layered Defense for Data Confidence
+                                </p>
+                            </div>
 
                             <div
-                                className={`mt-10 flex flex-col sm:flex-row gap-4 justify-center opacity-0-init ${heroVisible ? 'animate-fadeUp delay-300' : ''}`}
+                                className={`mt-10 md:mt-12 flex flex-col sm:flex-row gap-4 justify-center opacity-0-init ${heroVisible ? 'animate-fadeUp delay-400' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}
                             >
                                 <Link
                                     to="/login"
                                     onClick={handleSignInFromLanding}
-                                    className="hero-btn-primary px-8 py-4 text-white font-semibold rounded-xl text-lg"
+                                    className="hero-btn-primary-new px-8 py-4 text-white font-bold rounded-xl text-base md:text-lg tracking-wide"
                                 >
                                     Sign In →
                                 </Link>
                                 <button
                                     type="button"
                                     onClick={handleRequestPlatformAccess}
-                                    className="hero-btn-secondary px-8 py-4 text-white/90 font-semibold rounded-xl text-lg"
+                                    className="hero-btn-outline-new px-8 py-4 text-cyan-100 font-semibold rounded-xl text-base md:text-lg tracking-wide"
                                 >
                                     Request Platform Access
                                 </button>
                             </div>
 
                             <div
+                                ref={complianceRef.ref}
                                 className={`mt-12 opacity-0-init ${heroVisible ? 'animate-fadeIn delay-400' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}
                             >
@@ -413,17 +634,17 @@ export default function HomePage() {
                                 </p>
                                 <div className="flex flex-wrap items-center justify-center gap-4">
                                     {[
-                                        { title: 'SOC 2 Type II', subtitle: 'Inherited via AWS', type: 'blue' },
-                                        { title: 'ISO 27001', subtitle: 'Inherited via AWS', type: 'blue' },
-                                        { title: 'HIPAA + GDPR', subtitle: 'HIPAA eligible via AWS. GDPR aligned via EU-West-1 data residency.', type: 'green' }
+                                        { title: 'SOC 2 Type II', subtitle: 'Inherited via AWS', type: 'blue', delay: 'compliance-card-1' },
+                                        { title: 'ISO 27001', subtitle: 'Inherited via AWS', type: 'blue', delay: 'compliance-card-2' },
+                                        { title: 'HIPAA + GDPR', subtitle: 'HIPAA eligible via AWS. GDPR aligned via EU-West-1 data residency.', type: 'green', delay: 'compliance-card-3' }
                                     ].map((badge) => (
                                         <div
                                             key={badge.title}
-                                            className={`flex flex-col items-center rounded-xl border px-6 py-4 min-w-[160px] ${
+                                            className={`flex flex-col items-center rounded-xl border px-6 py-4 min-w-[160px] transition-all duration-300 compliance-card ${
                                                 badge.type === 'blue'
                                                     ? 'border-blue-500/40 bg-blue-500/10'
                                                     : 'border-emerald-500/40 bg-emerald-500/10'
-                                            }`}
+                                            } ${complianceRef.inView ? badge.delay : ''}`}
                                         >
                                             <span className={`text-sm font-semibold ${
                                                 badge.type === 'blue' ? 'text-blue-200' : 'text-emerald-200'
@@ -434,6 +655,11 @@ export default function HomePage() {
                                                 badge.type === 'blue' ? 'text-blue-300/70' : 'text-emerald-300/70'
                                             }`}>
                                                 {badge.subtitle}
+                                            </span>
+                                            <span className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium animate-badgePulse ${
+                                                badge.type === 'blue' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                            }`}>
+                                                Inherited
                                             </span>
                                         </div>
                                     ))}
@@ -477,7 +703,7 @@ export default function HomePage() {
                                             </span>
                                         </div>
                                     )}
-                                    <div className="w-10 h-10 mx-auto mb-3 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                                    <div className="w-10 h-10 mx-auto mb-3 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-iconPulse">
                                         {stat.icon}
                                     </div>
                                     <div className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
@@ -556,9 +782,38 @@ export default function HomePage() {
                     TRUST & VERIFICATION SECTION
                 ═══════════════════════════════════════ */}
                 <section className="py-24" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
-                    <div className="container mx-auto px-4">
+                    <div ref={trustRef.ref} className="container mx-auto px-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-16">
+                                <div className="relative w-32 h-32 mx-auto mb-8">
+                                    <svg viewBox="0 0 120 120" className="w-full h-full">
+                                        <defs>
+                                            <linearGradient id="vaultGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stopColor="#0f3a7a" />
+                                                <stop offset="100%" stopColor="#091322" />
+                                            </linearGradient>
+                                            <linearGradient id="vaultGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stopColor="#0b4a6a" />
+                                                <stop offset="100%" stopColor="#061220" />
+                                            </linearGradient>
+                                            <linearGradient id="vaultGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stopColor="#00e5ff" />
+                                                <stop offset="100%" stopColor="#00b8d4" />
+                                            </linearGradient>
+                                            <filter id="vaultGlow">
+                                                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur"/>
+                                                    <feMergeNode in="SourceGraphic"/>
+                                                </feMerge>
+                                            </filter>
+                                        </defs>
+                                        <rect x="10" y="20" width="100" height="80" rx="8" className={`${trustRef.inView ? 'animate-vaultLayer1' : 'opacity-0'}`} fill="url(#vaultGrad1)" stroke="#0f3a7a" strokeWidth="2" />
+                                        <rect x="25" y="35" width="70" height="50" rx="6" className={`${trustRef.inView ? 'animate-vaultLayer2' : 'opacity-0'}`} fill="url(#vaultGrad2)" stroke="#0b4a6a" strokeWidth="2" />
+                                        <rect x="45" y="50" width="30" height="20" rx="4" className={`${trustRef.inView ? 'animate-vaultLayer3' : 'opacity-0'}`} fill="url(#vaultGrad3)" filter="url(#vaultGlow)" />
+                                        <circle cx="60" cy="60" r="4" fill="#ffffff" className={`${trustRef.inView ? 'animate-vaultLayer3' : 'opacity-0'}`} />
+                                    </svg>
+                                </div>
                                 <div className="w-16 h-px mx-auto mb-4 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
                                 <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Security</p>
                                 <h2 className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-4">
@@ -706,7 +961,7 @@ export default function HomePage() {
                     WHO CAN JOIN TODAY SECTION
                 ═══════════════════════════════════════ */}
                 <section className="py-20" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
-                    <div className="container mx-auto px-4">
+                    <div ref={whoCanJoinRef.ref} className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto text-center mb-12">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Who Can Join Today</p>
                             <h2 className="Redoubt-font text-3xl md:text-5xl font-bold text-white mb-4">
@@ -719,21 +974,27 @@ export default function HomePage() {
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {[
-                                { icon: '🏥', title: 'Healthcare AI Startups', description: 'Clinical data, imaging, diagnostics pipelines' },
-                                { icon: '💳', title: 'Fintech Startups', description: 'Financial risk, fraud, market data' },
-                                { icon: '🔬', title: 'Research Institutions', description: 'Academic and clinical research datasets' },
-                                { icon: '🎓', title: 'Universities', description: 'Student research, scientific data sharing' },
-                                { icon: '🌍', title: 'Climate & Environmental Firms', description: 'Satellite, emissions, land use data' },
-                                { icon: '🧬', title: 'Early Stage Biotech', description: 'Genomics, drug discovery, trial data' }
-                            ].map((card) => (
-                                <div key={card.title} className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-xl hover:border-emerald-500/30 transition-colors">
-                                    <div className="text-4xl mb-4">{card.icon}</div>
-                                    <h3 className="text-lg font-semibold text-white mb-2">{card.title}</h3>
-                                    <p className="text-sm text-slate-400 mb-4">{card.description}</p>
-                                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                        Accepting Now
-                                    </span>
+                                { icon: '🏥', title: 'Healthcare AI Startups', description: 'Clinical data, imaging, diagnostics pipelines', delay: 'who-card-1' },
+                                { icon: '💳', title: 'Fintech Startups', description: 'Financial risk, fraud, market data', delay: 'who-card-2' },
+                                { icon: '🔬', title: 'Research Institutions', description: 'Academic and clinical research datasets', delay: 'who-card-3' },
+                                { icon: '🎓', title: 'Universities', description: 'Student research, scientific data sharing', delay: 'who-card-4' },
+                                { icon: '🌍', title: 'Climate & Environmental Firms', description: 'Satellite, emissions, land use data', delay: 'who-card-5' },
+                                { icon: '🧬', title: 'Early Stage Biotech', description: 'Genomics, drug discovery, trial data', delay: 'who-card-6' }
+                            ].map((card, idx) => (
+                                <div key={card.title} className={`${whoCanJoinRef.inView ? card.delay : ''}`}>
+                                    <TiltCard>
+                                        <div className="who-card rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-xl transition-all duration-300">
+                                            <div className={`text-4xl mb-4 ${whoCanJoinRef.inView ? 'animate-emojiBounce' : ''}`} style={{ animationDelay: `${0.05 + idx * 0.05}s` }}>
+                                                {card.icon}
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-white mb-2">{card.title}</h3>
+                                            <p className="text-sm text-slate-400 mb-4">{card.description}</p>
+                                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                                                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                                Accepting Now
+                                            </span>
+                                        </div>
+                                    </TiltCard>
                                 </div>
                             ))}
                         </div>
