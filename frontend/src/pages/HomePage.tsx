@@ -428,6 +428,7 @@ export default function HomePage() {
 
     const handleRequestPlatformAccess = () => { startOnboarding(); navigate('/onboarding') }
     const handleSignInFromLanding     = () => { signOut() }
+    const handleAdminAccessFromLanding = () => { signOut(); navigate('/admin/login') }
     const handleWizardCancel          = () => { setWizardOpen(false); setWizardStep(1) }
     const handleEnterDashboard        = () => { signIn(); setWizardOpen(false); setWizardStep(1); navigate('/dashboard') }
     const handleReviewProfile         = () => { signIn(); setWizardOpen(false); setWizardStep(1); navigate('/profile') }
@@ -508,6 +509,12 @@ export default function HomePage() {
                                 <a href="#join"         className="nav-link text-slate-300 hover:text-white">Join Today</a>
                             </nav>
                             <div className="flex items-center gap-x-4">
+                                <button
+                                    onClick={handleAdminAccessFromLanding}
+                                    className="px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-200 border border-cyan-500/40 rounded-2xl hover:border-cyan-300/70 hover:bg-cyan-500/10 transition-all"
+                                >
+                                    Admin Console
+                                </button>
                                 <Link
                                     to="/login"
                                     onClick={handleSignInFromLanding}
@@ -582,6 +589,12 @@ export default function HomePage() {
                             transition-all duration-700 delay-700
                             ${heroVisible ? 'opacity-100' : 'opacity-0'}
                         `}>
+                            <button
+                                onClick={handleAdminAccessFromLanding}
+                                className="px-10 py-4 border border-cyan-500/50 text-cyan-100 font-medium rounded-2xl text-lg backdrop-blur-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-300"
+                            >
+                                Open Admin Console
+                            </button>
                             <Link
                                 to="/login"
                                 onClick={handleSignInFromLanding}
@@ -796,6 +809,12 @@ export default function HomePage() {
                             Every participant is identity-verified. Every dataset is scored. Every access is audited.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-5 justify-center">
+                            <button
+                                onClick={handleAdminAccessFromLanding}
+                                className="px-12 py-5 border-2 border-cyan-500/70 rounded-3xl text-lg font-medium text-cyan-100 hover:bg-cyan-500/10 transition-all"
+                            >
+                                Admin Console
+                            </button>
                             <Link
                                 to="/login"
                                 onClick={handleSignInFromLanding}

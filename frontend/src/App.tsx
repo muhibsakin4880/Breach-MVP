@@ -150,6 +150,7 @@ function App() {
                     <Route path="onboarding/confirmation" element={RequireOnboardingAccess(<OnboardingConfirmation />)} />
                 </Route>
 
+                <Route path="admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="admin/login" element={<AdminLoginPage />} />
                 <Route path="admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />

@@ -222,6 +222,15 @@ export default function LoginPage() {
                         </div>
                     </div>
                 )}
+
+                <div className="mt-5 pt-4 border-t border-slate-800 text-center">
+                    <Link
+                        to="/admin"
+                        className="text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+                    >
+                        System administrator? Open Admin Console
+                    </Link>
+                </div>
             </div>
         </div>
     )
