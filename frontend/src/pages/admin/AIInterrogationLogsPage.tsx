@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -56,6 +56,19 @@ type CriticalAlert = {
     message: string
 }
 
+type SchemaTone = 'green' | 'amber' | 'red'
+
+type SchemaFieldRow = {
+    field: string
+    type: string
+    sample: string
+    complianceLabel: string
+    complianceTone: SchemaTone
+    residencyLabel: string
+    residencyTone: SchemaTone
+    nullRate: string
+}
+
 const summaryStats = [
     { label: 'Datasets Scanned Today', value: '847' },
     { label: 'Access Decisions Made', value: '312' },
@@ -71,7 +84,7 @@ const tabs: Array<{ key: TabKey; label: string }> = [
     { key: 'quarantine', label: 'Quarantine Events' }
 ]
 
-const logRows: LogRow[] = [
+export const logRows: LogRow[] = [
     {
         id: 'log-1',
         timestamp: '2026-03-22 14:32:07',
@@ -364,6 +377,159 @@ const criticalAlerts: CriticalAlert[] = [
     { tone: 'info', message: 'Scheduled audit backup completed' }
 ]
 
+export const schemaFieldRows: SchemaFieldRow[] = [
+    {
+        field: 'device_id',
+        type: 'String',
+        sample: '"DE-7829-XK", "AE-4512-QR"',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'timestamp_utc',
+        type: 'Timestamp',
+        sample: '"2026-01-15T08:23:41Z"',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'flow_count',
+        type: 'Integer',
+        sample: '1247, 3892, 562',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '1.8%'
+    },
+    {
+        field: 'blood_type',
+        type: 'String',
+        sample: '"A+", "O-", "B+"',
+        complianceLabel: 'High Risk: PDPL Flagged',
+        complianceTone: 'red',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'red',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'national_id',
+        type: 'String',
+        sample: '"784-1972-1234567-1"',
+        complianceLabel: 'High Risk: PDPL Flagged',
+        complianceTone: 'red',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'red',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'location_lat',
+        type: 'Float',
+        sample: '"24.4539", "25.2697"',
+        complianceLabel: 'Gray Zone: DPO Review Pending',
+        complianceTone: 'amber',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'amber',
+        nullRate: '2.1%'
+    },
+    {
+        field: 'location_lon',
+        type: 'Float',
+        sample: '"54.3773", "55.3092"',
+        complianceLabel: 'Gray Zone: DPO Review Pending',
+        complianceTone: 'amber',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'amber',
+        nullRate: '2.1%'
+    },
+    {
+        field: 'salary_bracket',
+        type: 'String',
+        sample: '"150000-200000 AED"',
+        complianceLabel: 'Gray Zone: DPO Review Pending',
+        complianceTone: 'amber',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'amber',
+        nullRate: '5.4%'
+    },
+    {
+        field: 'email_hash',
+        type: 'String',
+        sample: '"a7b3c9f2..."',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'registration_date',
+        type: 'Date',
+        sample: '"2024-03-12", "2025-01-08"',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'ip_address',
+        type: 'String',
+        sample: '"185.58.142.12"',
+        complianceLabel: 'High Risk: PDPL Flagged',
+        complianceTone: 'red',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'red',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'passport_number',
+        type: 'String',
+        sample: '"A12345678"',
+        complianceLabel: 'High Risk: PDPL Flagged',
+        complianceTone: 'red',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'red',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'phone_prefix',
+        type: 'String',
+        sample: '"+971-50", "+971-55"',
+        complianceLabel: 'Gray Zone: DPO Review Pending',
+        complianceTone: 'amber',
+        residencyLabel: '🇦🇪 Local Hosting Required',
+        residencyTone: 'amber',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'department_code',
+        type: 'String',
+        sample: '"HR-FIN-001", "OPS-TECH-042"',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    },
+    {
+        field: 'employee_id',
+        type: 'String',
+        sample: '"EMP-2024-8891"',
+        complianceLabel: 'Tier 1: Safe',
+        complianceTone: 'green',
+        residencyLabel: '🌐 Global Transfer Cleared',
+        residencyTone: 'green',
+        nullRate: '0.0%'
+    }
+]
+
 const toneBadgeClasses: Record<DecisionTone, string> = {
     red: 'bg-red-500/10 text-red-300 border-red-500/30',
     amber: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
@@ -394,6 +560,18 @@ const alertClasses: Record<CriticalAlert['tone'], string> = {
     info: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
 }
 
+const schemaToneClasses: Record<SchemaTone, string> = {
+    green: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+    amber: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+    red: 'border-red-500/30 bg-red-500/10 text-red-200'
+}
+
+const summaryScoreClasses: Record<DecisionTone, string> = {
+    green: 'text-emerald-300',
+    amber: 'text-amber-300',
+    red: 'text-red-300'
+}
+
 function getConfidenceTone(value: string): DecisionTone | null {
     const parsed = Number.parseInt(value, 10)
     if (Number.isNaN(parsed)) return null
@@ -410,13 +588,43 @@ function filterLogs(rows: LogRow[], tab: TabKey) {
     return rows.filter(row => row.logType === 'Quarantine Event')
 }
 
+function getCompactSummary(log: LogRow) {
+    if (log.decision === 'APPROVED' || log.decision === 'CLEAN') {
+        return [
+            'All 15 fields within safe threshold.',
+            'No PHI/PII detected.',
+            'Schema valid. Global transfer cleared.',
+            'Recommendation: Approve.'
+        ].join('\n')
+    }
+
+    if (log.decision === 'BLOCKED' || log.decision === 'QUARANTINED' || log.decision === 'FLAGGED') {
+        return [
+            '4 High Risk fields detected (PHI: national_id, passport_number, blood_type, ip_address).',
+            'Schema mismatch: 12 declared, 15 found.',
+            'Residency violation: UAE local hosting required.',
+            'Recommendation: Quarantine.'
+        ].join('\n')
+    }
+
+    return [
+        'Deep scan in progress.',
+        'Risk and residency checks still running.',
+        'Schema validation pending final pass.',
+        'Recommendation: Hold for review.'
+    ].join('\n')
+}
+
 export default function AIInterrogationLogsPage() {
     const { isAuthenticated } = useAuth()
+    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState<TabKey>('all')
     const [selectedLogId, setSelectedLogId] = useState(logRows[0].id)
 
     const visibleRows = useMemo(() => filterLogs(logRows, activeTab), [activeTab])
     const selectedLog = useMemo(() => logRows.find(row => row.id === selectedLogId) ?? logRows[0], [selectedLogId])
+    const compactSummary = useMemo(() => getCompactSummary(selectedLog), [selectedLog])
+    const overallConfidence = selectedLog.confidence === '--' ? 'N/A' : selectedLog.confidence
 
     const onTabClick = (tab: TabKey) => {
         const nextRows = filterLogs(logRows, tab)
@@ -543,63 +751,58 @@ export default function AIInterrogationLogsPage() {
                     </article>
 
                     <aside className="xl:col-span-4 rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl p-5 shadow-2xl shadow-black/30">
-                        <div className="space-y-1">
-                            <h3 className="text-[12px] uppercase tracking-[0.12em] text-slate-300 font-semibold">AI Decision Report</h3>
-                            <p className="text-sm text-slate-100 font-medium">{selectedLog.report.subjectTitle}</p>
-                        </div>
-
-                        <div className="mt-4 space-y-2 text-[11px] font-mono text-slate-300">
-                            <div className="flex justify-between gap-3"><span className="text-slate-500">Dataset ID:</span><span>{selectedLog.report.datasetId}</span></div>
-                            <div className="flex justify-between gap-3"><span className="text-slate-500">Vendor ID:</span><span>{selectedLog.report.vendorId}</span></div>
-                            <div className="flex justify-between gap-3"><span className="text-slate-500">Scan started:</span><span>{selectedLog.report.scanStarted}</span></div>
-                            <div className="flex justify-between gap-3"><span className="text-slate-500">Scan completed:</span><span>{selectedLog.report.scanCompleted}</span></div>
-                            <div className="flex justify-between gap-3"><span className="text-slate-500">AI model:</span><span>{selectedLog.report.aiModel}</span></div>
-                        </div>
-
-                        <div className="mt-5">
-                            <h4 className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Confidence breakdown</h4>
-                            <div className="mt-2 space-y-1.5 text-[11px] font-mono">
-                                {selectedLog.report.confidenceBreakdown.map(item => (
-                                    <div key={item.label} className="flex justify-between gap-3 rounded-md border border-slate-800/80 bg-slate-950/40 px-2.5 py-1.5">
-                                        <span className="text-slate-400">{item.label}</span>
-                                        <span className={item.tone ? (item.tone === 'green' ? 'text-emerald-300' : item.tone === 'amber' ? 'text-amber-300' : 'text-red-300') : 'text-slate-200'}>{item.value}</span>
-                                    </div>
-                                ))}
+                        <div className="space-y-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                    <h3 className="text-[12px] uppercase tracking-[0.12em] text-slate-300 font-semibold">AI Summary</h3>
+                                    <p className="text-sm text-slate-100 font-medium">{selectedLog.report.subjectTitle}</p>
+                                </div>
+                                <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-semibold tracking-wider ${toneBadgeClasses[selectedLog.decisionTone]}`}>
+                                    {selectedLog.decision}
+                                </span>
                             </div>
-                        </div>
 
-                        <div className="mt-5">
-                            <h4 className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Issues detected ({selectedLog.report.issues.length} items)</h4>
-                            <div className="mt-2 space-y-2 text-[11px] font-mono">
-                                {selectedLog.report.issues.map((issue, index) => (
-                                    <div key={`${issue.text}-${index}`} className={`rounded-md border px-2.5 py-2 leading-relaxed ${issueClasses[issue.tone]}`}>
-                                        {issue.text}
-                                    </div>
-                                ))}
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 px-3 py-3">
+                                <p className={`text-3xl font-semibold leading-none ${summaryScoreClasses[selectedLog.decisionTone]}`}>{overallConfidence}</p>
+                                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">Overall Confidence</p>
                             </div>
-                        </div>
 
-                        <div className="mt-5">
-                            <h4 className="text-[11px] uppercase tracking-[0.12em] text-slate-400">Action taken</h4>
-                            <div className="mt-2 space-y-1.5 text-[11px] font-mono">
-                                {selectedLog.report.actionsTaken.map(item => (
-                                    <div key={item.label} className="flex justify-between gap-3 rounded-md border border-slate-800/80 bg-slate-950/40 px-2.5 py-1.5">
-                                        <span className="text-slate-400">{item.label}:</span>
-                                        <span className={actionTakenToneClasses[item.tone]}>{item.value}</span>
-                                    </div>
-                                ))}
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 px-3 py-3">
+                                <p className="font-mono text-[11px] leading-relaxed text-slate-200 whitespace-pre-line">{compactSummary}</p>
                             </div>
-                        </div>
 
-                        <div className="mt-6 grid grid-cols-1 gap-2">
-                            <button className="rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-[11px] font-semibold text-amber-200 hover:bg-amber-500/15 transition-colors">
-                                Override & Approve
-                            </button>
-                            <button className="rounded-md border border-red-500/50 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-200 hover:bg-red-500/15 transition-colors">
-                                Confirm Quarantine
-                            </button>
-                            <button className="rounded-md border border-cyan-500/50 bg-cyan-500/10 px-3 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/15 transition-colors">
-                                Request Manual Review
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="rounded-md border border-slate-800/80 bg-slate-950/40 px-2 py-2 text-center">
+                                    <p className="text-[9px] uppercase tracking-[0.12em] text-slate-500">Fields</p>
+                                    <p className="mt-1 font-mono text-[12px] text-slate-200">15</p>
+                                </div>
+                                <div className="rounded-md border border-red-500/30 bg-red-500/10 px-2 py-2 text-center">
+                                    <p className="text-[9px] uppercase tracking-[0.12em] text-red-300/80">High Risk</p>
+                                    <p className="mt-1 font-mono text-[12px] text-red-200">4</p>
+                                </div>
+                                <div className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-2 text-center">
+                                    <p className="text-[9px] uppercase tracking-[0.12em] text-cyan-300/80">Null Rate</p>
+                                    <p className="mt-1 font-mono text-[12px] text-cyan-200">0.8%</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <button className="rounded-md border border-red-500/50 bg-red-500/10 px-2 py-1.5 text-[10px] font-semibold text-red-200 hover:bg-red-500/15 transition-colors">
+                                    Quarantine
+                                </button>
+                                <button className="rounded-md border border-emerald-500/50 bg-emerald-500/10 px-2 py-1.5 text-[10px] font-semibold text-emerald-200 hover:bg-emerald-500/15 transition-colors">
+                                    Approve
+                                </button>
+                                <button className="rounded-md border border-amber-500/50 bg-amber-500/10 px-2 py-1.5 text-[10px] font-semibold text-amber-200 hover:bg-amber-500/15 transition-colors">
+                                    DPO Review
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => navigate(`/admin/ai-report/${selectedLog.id}`)}
+                                className="w-full rounded-md border border-cyan-500/50 bg-transparent px-3 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/10 transition-colors"
+                            >
+                                View Full Report →
                             </button>
                         </div>
                     </aside>
