@@ -14,6 +14,7 @@ import AIInterrogationLogsPage from './pages/admin/AIInterrogationLogsPage'
 import AIReportPage from './pages/admin/AIReportPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import EscrowVaultPage from './pages/admin/EscrowVaultPage'
+import ActiveEphemeralTokensPage from './pages/admin/ActiveEphemeralTokensPage'
 import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import ApplicationReviewPage from './pages/admin/ApplicationReviewPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -162,6 +163,7 @@ function App() {
                 <Route path="admin/ai-report/:reportId" element={<AIReportPage />} />
                 <Route path="admin/settings" element={<AdminSettingsPage />} />
                 <Route path="admin/escrow-vault" element={<EscrowVaultPage />} />
+                <Route path="admin/ephemeral-tokens" element={<ActiveEphemeralTokensPage />} />
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
                 <Route path="admin/application-review/:appId" element={<ApplicationReviewPage />} />
                 <Route path="admin/incident-response" element={<IncidentResponsePage />} />
