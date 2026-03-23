@@ -13,6 +13,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import AIInterrogationLogsPage from './pages/admin/AIInterrogationLogsPage'
 import AIReportPage from './pages/admin/AIReportPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
+import EscrowVaultPage from './pages/admin/EscrowVaultPage'
 import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import ApplicationReviewPage from './pages/admin/ApplicationReviewPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -160,6 +161,7 @@ function App() {
                 <Route path="admin/ai-interrogation-logs" element={<AIInterrogationLogsPage />} />
                 <Route path="admin/ai-report/:reportId" element={<AIReportPage />} />
                 <Route path="admin/settings" element={<AdminSettingsPage />} />
+                <Route path="admin/escrow-vault" element={<EscrowVaultPage />} />
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
                 <Route path="admin/application-review/:appId" element={<ApplicationReviewPage />} />
                 <Route path="admin/incident-response" element={<IncidentResponsePage />} />
