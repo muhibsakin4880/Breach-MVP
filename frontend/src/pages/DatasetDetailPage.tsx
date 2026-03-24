@@ -8,6 +8,7 @@ import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
+import ControlTowerPanel from '../components/ControlTowerPanel'
 
 const STATUS_STEPS = [
     {
@@ -331,6 +332,13 @@ export default function DatasetDetailPage() {
                                 role="buyer"
                                 compact
                                 title="Access Impact Simulator"
+                            />
+                            <ControlTowerPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                role="buyer"
+                                compact
+                                title="Access Control Tower"
                             />
                             <ExecutionRunbookPanel
                                 contractId={`REQ-${dataset.id}`}

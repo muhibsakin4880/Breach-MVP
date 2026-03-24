@@ -9,6 +9,7 @@ import SecurityAuditTimeline from '../../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../../components/ContractHealthPanel'
 import TransitionImpactPanel from '../../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../../components/ExecutionRunbookPanel'
+import ControlTowerPanel from '../../components/ControlTowerPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -335,6 +336,13 @@ export default function EscrowVaultPage() {
                     role="admin"
                     pendingReleaseCount={pendingReleaseCount}
                     title="Operation Impact Simulator"
+                />
+                <ControlTowerPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    title="Vault Control Tower"
                 />
                 <ExecutionRunbookPanel
                     contractId={focusedEscrowId}

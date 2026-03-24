@@ -15,6 +15,7 @@ import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
+import ControlTowerPanel from '../components/ControlTowerPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -260,6 +261,15 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                             role="reviewer"
                             compact
                             title="Decision Impact Simulator"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <ControlTowerPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Reviewer Control Tower"
                         />
                     </div>
                     <div className="mt-4">

@@ -6,6 +6,7 @@ import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
+import ControlTowerPanel from '../components/ControlTowerPanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -280,6 +281,13 @@ export default function EscrowCenterPage() {
                         role="buyer"
                         compact
                         title="Action Impact Simulator"
+                    />
+                    <ControlTowerPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Buyer Control Tower"
                     />
                     <ExecutionRunbookPanel
                         contractId={selectedTransaction.id}
