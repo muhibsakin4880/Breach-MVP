@@ -12,6 +12,7 @@ import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 import DecisionGatePanel from '../components/DecisionGatePanel'
 import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
+import RemediationQueuePanel from '../components/RemediationQueuePanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -179,6 +180,11 @@ export default function EscrowCenterPage() {
                 digests={buyerPortfolioDigests}
                 compact
                 title="Buyer Portfolio Alerts"
+            />
+            <RemediationQueuePanel
+                digests={buyerPortfolioDigests}
+                compact
+                title="Buyer Remediation Queue"
             />
 
             <section className="grid lg:grid-cols-[2fr_1fr] gap-6">
