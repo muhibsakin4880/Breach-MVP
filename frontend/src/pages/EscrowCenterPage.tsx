@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
+import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -257,6 +258,8 @@ export default function EscrowCenterPage() {
                             </span>
                         </div>
                     </div>
+
+                    <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
 
                     <div className="space-y-3">
                         <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Status Timeline</div>

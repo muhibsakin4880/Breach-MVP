@@ -9,6 +9,7 @@ import {
     statusStyles,
     type DatasetRequest
 } from '../data/workspaceData'
+import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -231,6 +232,10 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                     <p className="mt-1 text-xs text-slate-500">
                         {selectedRequest.name} • {selectedRequest.category}
                     </p>
+
+                    <div className="mt-4">
+                        <LifecycleGuidancePanel role="admin" state={selectedRequest.status} compact title="Reviewer Workflow" />
+                    </div>
 
                     <div className="mt-6 space-y-3">
                         {[

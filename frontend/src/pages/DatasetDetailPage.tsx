@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
 import { requestReviewStateLabel } from '../domain/accessContract'
+import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 
 const STATUS_STEPS = [
     {
@@ -301,6 +302,8 @@ export default function DatasetDetailPage() {
                                     {requestStatus === 'REQUEST_REJECTED' && 'Request declined. We can suggest alternate sources or share summary stats.'}
                                 </p>
                             </div>
+
+                            <LifecycleGuidancePanel role="buyer" state={requestStatus} compact title="Request Workflow Guidance" />
 
                             <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5 space-y-5">
                                 <div className="flex items-center justify-between">

@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain/accessContract'
+import LifecycleGuidancePanel from '../../components/LifecycleGuidancePanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -261,6 +262,15 @@ export default function EscrowVaultPage() {
         return transactionRows.filter(row => row.status === 'RELEASED_TO_PROVIDER')
     }, [activeFilter])
 
+    const focusedLifecycleState = useMemo<ContractLifecycleState>(() => {
+        if (activeFilter === 'active') return 'ACCESS_ACTIVE'
+        if (activeFilter === 'fundsHeld') return 'FUNDS_HELD'
+        if (activeFilter === 'pendingRelease') return 'RELEASE_PENDING'
+        if (activeFilter === 'disputed') return 'DISPUTE_OPEN'
+        if (activeFilter === 'released') return 'RELEASED_TO_PROVIDER'
+        return filteredTransactions[0]?.status ?? 'REVIEW_IN_PROGRESS'
+    }, [activeFilter, filteredTransactions])
+
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
     return (
@@ -292,6 +302,8 @@ export default function EscrowVaultPage() {
                         </article>
                     ))}
                 </section>
+
+                <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
 
                 <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="px-5 py-4 border-b border-slate-800/60">
