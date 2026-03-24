@@ -17,6 +17,7 @@ import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
+import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -286,6 +287,15 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                             role="reviewer"
                             compact
                             title="Reviewer Control Tower"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <PolicyAttestationPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Reviewer Policy Attestation"
                         />
                     </div>
                     <div className="mt-4">

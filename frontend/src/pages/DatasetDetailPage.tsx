@@ -10,6 +10,7 @@ import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
+import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 
 const STATUS_STEPS = [
     {
@@ -350,6 +351,13 @@ export default function DatasetDetailPage() {
                                 role="buyer"
                                 compact
                                 title="Access Control Tower"
+                            />
+                            <PolicyAttestationPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                role="buyer"
+                                compact
+                                title="Access Policy Attestation"
                             />
                             <ResilienceInsightsPanel
                                 digests={singleContractDigest}

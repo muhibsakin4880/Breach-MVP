@@ -11,6 +11,7 @@ import TransitionImpactPanel from '../../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../../components/ResilienceInsightsPanel'
+import PolicyAttestationPanel from '../../components/PolicyAttestationPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -359,6 +360,13 @@ export default function EscrowVaultPage() {
                     role="admin"
                     pendingReleaseCount={pendingReleaseCount}
                     title="Vault Control Tower"
+                />
+                <PolicyAttestationPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    title="Vault Policy Attestation"
                 />
                 <ExecutionRunbookPanel
                     contractId={focusedEscrowId}

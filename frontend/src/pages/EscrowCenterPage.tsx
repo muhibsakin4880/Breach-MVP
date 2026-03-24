@@ -8,6 +8,7 @@ import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
+import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -304,6 +305,13 @@ export default function EscrowCenterPage() {
                         role="buyer"
                         compact
                         title="Buyer Control Tower"
+                    />
+                    <PolicyAttestationPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Buyer Policy Attestation"
                     />
                     <ExecutionRunbookPanel
                         contractId={selectedTransaction.id}
