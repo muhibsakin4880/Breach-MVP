@@ -13,6 +13,8 @@ import ControlTowerPanel from '../../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../../components/PolicyAttestationPanel'
 import DecisionGatePanel from '../../components/DecisionGatePanel'
+import AlertCenterPanel from '../../components/AlertCenterPanel'
+import PortfolioAlertBoard from '../../components/PortfolioAlertBoard'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -341,6 +343,10 @@ export default function EscrowVaultPage() {
                     digests={adminPortfolioDigests}
                     title="Vault Portfolio Resilience"
                 />
+                <PortfolioAlertBoard
+                    digests={adminPortfolioDigests}
+                    title="Vault Portfolio Alerts"
+                />
 
                 <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
                 <ContractHealthPanel
@@ -375,6 +381,13 @@ export default function EscrowVaultPage() {
                     role="admin"
                     pendingReleaseCount={pendingReleaseCount}
                     title="Vault Decision Gate"
+                />
+                <AlertCenterPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    title="Vault Alert Center"
                 />
                 <ExecutionRunbookPanel
                     contractId={focusedEscrowId}

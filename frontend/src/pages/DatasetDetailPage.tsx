@@ -12,6 +12,8 @@ import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 import DecisionGatePanel from '../components/DecisionGatePanel'
+import AlertCenterPanel from '../components/AlertCenterPanel'
+import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 
 const STATUS_STEPS = [
     {
@@ -372,12 +374,24 @@ export default function DatasetDetailPage() {
                                 compact
                                 title="Single Contract Resilience"
                             />
+                            <PortfolioAlertBoard
+                                digests={singleContractDigest}
+                                compact
+                                title="Single Contract Alerts"
+                            />
                             <ExecutionRunbookPanel
                                 contractId={`REQ-${dataset.id}`}
                                 state={escrowLifecycleState}
                                 role="buyer"
                                 compact
                                 title="Access Runbook"
+                            />
+                            <AlertCenterPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                role="buyer"
+                                compact
+                                title="Access Alert Center"
                             />
                             <SecurityAuditTimeline
                                 contractId={`REQ-${dataset.id}`}

@@ -10,6 +10,8 @@ import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 import DecisionGatePanel from '../components/DecisionGatePanel'
+import AlertCenterPanel from '../components/AlertCenterPanel'
+import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -173,6 +175,11 @@ export default function EscrowCenterPage() {
                 compact
                 title="Buyer Portfolio Resilience"
             />
+            <PortfolioAlertBoard
+                digests={buyerPortfolioDigests}
+                compact
+                title="Buyer Portfolio Alerts"
+            />
 
             <section className="grid lg:grid-cols-[2fr_1fr] gap-6">
                 <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden">
@@ -320,6 +327,13 @@ export default function EscrowCenterPage() {
                         role="buyer"
                         compact
                         title="Buyer Decision Gate"
+                    />
+                    <AlertCenterPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Buyer Alert Center"
                     />
                     <ExecutionRunbookPanel
                         contractId={selectedTransaction.id}

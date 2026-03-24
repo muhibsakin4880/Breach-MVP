@@ -19,6 +19,8 @@ import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
 import DecisionGatePanel from '../components/DecisionGatePanel'
+import AlertCenterPanel from '../components/AlertCenterPanel'
+import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -139,6 +141,11 @@ export default function AccessRequestsPage() {
                 digests={reviewerPortfolioDigests}
                 compact
                 title="Reviewer Portfolio Resilience"
+            />
+            <PortfolioAlertBoard
+                digests={reviewerPortfolioDigests}
+                compact
+                title="Reviewer Portfolio Alerts"
             />
 
             <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
@@ -306,6 +313,15 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                             role="reviewer"
                             compact
                             title="Reviewer Decision Gate"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <AlertCenterPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Reviewer Alert Center"
                         />
                     </div>
                     <div className="mt-4">
