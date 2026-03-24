@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain/accessContract'
 import LifecycleGuidancePanel from '../../components/LifecycleGuidancePanel'
+import { canPerformAdminEscrowAction } from '../../domain/actionGuardrails'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -244,10 +245,24 @@ const actionButtonClasses: Record<ActionTone, string> = {
     red: 'border-red-500/50 bg-red-500/10 text-red-200 hover:bg-red-500/18',
     slate: 'border-slate-600/70 bg-slate-800/60 text-slate-200 hover:bg-slate-700/70'
 }
+const disabledActionClass =
+    'cursor-not-allowed border-slate-700/80 bg-slate-900/60 text-slate-500 hover:bg-slate-900/60'
 
 export default function EscrowVaultPage() {
     const { isAuthenticated } = useAuth()
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
+    const pendingReleaseCount = useMemo(
+        () => transactionRows.filter(row => row.status === 'RELEASE_PENDING').length,
+        []
+    )
+    const releaseAllPendingGuardrail = useMemo(
+        () => canPerformAdminEscrowAction('release_all_pending', 'RELEASE_PENDING', pendingReleaseCount),
+        [pendingReleaseCount]
+    )
+    const transactionStatusByEscId = useMemo(
+        () => new Map(transactionRows.map(row => [row.escId, row.status])),
+        []
+    )
 
     const currentTimestamp = useMemo(() => {
         return `${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC`
@@ -340,26 +355,40 @@ export default function EscrowVaultPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50 font-mono text-[11px] text-slate-200">
-                                {filteredTransactions.map(row => (
-                                    <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
-                                        <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">{row.buyer}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">{row.provider}</td>
-                                        <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-slate-100">{row.amount}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
-                                                {row.statusLabel}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.window}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <button className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses[row.actionTone]}`}>
-                                                {row.actionLabel}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {filteredTransactions.map(row => {
+                                    const isReleaseAction = row.actionLabel === 'RELEASE'
+                                    const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', row.status)
+                                    const actionDisabled = isReleaseAction && !releaseNowGuardrail.allowed
+
+                                    return (
+                                        <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
+                                            <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">{row.buyer}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">{row.provider}</td>
+                                            <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap text-slate-100">{row.amount}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
+                                                    {row.statusLabel}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.window}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <button
+                                                    disabled={actionDisabled}
+                                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                                        actionDisabled ? disabledActionClass : actionButtonClasses[row.actionTone]
+                                                    }`}
+                                                >
+                                                    {row.actionLabel}
+                                                </button>
+                                                {actionDisabled && (
+                                                    <p className="mt-1 max-w-[180px] text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -373,57 +402,88 @@ export default function EscrowVaultPage() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-                        {disputeCards.map(dispute => (
-                            <article key={dispute.escId} className="rounded-lg border border-slate-800/80 bg-slate-950/45 p-4">
-                                <div className="space-y-1">
-                                    <p className="font-mono text-[11px] text-cyan-300">{dispute.escId}</p>
-                                    <h3 className="text-[14px] font-semibold text-slate-100">{dispute.dataset}</h3>
-                                </div>
+                        {disputeCards.map(dispute => {
+                            const disputeState = transactionStatusByEscId.get(dispute.escId) ?? 'DISPUTE_OPEN'
+                            const resolveRefundGuardrail = canPerformAdminEscrowAction('resolve_refund', disputeState)
+                            const resolveReleaseGuardrail = canPerformAdminEscrowAction('resolve_release', disputeState)
+                            const escalateLegalGuardrail = canPerformAdminEscrowAction('escalate_legal', disputeState)
 
-                                <div className="mt-3 grid grid-cols-1 gap-2 text-[11px]">
-                                    <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
-                                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Raised by</p>
-                                        <p className="mt-1 text-slate-200">{dispute.raisedBy}</p>
+                            return (
+                                <article key={dispute.escId} className="rounded-lg border border-slate-800/80 bg-slate-950/45 p-4">
+                                    <div className="space-y-1">
+                                        <p className="font-mono text-[11px] text-cyan-300">{dispute.escId}</p>
+                                        <h3 className="text-[14px] font-semibold text-slate-100">{dispute.dataset}</h3>
                                     </div>
-                                    <div className="rounded-md border border-red-500/25 bg-red-500/8 px-3 py-2">
-                                        <p className="text-[10px] uppercase tracking-[0.12em] text-red-300/80">Reason</p>
-                                        <p className="mt-1 text-red-100/90 leading-relaxed">{dispute.reason}</p>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Amount at stake</p>
-                                            <p className="mt-1 text-slate-200">{dispute.amount}</p>
-                                        </div>
-                                        <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Raised</p>
-                                            <p className="mt-1 text-slate-200">{dispute.raisedAt}</p>
-                                        </div>
-                                        <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Evidence submitted</p>
-                                            <p className="mt-1 text-slate-200">{dispute.evidenceSubmitted}</p>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="mt-3 space-y-3">
-                                    <textarea
-                                        placeholder="Internal note"
-                                        className="h-24 w-full resize-y rounded-md border border-slate-700/80 bg-slate-950/90 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/70"
-                                    />
-                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                        <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${actionButtonClasses.blue}`}>
-                                            Resolve: Refund Buyer
-                                        </button>
-                                        <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${actionButtonClasses.green}`}>
-                                            Resolve: Release to Provider
-                                        </button>
-                                        <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${actionButtonClasses.amber}`}>
-                                            Escalate to Legal
-                                        </button>
+                                    <div className="mt-3 grid grid-cols-1 gap-2 text-[11px]">
+                                        <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Raised by</p>
+                                            <p className="mt-1 text-slate-200">{dispute.raisedBy}</p>
+                                        </div>
+                                        <div className="rounded-md border border-red-500/25 bg-red-500/8 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-[0.12em] text-red-300/80">Reason</p>
+                                            <p className="mt-1 text-red-100/90 leading-relaxed">{dispute.reason}</p>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                            <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
+                                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Amount at stake</p>
+                                                <p className="mt-1 text-slate-200">{dispute.amount}</p>
+                                            </div>
+                                            <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
+                                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Raised</p>
+                                                <p className="mt-1 text-slate-200">{dispute.raisedAt}</p>
+                                            </div>
+                                            <div className="rounded-md border border-slate-800/80 bg-slate-900/55 px-3 py-2">
+                                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Evidence submitted</p>
+                                                <p className="mt-1 text-slate-200">{dispute.evidenceSubmitted}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </article>
-                        ))}
+
+                                    <div className="mt-3 space-y-3">
+                                        <textarea
+                                            placeholder="Internal note"
+                                            className="h-24 w-full resize-y rounded-md border border-slate-700/80 bg-slate-950/90 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/70"
+                                        />
+                                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            <button
+                                                disabled={!resolveRefundGuardrail.allowed}
+                                                className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
+                                                    resolveRefundGuardrail.allowed ? actionButtonClasses.blue : disabledActionClass
+                                                }`}
+                                            >
+                                                Resolve: Refund Buyer
+                                            </button>
+                                            <button
+                                                disabled={!resolveReleaseGuardrail.allowed}
+                                                className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
+                                                    resolveReleaseGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                                                }`}
+                                            >
+                                                Resolve: Release to Provider
+                                            </button>
+                                            <button
+                                                disabled={!escalateLegalGuardrail.allowed}
+                                                className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
+                                                    escalateLegalGuardrail.allowed ? actionButtonClasses.amber : disabledActionClass
+                                                }`}
+                                            >
+                                                Escalate to Legal
+                                            </button>
+                                        </div>
+                                        {!resolveRefundGuardrail.allowed && (
+                                            <p className="text-[10px] text-amber-300">Refund: {resolveRefundGuardrail.reason}</p>
+                                        )}
+                                        {!resolveReleaseGuardrail.allowed && (
+                                            <p className="text-[10px] text-amber-300">Release: {resolveReleaseGuardrail.reason}</p>
+                                        )}
+                                        {!escalateLegalGuardrail.allowed && (
+                                            <p className="text-[10px] text-amber-300">Legal escalation: {escalateLegalGuardrail.reason}</p>
+                                        )}
+                                    </div>
+                                </article>
+                            )
+                        })}
                     </div>
                 </section>
 
@@ -434,9 +494,21 @@ export default function EscrowVaultPage() {
                             <p className="text-lg font-semibold text-slate-100">Ready for Release</p>
                             <p className="text-sm text-slate-400">Escrows pending manual or auto release</p>
                         </div>
-                        <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses.green}`}>
-                            Release All Pending
-                        </button>
+                        <div className="flex flex-col items-start gap-1 sm:items-end">
+                            <button
+                                disabled={!releaseAllPendingGuardrail.allowed}
+                                className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                    releaseAllPendingGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                                }`}
+                            >
+                                Release All Pending
+                            </button>
+                            <p className={`text-[10px] ${releaseAllPendingGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                                {releaseAllPendingGuardrail.allowed
+                                    ? `${pendingReleaseCount} contracts are ready for release.`
+                                    : releaseAllPendingGuardrail.reason}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -451,19 +523,32 @@ export default function EscrowVaultPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50 font-mono text-[11px] text-slate-200">
-                                {releaseQueueRows.map(row => (
-                                    <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
-                                        <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
-                                        <td className="px-4 py-3">{row.dataset}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">{row.amount}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.trigger}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <button className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses.green}`}>
-                                                Release Now
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {releaseQueueRows.map(row => {
+                                    const releaseState = transactionStatusByEscId.get(row.escId) ?? 'RELEASE_PENDING'
+                                    const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', releaseState)
+
+                                    return (
+                                        <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
+                                            <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
+                                            <td className="px-4 py-3">{row.dataset}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">{row.amount}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.trigger}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <button
+                                                    disabled={!releaseNowGuardrail.allowed}
+                                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                                        releaseNowGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                                                    }`}
+                                                >
+                                                    Release Now
+                                                </button>
+                                                {!releaseNowGuardrail.allowed && (
+                                                    <p className="mt-1 max-w-[180px] text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>

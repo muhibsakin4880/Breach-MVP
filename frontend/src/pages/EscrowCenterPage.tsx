@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
+import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -75,6 +76,18 @@ export default function EscrowCenterPage() {
     const selectedTransaction = useMemo(() => {
         return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[2]
     }, [selectedId])
+    const releasePaymentGuardrail = useMemo(
+        () => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status),
+        [selectedTransaction.status]
+    )
+    const openDisputeGuardrail = useMemo(
+        () => canPerformBuyerEscrowAction('open_dispute', selectedTransaction.status),
+        [selectedTransaction.status]
+    )
+    const extendWindowGuardrail = useMemo(
+        () => canPerformBuyerEscrowAction('extend_window', selectedTransaction.status),
+        [selectedTransaction.status]
+    )
 
     const filteredTransactions = useMemo(() => {
         if (activeFilter === 'All') return escrowTransactions
@@ -348,16 +361,50 @@ export default function EscrowCenterPage() {
                     <div className="grid gap-2">
                         <button 
                             onClick={() => setShowFeedbackModal(true)}
-                            className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-medium text-white"
+                            disabled={!releasePaymentGuardrail.allowed}
+                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                releasePaymentGuardrail.allowed
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
+                            }`}
                         >
                             Confirm & Release Payment
                         </button>
-                        <button className="w-full rounded-lg border border-rose-500/50 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-500/10">
+                        <p className={`text-[11px] ${releasePaymentGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                            {releasePaymentGuardrail.allowed
+                                ? 'Release is available for this escrow state.'
+                                : releasePaymentGuardrail.reason}
+                        </p>
+                        <button
+                            disabled={!openDisputeGuardrail.allowed}
+                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                openDisputeGuardrail.allowed
+                                    ? 'border border-rose-500/50 text-rose-200 hover:bg-rose-500/10'
+                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
+                            }`}
+                        >
                             Initiate Dispute
                         </button>
-                        <button className="w-full rounded-lg border border-blue-500/50 px-3 py-2 text-sm font-medium text-blue-200 hover:bg-blue-500/10">
+                        <p className={`text-[11px] ${openDisputeGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                            {openDisputeGuardrail.allowed
+                                ? 'Dispute can be opened while access is active or pending release.'
+                                : openDisputeGuardrail.reason}
+                        </p>
+                        <button
+                            disabled={!extendWindowGuardrail.allowed}
+                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                extendWindowGuardrail.allowed
+                                    ? 'border border-blue-500/50 text-blue-200 hover:bg-blue-500/10'
+                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
+                            }`}
+                        >
                             Extend Window
                         </button>
+                        <p className={`text-[11px] ${extendWindowGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                            {extendWindowGuardrail.allowed
+                                ? 'Window extension is available for this contract stage.'
+                                : extendWindowGuardrail.reason}
+                        </p>
                     </div>
                 </div>
             </section>

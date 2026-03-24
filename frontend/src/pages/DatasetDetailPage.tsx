@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
-import { requestReviewStateLabel } from '../domain/accessContract'
+import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
+import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
 
 const STATUS_STEPS = [
     {
@@ -59,6 +60,16 @@ export default function DatasetDetailPage() {
         openRequestModal()
         navigate(location.pathname, { replace: true, state: null })
     }, [location.pathname, location.state, navigate])
+
+    const escrowLifecycleState: ContractLifecycleState =
+        requestStatus === 'REQUEST_APPROVED'
+            ? escrowActive
+                ? 'RELEASE_PENDING'
+                : 'FUNDS_HELD'
+            : requestStatus
+    const startEscrowGuardrail = canStartEscrowForRequest(requestStatus, escrowActive)
+    const releasePaymentGuardrail = canPerformBuyerEscrowAction('release_payment', escrowLifecycleState)
+    const disputeRefundGuardrail = canPerformBuyerEscrowAction('open_dispute', escrowLifecycleState)
 
     const handleSubmitRequest = () => {
         setRequestStatus('REVIEW_IN_PROGRESS')
@@ -353,11 +364,21 @@ export default function DatasetDetailPage() {
                                             </div>
                                             <p className="text-xs text-slate-400">Full refund if unsatisfied</p>
 <button
-                                                 className="w-full px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-semibold transition-colors transition-transform duration-100 active:scale-95"
-                                                 onClick={() => setEscrowActive(true)}
-                                             >
+                                                disabled={!startEscrowGuardrail.allowed}
+                                                className={`w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors transition-transform duration-100 active:scale-95 ${
+                                                    startEscrowGuardrail.allowed
+                                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                        : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                }`}
+                                                onClick={() => setEscrowActive(true)}
+                                            >
                                                 Put on Escrow
                                             </button>
+                                            <p className={`text-[11px] ${startEscrowGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                                                {startEscrowGuardrail.allowed
+                                                    ? 'Escrow can be activated for this approved request.'
+                                                    : startEscrowGuardrail.reason}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -394,12 +415,36 @@ export default function DatasetDetailPage() {
                                             <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                                         </div>
                                         <div className="grid gap-2">
-                                            <button className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">
+                                            <button
+                                                disabled={!releasePaymentGuardrail.allowed}
+                                                className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                                    releasePaymentGuardrail.allowed
+                                                        ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                                        : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                }`}
+                                            >
                                                 Confirm & Release Payment
                                             </button>
-                                            <button className="w-full rounded-lg border border-rose-500/60 px-3 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">
+                                            <p className={`text-[11px] ${releasePaymentGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                                                {releasePaymentGuardrail.allowed
+                                                    ? 'Payment release is currently permitted by lifecycle policy.'
+                                                    : releasePaymentGuardrail.reason}
+                                            </p>
+                                            <button
+                                                disabled={!disputeRefundGuardrail.allowed}
+                                                className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                                    disputeRefundGuardrail.allowed
+                                                        ? 'border border-rose-500/60 text-rose-200 hover:bg-rose-500/10'
+                                                        : 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                }`}
+                                            >
                                                 Dispute & Refund
                                             </button>
+                                            <p className={`text-[11px] ${disputeRefundGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                                                {disputeRefundGuardrail.allowed
+                                                    ? 'Dispute remains available until escrow is settled.'
+                                                    : disputeRefundGuardrail.reason}
+                                            </p>
                                         </div>
                                     </div>
                                 )}

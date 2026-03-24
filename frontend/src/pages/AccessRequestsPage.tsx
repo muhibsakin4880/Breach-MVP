@@ -10,6 +10,7 @@ import {
     type DatasetRequest
 } from '../data/workspaceData'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
+import { canPerformReviewerAction } from '../domain/actionGuardrails'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -207,6 +208,10 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
               : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/30'
 
     const highlightEscalate = selectedRequest?.id === 'med-441'
+    const currentReviewState = selectedRequest?.status ?? 'REVIEW_IN_PROGRESS'
+    const approveGuardrail = canPerformReviewerAction('approve_with_conditions', currentReviewState)
+    const escalateGuardrail = canPerformReviewerAction('escalate_dual_approval', currentReviewState)
+    const rejectGuardrail = canPerformReviewerAction('reject_request', currentReviewState)
 
     return (
         <aside className="rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-xl min-h-[420px]">
@@ -284,22 +289,48 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-3">
-                        <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">
+                        <button
+                            disabled={!approveGuardrail.allowed}
+                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                                approveGuardrail.allowed
+                                    ? 'bg-blue-600 text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)] hover:bg-blue-500'
+                                    : 'cursor-not-allowed border border-slate-700 bg-slate-900/70 text-slate-500'
+                            }`}
+                        >
                             Approve with Conditions
                         </button>
                         <button
+                            disabled={!escalateGuardrail.allowed}
                             className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-                                highlightEscalate
+                                !escalateGuardrail.allowed
+                                    ? 'cursor-not-allowed border-slate-700 bg-slate-900/70 text-slate-500'
+                                    : highlightEscalate
                                     ? 'border-amber-400 text-amber-100 bg-amber-500/15 shadow-[0_0_20px_rgba(245,158,11,0.35)]'
                                     : 'border-amber-400 text-amber-200 hover:bg-amber-500/10'
                             }`}
                         >
                             Escalate for Dual Approval
                         </button>
-                        <button className="rounded-lg border border-rose-500 text-rose-200 px-4 py-2 text-sm font-semibold hover:bg-rose-500/10">
+                        <button
+                            disabled={!rejectGuardrail.allowed}
+                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+                                rejectGuardrail.allowed
+                                    ? 'border-rose-500 text-rose-200 hover:bg-rose-500/10'
+                                    : 'cursor-not-allowed border-slate-700 bg-slate-900/70 text-slate-500'
+                            }`}
+                        >
                             Reject
                         </button>
                     </div>
+                    {!approveGuardrail.allowed && (
+                        <p className="mt-2 text-[11px] text-amber-300">Approve: {approveGuardrail.reason}</p>
+                    )}
+                    {!escalateGuardrail.allowed && (
+                        <p className="mt-1 text-[11px] text-amber-300">Escalate: {escalateGuardrail.reason}</p>
+                    )}
+                    {!rejectGuardrail.allowed && (
+                        <p className="mt-1 text-[11px] text-amber-300">Reject: {rejectGuardrail.reason}</p>
+                    )}
 
                     <p className="mt-3 text-xs text-slate-500">
                         High risk requests require dual approval from 2 platform admins
