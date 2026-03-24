@@ -68,12 +68,14 @@ function computeRiskLevel(score: number): RiskLevel {
 
 export default function AccessRequestsPage() {
     const [selectedRequest, setSelectedRequest] = useState<DatasetRequest | null>(null)
+    const [showRiskAssessment, setShowRiskAssessment] = useState(false)
 
     const requestedCount = datasetRequests.length
     const approvedCount = datasetRequests.filter(item => item.status === 'REQUEST_APPROVED').length
     const pendingCount = datasetRequests.filter(item => item.status === 'REVIEW_IN_PROGRESS').length
 
-    const riskScore = useMemo(() => (selectedRequest ? computeRiskScore(selectedRequest) : 72), [selectedRequest])
+    const activeRequest = selectedRequest ?? datasetRequests[0]
+    const riskScore = useMemo(() => computeRiskScore(activeRequest), [activeRequest])
     const riskLevel = useMemo(() => computeRiskLevel(riskScore), [riskScore])
     const reviewerPortfolioDigests = useMemo(
         () =>
@@ -84,6 +86,31 @@ export default function AccessRequestsPage() {
             })),
         []
     )
+    const openRiskAssessment = () => {
+        if (!selectedRequest) setSelectedRequest(datasetRequests[0])
+        setShowRiskAssessment(true)
+    }
+
+    if (showRiskAssessment) {
+        return (
+            <div className="container mx-auto px-4 py-10 space-y-6 text-white">
+                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <button
+                        onClick={() => setShowRiskAssessment(false)}
+                        className="mb-4 rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white"
+                    >
+                        Back to Access Requests
+                    </button>
+                    <h1 className="text-2xl font-semibold">Risk Assessment</h1>
+                    <p className="mt-1 text-sm text-slate-400">
+                        Dedicated risk review workspace for: {activeRequest.name}
+                    </p>
+                </section>
+
+                <RiskPanel selectedRequest={activeRequest} riskScore={riskScore} riskLevel={riskLevel} />
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto px-4 py-10 space-y-6 text-white">
@@ -95,7 +122,7 @@ export default function AccessRequestsPage() {
                             Full request pipeline management with confidence scores and status tracking.
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
                             {requestedCount} requested
                         </span>
@@ -105,37 +132,39 @@ export default function AccessRequestsPage() {
                         <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
                             {approvedCount} approved
                         </span>
+                        <button
+                            onClick={openRiskAssessment}
+                            className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                        >
+                            Risk Assessment
+                        </button>
                     </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm">
-                            <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
-                                <tr>
-                                    <th className="py-3 pr-4 text-left font-medium">Dataset</th>
-                                    <th className="py-3 px-4 text-left font-medium">Confidence</th>
-                                    <th className="py-3 px-4 text-left font-medium">Risk</th>
-                                    <th className="py-3 px-4 text-left font-medium">Status</th>
-                                    <th className="py-3 px-4 text-left font-medium">Last updated</th>
-                                    <th className="py-3 pl-4 text-right font-medium">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                {datasetRequests.map(request => (
-                                    <RequestTableRow
-                                        key={request.id}
-                                        request={request}
-                                        onSelect={() => setSelectedRequest(request)}
-                                        riskScore={computeRiskScore(request)}
-                                        isSelected={selectedRequest?.id === request.id}
-                                    />
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <RiskPanel selectedRequest={selectedRequest} riskScore={riskScore} riskLevel={riskLevel} />
+                <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                        <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th className="py-3 pr-4 text-left font-medium">Dataset</th>
+                                <th className="py-3 px-4 text-left font-medium">Confidence</th>
+                                <th className="py-3 px-4 text-left font-medium">Risk</th>
+                                <th className="py-3 px-4 text-left font-medium">Status</th>
+                                <th className="py-3 px-4 text-left font-medium">Last updated</th>
+                                <th className="py-3 pl-4 text-right font-medium">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                            {datasetRequests.map(request => (
+                                <RequestTableRow
+                                    key={request.id}
+                                    request={request}
+                                    onSelect={() => setSelectedRequest(request)}
+                                    riskScore={computeRiskScore(request)}
+                                    isSelected={selectedRequest?.id === request.id}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </section>
 

@@ -42,6 +42,7 @@ export default function DatasetDetailPage() {
     const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
     const [requestStatus, setRequestStatus] = useState<RequestStatus>(dataset.access.status)
     const [showRequestModal, setShowRequestModal] = useState(false)
+    const [showRiskAssessment, setShowRiskAssessment] = useState(false)
     const [intendedUsage, setIntendedUsage] = useState('')
     const [duration, setDuration] = useState('90 days')
     const [orgType, setOrgType] = useState('research')
@@ -62,6 +63,7 @@ export default function DatasetDetailPage() {
         setComplianceChecked(false)
         setEscrowWindow('24 hours')
         setEscrowActive(false)
+        setShowRiskAssessment(false)
     }, [dataset])
 
     useEffect(() => {
@@ -92,6 +94,105 @@ export default function DatasetDetailPage() {
         ],
         [dataset.id, escrowLifecycleState]
     )
+
+    if (showRiskAssessment) {
+        return (
+            <div className="bg-slate-900 text-white min-h-screen">
+                <div className="container mx-auto px-4 py-10 space-y-6">
+                    <section className="bg-slate-800/70 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                        <button
+                            onClick={() => setShowRiskAssessment(false)}
+                            className="mb-4 rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white"
+                        >
+                            Back to Dataset Detail
+                        </button>
+                        <h1 className="text-2xl font-semibold">Risk Assessment</h1>
+                        <p className="mt-1 text-sm text-slate-400">
+                            Dedicated risk review workspace for: {dataset.title}
+                        </p>
+                    </section>
+
+                    <section className="space-y-4">
+                        <LifecycleGuidancePanel role="buyer" state={requestStatus} compact title="Request Workflow Guidance" />
+                        <ContractHealthPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            compact
+                            title="Request Integrity Monitor"
+                        />
+                        <TransitionImpactPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Impact Simulator"
+                        />
+                        <ControlTowerPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Control Tower"
+                        />
+                        <PolicyAttestationPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Policy Attestation"
+                        />
+                        <DecisionGatePanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Decision Gate"
+                        />
+                        <ResilienceInsightsPanel
+                            digests={singleContractDigest}
+                            compact
+                            title="Single Contract Resilience"
+                        />
+                        <PortfolioAlertBoard
+                            digests={singleContractDigest}
+                            compact
+                            title="Single Contract Alerts"
+                        />
+                        <RemediationQueuePanel
+                            digests={singleContractDigest}
+                            compact
+                            title="Single Contract Remediation Queue"
+                        />
+                        <ReadinessCertificationPanel
+                            digests={singleContractDigest}
+                            compact
+                            title="Single Contract Launch Certification"
+                        />
+                        <ExecutionRunbookPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Runbook"
+                        />
+                        <AlertCenterPanel
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            role="buyer"
+                            compact
+                            title="Access Alert Center"
+                        />
+                        <SecurityAuditTimeline
+                            contractId={`REQ-${dataset.id}`}
+                            state={escrowLifecycleState}
+                            compact
+                            title="Secure Access Audit Trail"
+                        />
+                    </section>
+                </div>
+            </div>
+        )
+    }
 
     const handleSubmitRequest = () => {
         setRequestStatus('REVIEW_IN_PROGRESS')
@@ -236,11 +337,19 @@ export default function DatasetDetailPage() {
 
             {/* Access Section */}
             <div className="container mx-auto px-4 pb-14">
-                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.22)]">
-                    <svg className="h-4 w-4 text-cyan-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-semibold text-white">All Access Requests are Audited</span>
+                <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.22)] md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-3">
+                        <svg className="h-4 w-4 text-cyan-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-semibold text-white">All Access Requests are Audited</span>
+                    </div>
+                    <button
+                        onClick={() => setShowRiskAssessment(true)}
+                        className="self-start rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20 md:self-auto"
+                    >
+                        Risk Assessment
+                    </button>
                 </div>
                 <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 md:p-9">
                     <div className="flex flex-col lg:flex-row gap-10">
@@ -336,81 +445,18 @@ export default function DatasetDetailPage() {
                                 </p>
                             </div>
 
-                            <LifecycleGuidancePanel role="buyer" state={requestStatus} compact title="Request Workflow Guidance" />
-                            <ContractHealthPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                compact
-                                title="Request Integrity Monitor"
-                            />
-                            <TransitionImpactPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Impact Simulator"
-                            />
-                            <ControlTowerPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Control Tower"
-                            />
-                            <PolicyAttestationPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Policy Attestation"
-                            />
-                            <DecisionGatePanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Decision Gate"
-                            />
-                            <ResilienceInsightsPanel
-                                digests={singleContractDigest}
-                                compact
-                                title="Single Contract Resilience"
-                            />
-                            <PortfolioAlertBoard
-                                digests={singleContractDigest}
-                                compact
-                                title="Single Contract Alerts"
-                            />
-                            <RemediationQueuePanel
-                                digests={singleContractDigest}
-                                compact
-                                title="Single Contract Remediation Queue"
-                            />
-                            <ReadinessCertificationPanel
-                                digests={singleContractDigest}
-                                compact
-                                title="Single Contract Launch Certification"
-                            />
-                            <ExecutionRunbookPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Runbook"
-                            />
-                            <AlertCenterPanel
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                role="buyer"
-                                compact
-                                title="Access Alert Center"
-                            />
-                            <SecurityAuditTimeline
-                                contractId={`REQ-${dataset.id}`}
-                                state={escrowLifecycleState}
-                                compact
-                                title="Secure Access Audit Trail"
-                            />
+                            <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+                                <div className="text-sm font-semibold text-white">Risk Assessment Workspace</div>
+                                <p className="mt-1 text-xs text-slate-300">
+                                    Detailed risk controls and review components now open in a dedicated page.
+                                </p>
+                                <button
+                                    onClick={() => setShowRiskAssessment(true)}
+                                    className="mt-3 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
+                                >
+                                    Risk Assessment
+                                </button>
+                            </div>
 
                             <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5 space-y-5">
                                 <div className="flex items-center justify-between">
