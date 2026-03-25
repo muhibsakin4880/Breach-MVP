@@ -185,7 +185,7 @@ export default function ProviderDatasetManagementPage({ title = 'Provider & Data
 
     return (
         <AdminLayout title={title} subtitle={subtitle}>
-            <div className="relative min-h-screen bg-[#030712] text-white">
+            <div className="relative min-h-screen text-white">
                 <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.14),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.14),transparent_35%),radial-gradient(circle_at_40%_80%,rgba(251,191,36,0.08),transparent_35%)]" />
                 <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                     <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
