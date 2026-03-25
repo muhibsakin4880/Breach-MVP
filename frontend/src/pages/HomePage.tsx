@@ -516,8 +516,9 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     HERO
                 ════════════════════════════════════════ */}
-                <section className="relative pt-24 pb-16 md:pt-32 md:pb-20 overflow-hidden">
+                <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,229,255,0.06)_0%,transparent_70%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.15)_0%,rgba(2,6,23,0.75)_100%)]" />
 
                     <div className="max-w-6xl mx-auto px-6 relative z-10">
                         <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -532,45 +533,55 @@ export default function HomePage() {
                                 <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
                                     Redoubt
                                 </h1>
+
+                                <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-slate-100 leading-tight mb-3">
+                                    Secure Every Dataset Before It Reaches Production
+                                </h2>
+
+                                <p className="h-5 text-[11px] sm:text-xs tracking-[0.22em] text-cyan-300/75 uppercase font-medium mb-4">
+                                    {taglineTyped}
+                                </p>
                                 
                                 <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto md:mx-0 mb-8">
-                                    Validate, score, and secure your datasets with AI-powered quality assurance and zero-trust access controls.
+                                    Validate provenance, score quality, and enforce zero-trust controls across every access request.
                                 </p>
 
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                                    <Link
-                                        to="/login"
-                                        onClick={handleSignInFromLanding}
-                                        className="px-6 py-3 bg-white text-slate-900 font-semibold rounded-lg hover:bg-cyan-50 transition-all"
-                                    >
-                                        Sign In
-                                    </Link>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                                     <button
                                         onClick={handleRequestPlatformAccess}
-                                        className="px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all"
+                                        className="px-6 py-3 bg-cyan-400 text-slate-950 font-semibold rounded-lg hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.25)]"
                                     >
                                         Request Access
                                     </button>
+                                    <Link
+                                        to="/login"
+                                        onClick={handleSignInFromLanding}
+                                        className="px-6 py-3 border border-slate-600 bg-slate-900/60 text-slate-200 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                                    >
+                                        Sign In
+                                    </Link>
                                 </div>
 
-                                <div className="mt-10">
-                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 justify-center md:justify-start text-sm text-slate-500">
+                                <div className="mt-8">
+                                    <div className="flex flex-wrap items-center gap-2.5 justify-center md:justify-start">
                                         {['SOC 2 Type II certified', 'ISO 27001 certified', 'HIPAA eligible', 'GDPR compliant'].map((certification) => (
-                                            <span key={certification} className="inline-flex items-center gap-2">
-                                                <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                                            <span key={certification} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-100">
+                                                <svg className="w-3.5 h-3.5 text-emerald-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
                                                 <span>{certification}</span>
                                             </span>
                                         ))}
                                     </div>
-                                    <p className="mt-2 text-[10px] tracking-wide text-slate-600 text-center md:text-left">
-                                        *via AWS shared responsibility model
+                                    <p className="mt-3 text-[10px] tracking-wide text-slate-500 text-center md:text-left">
+                                        Compliance inheritance via AWS shared responsibility model.
                                     </p>
                                 </div>
                             </div>
 
                             {/* Right: Visual */}
-                            <div className="hidden md:block relative">
-                                <PermissionGateEmblem visible={heroVisible} />
+                            <div className="relative flex justify-center md:justify-end">
+                                <div className="scale-[0.76] sm:scale-[0.88] md:scale-100 -mb-10 md:mb-0">
+                                    <PermissionGateEmblem visible={heroVisible} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -579,17 +590,17 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     STATS
                 ════════════════════════════════════════ */}
-                <section className="py-12 border-y border-white/5 bg-slate-900/50">
+                <section className="py-14 md:py-16 border-y border-white/10 bg-slate-950/60">
                     <div ref={statsRef.ref} className="max-w-6xl mx-auto px-6">
-                        <div className="grid grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
                             {[
                                 { value: `${datasetsCount.toLocaleString()}+`, label: 'Verified Datasets' },
                                 { value: `${verifiedCount}%`, label: 'Accuracy Rate' },
                                 { value: `${partnersCount}+`, label: 'Trusted Partners' }
                             ].map((stat, i) => (
-                                <div key={i} className="text-center">
+                                <div key={i} className="text-center rounded-xl border border-white/5 bg-slate-900/50 px-4 py-5 sm:bg-transparent sm:border-transparent sm:p-0">
                                     <div className="redoubt-font text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                                    <div className="text-slate-500 text-sm">{stat.label}</div>
+                                    <div className="text-slate-400 text-sm">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -599,7 +610,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     HOW IT WORKS
                 ════════════════════════════════════════ */}
-                <section id="how-it-works" className="py-20 bg-slate-900">
+                <section id="how-it-works" className="py-24 bg-slate-950">
                     <div className="max-w-6xl mx-auto px-6">
                         <div className="text-center mb-12">
                             <h2 className="redoubt-font text-3xl font-semibold text-white">How Redoubt Works</h2>
@@ -628,7 +639,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     TRUST & VERIFICATION
                 ════════════════════════════════════════ */}
-                <section id="security" ref={trustRef.ref} className="py-20 bg-slate-800">
+                <section id="security" ref={trustRef.ref} className="py-24 bg-slate-900/95">
                     <div className="max-w-6xl mx-auto px-6">
                         <div className="text-center mb-12">
                             <h2 className="redoubt-font text-3xl font-semibold text-white">Trust by Design</h2>
@@ -658,7 +669,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     SOLUTIONS
                 ════════════════════════════════════════ */}
-                <section id="solutions" className="py-20 bg-slate-900">
+                <section id="solutions" className="py-24 bg-slate-950">
                     <div className="max-w-6xl mx-auto px-6">
                         <div className="text-center mb-12">
                             <h2 className="redoubt-font text-3xl font-semibold text-white">Built for Every Team</h2>
@@ -683,7 +694,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     WHO CAN JOIN
                 ════════════════════════════════════════ */}
-                <section id="join" ref={whoCanJoinRef.ref} className="py-20 bg-slate-800">
+                <section id="join" ref={whoCanJoinRef.ref} className="py-24 bg-slate-900/95">
                     <div className="max-w-6xl mx-auto px-6">
                         <div className="text-center mb-12">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium mb-4">
@@ -713,7 +724,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     FINAL CTA
                 ════════════════════════════════════════ */}
-                <section className="py-20 bg-slate-900">
+                <section className="py-24 bg-slate-950 border-t border-white/5">
                     <div className="max-w-3xl mx-auto px-6 text-center">
                         <h2 className="text-3xl font-semibold text-white mb-4">
                             Ready to get started?
@@ -722,19 +733,19 @@ export default function HomePage() {
                             Join the trusted network of organizations leveraging verified data for AI and analytics.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link
-                                to="/login"
-                                onClick={handleSignInFromLanding}
-                                className="px-8 py-3 bg-white text-slate-900 font-semibold rounded-lg hover:bg-cyan-50 transition-all"
-                            >
-                                Sign In
-                            </Link>
                             <button
                                 onClick={handleRequestPlatformAccess}
-                                className="px-8 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all"
+                                className="px-8 py-3 bg-cyan-400 text-slate-950 font-semibold rounded-lg hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.25)]"
                             >
                                 Request Access
                             </button>
+                            <Link
+                                to="/login"
+                                onClick={handleSignInFromLanding}
+                                className="px-8 py-3 border border-slate-600 bg-slate-900/60 text-slate-200 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                            >
+                                Sign In
+                            </Link>
                         </div>
                     </div>
                 </section>
