@@ -475,60 +475,59 @@ export default function EscrowVaultPage() {
                     </div>
                 </section>
 
-                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    {summaryCards.map(card => (
-                        <article
-                            key={card.label}
-                            className={`rounded-xl border p-4 backdrop-blur-xl shadow-2xl shadow-black/25 ${summaryAccentClasses[card.tone]}`}
-                        >
-                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{card.label}</p>
-                            <p className={`mt-2 text-3xl font-semibold ${summaryValueClasses[card.tone]}`}>{card.value}</p>
-                        </article>
-                    ))}
-                </section>
-
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 backdrop-blur-xl shadow-2xl shadow-black/25">
-                    <div className="flex flex-wrap gap-2">
-                        {workspaceTabs.map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveWorkspace(tab.key)}
-                                className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                    activeWorkspace === tab.key
-                                        ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                        : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
-                                }`}
+                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-4 backdrop-blur-xl shadow-2xl shadow-black/25 space-y-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                        {summaryCards.map(card => (
+                            <article
+                                key={card.label}
+                                className={`rounded-lg border p-3 ${summaryAccentClasses[card.tone]}`}
                             >
-                                {tab.label}
-                            </button>
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{card.label}</p>
+                                <p className={`mt-1 text-2xl font-semibold ${summaryValueClasses[card.tone]}`}>{card.value}</p>
+                            </article>
                         ))}
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                        {workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint}
-                    </p>
+                    <div className="border-t border-slate-800/60 pt-4">
+                        <div className="flex flex-wrap gap-2">
+                            {workspaceTabs.map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveWorkspace(tab.key)}
+                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                        activeWorkspace === tab.key
+                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="mt-2 text-xs text-slate-500">
+                            {workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint}
+                        </p>
+                    </div>
                 </section>
 
                 {activeWorkspace === 'overview' && (
-                    <div className="space-y-6">
-                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 backdrop-blur-xl shadow-2xl shadow-black/25">
-                            <div className="flex flex-wrap gap-2">
-                                {overviewTabs.map(tab => (
-                                    <button
-                                        key={tab.key}
-                                        onClick={() => setActiveOverviewTab(tab.key)}
-                                        className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                            activeOverviewTab === tab.key
-                                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                                : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
-                                        }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
+                    <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-4 backdrop-blur-xl shadow-2xl shadow-black/25">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {overviewTabs.map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveOverviewTab(tab.key)}
+                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                        activeOverviewTab === tab.key
+                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
 
-                        <div className="max-h-[calc(100vh-340px)] overflow-y-auto pr-1">
+                        <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-1 border-t border-slate-800/60 pt-4">
                             {activeOverviewTab === 'resilience' && (
                                 <ResilienceInsightsPanel
                                     digests={adminPortfolioDigests}
@@ -633,43 +632,41 @@ export default function EscrowVaultPage() {
                                 </section>
                             )}
                         </div>
-                    </div>
+                    </section>
                 )}
 
                 {activeWorkspace === 'riskAssessment' && (
-                    <>
-                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/25">
-                            <div className="space-y-1">
-                                <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Risk Assessment Workspace</h2>
-                                <p className="text-sm text-slate-400">
-                                    Focused escrow: <span className="font-mono text-cyan-300">{focusedEscrowId}</span>
-                                </p>
-                            </div>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                {filterTabs.map(tab => (
-                                    <button
-                                        key={tab.key}
-                                        onClick={() => setActiveFilter(tab.key)}
-                                        className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                            activeFilter === tab.key
-                                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                                : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
-                                        }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
+                    <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/25">
+                        <div className="space-y-1 mb-4">
+                            <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Risk Assessment Workspace</h2>
+                            <p className="text-sm text-slate-400">
+                                Focused escrow: <span className="font-mono text-cyan-300">{focusedEscrowId}</span>
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {filterTabs.map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveFilter(tab.key)}
+                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                        activeFilter === tab.key
+                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="border-t border-slate-800/60 pt-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                                 <h3 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">
                                     Active Panel: {activeRiskPanelLabel}
                                 </h3>
                                 <p className="text-xs text-slate-500">Switch views to inspect one control surface at a time.</p>
                             </div>
 
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 mb-4">
                                 {riskPanelTabs.map(tab => (
                                     <button
                                         key={tab.key}
@@ -685,11 +682,11 @@ export default function EscrowVaultPage() {
                                 ))}
                             </div>
 
-                            <div className="mt-4 max-h-[70vh] overflow-y-auto pr-1">
+                            <div className="max-h-[calc(100vh-480px)] overflow-y-auto pr-1 border-t border-slate-800/60 pt-4">
                                 {renderActiveRiskPanel()}
                             </div>
-                        </section>
-                    </>
+                        </div>
+                    </section>
                 )}
 
                 {activeWorkspace === 'disputes' && (
