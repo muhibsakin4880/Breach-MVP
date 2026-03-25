@@ -15,6 +15,11 @@ import AIReportPage from './pages/admin/AIReportPage'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import EscrowVaultPage from './pages/admin/EscrowVaultPage'
 import ActiveEphemeralTokensPage from './pages/admin/ActiveEphemeralTokensPage'
+import UserManagementPage from './pages/admin/UserManagementPage'
+import ProviderDatasetManagementPage from './pages/admin/ProviderDatasetManagementPage'
+import SecurityCompliancePage from './pages/admin/SecurityCompliancePage'
+import OperationsPage from './pages/admin/OperationsPage'
+import NotificationsPage from './pages/admin/NotificationsPage'
 import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import ApplicationReviewPage from './pages/admin/ApplicationReviewPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -164,7 +169,12 @@ function App() {
                 <Route path="admin/ai-report/:reportId" element={<AIReportPage />} />
                 <Route path="admin/settings" element={<AdminSettingsPage />} />
                 <Route path="admin/escrow-vault" element={<EscrowVaultPage />} />
-                <Route path="admin/ephemeral-tokens" element={<ActiveEphemeralTokensPage />} />
+<Route path="admin/ephemeral-tokens" element={<ActiveEphemeralTokensPage />} />
+                <Route path="admin/user-management" element={<UserManagementPage />} />
+                <Route path="admin/provider-dataset" element={<ProviderDatasetManagementPage />} />
+                <Route path="admin/security-compliance" element={<SecurityCompliancePage />} />
+                <Route path="admin/operations" element={<OperationsPage />} />
+                <Route path="admin/notifications" element={<NotificationsPage />} />
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
                 <Route path="admin/application-review/:appId" element={<ApplicationReviewPage />} />
                 <Route path="admin/incident-response" element={<IncidentResponsePage />} />
