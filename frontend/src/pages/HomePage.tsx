@@ -530,15 +530,11 @@ export default function HomePage() {
                                     Enterprise Data Trust Platform
                                 </div>
                                 
-                                <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
-                                    Redoubt
+                                <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-[#67E8F9] leading-tight mb-4">
+                                    REDOUBT
                                 </h1>
 
-                                <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-slate-100 leading-tight mb-3">
-                                    Secure Every Dataset Before It Reaches Production
-                                </h2>
-
-                                <p className="h-5 text-[11px] sm:text-xs tracking-[0.22em] text-cyan-300/75 uppercase font-medium mb-4">
+                                <p className="h-5 text-[11px] sm:text-xs tracking-[0.18em] text-cyan-300/75 uppercase font-medium mb-4">
                                     {taglineTyped}
                                 </p>
                                 
