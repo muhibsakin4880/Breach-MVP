@@ -443,29 +443,6 @@ export default function HomePage() {
                 .redoubt-font { font-family: 'Syne', sans-serif; }
                 .body-font    { font-family: 'Inter', system-ui, sans-serif; }
 
-                .glass {
-                    background:      rgba(15,23,42,0.65);
-                    backdrop-filter: blur(24px);
-                    border:          1px solid rgba(148,163,184,0.09);
-                    transition:      all 0.35s ease;
-                }
-                .glass:hover {
-                    background:   rgba(15,23,42,0.85);
-                    border-color: rgba(59,130,246,0.35);
-                    transform:    translateY(-6px);
-                    box-shadow:   0 25px 70px rgba(59,130,246,0.12);
-                }
-                .cyber-glow {
-                    box-shadow: 0 0 20px rgba(0,229,255,0.12), 0 0 40px rgba(0,180,216,0.06);
-                }
-                .hero-title-glow {
-                    background:              linear-gradient(90deg,#00E5FF,#67E8F9);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    text-shadow:             0 0 40px rgba(0,229,255,0.6);
-                }
-
-                /* Emblem animations */
                 @keyframes logoSpinCW  { from { transform: rotate(0deg) }   to { transform: rotate(360deg) }  }
                 @keyframes logoSpinCCW { from { transform: rotate(0deg) }   to { transform: rotate(-360deg) } }
                 @keyframes logoFloat {
@@ -486,49 +463,38 @@ export default function HomePage() {
                     0%,100% { opacity: 0.45 }
                     50%     { opacity: 1 }
                 }
-
-                /* Nav underline hover */
-                .nav-link { position: relative; padding-bottom: 2px; transition: color 0.2s; }
-                .nav-link::after {
-                    content: ''; position: absolute; bottom: -2px; left: 0;
-                    width: 0; height: 1px; background: #00E5FF;
-                    transition: width 0.25s ease;
-                }
-                .nav-link:hover::after { width: 100%; }
             `}</style>
 
             {/* ── NAVBAR ── */}
             {!wizardOpen && (
-                <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#0f1a33]/90 bg-[#050C1F] shadow-[0_12px_30px_rgba(2,6,23,0.38)]">
-                    <div className="max-w-7xl mx-auto px-6 flex items-center justify-end h-16">
-                        <div className="ml-auto flex items-center gap-x-6 md:gap-x-8">
-                            <nav className="hidden md:flex items-center gap-x-9 text-sm font-medium">
-                                <a href="#how-it-works" className="nav-link text-slate-300 hover:text-white">How it Works</a>
-                                <a href="#security"     className="nav-link text-slate-300 hover:text-white">Security</a>
-                                <a href="#solutions"    className="nav-link text-slate-300 hover:text-white">Solutions</a>
-                                <a href="#join"         className="nav-link text-slate-300 hover:text-white">Join Today</a>
-                            </nav>
-                            <div className="flex items-center gap-x-4">
-                                <button
-                                    onClick={handleAdminAccessFromLanding}
-                                    className="px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-200 border border-cyan-500/40 rounded-2xl hover:border-cyan-300/70 hover:bg-cyan-500/10 transition-all"
-                                >
-                                    Admin Console
-                                </button>
-                                <Link
-                                    to="/login"
-                                    onClick={handleSignInFromLanding}
-                                    className="px-6 py-2.5 text-sm font-semibold text-white border border-white/30 rounded-2xl hover:border-white/60 transition-all hover:bg-white/5"
-                                >
-                                    Sign In
-                                </Link>
-                                <button
-                                    onClick={handleRequestPlatformAccess}
-                                    className="px-7 py-2.5 text-sm font-semibold bg-gradient-to-r from-[#0077b6] to-[#00b4d8] rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-cyan-500/30"
-                                >
-                                    Request Access
-                                </button>
+                <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800">
+                    <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-sm">R</span>
                             </div>
+                            <span className="text-white font-semibold text-lg">Redoubt</span>
+                        </div>
+                        <nav className="hidden md:flex items-center gap-8 text-sm">
+                            <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
+                            <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
+                            <a href="#solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</a>
+                            <a href="#join" className="text-slate-300 hover:text-white transition-colors">Join</a>
+                        </nav>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                to="/login"
+                                onClick={handleSignInFromLanding}
+                                className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                            >
+                                Sign In
+                            </Link>
+                            <button
+                                onClick={handleRequestPlatformAccess}
+                                className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
+                            >
+                                Request Access
+                            </button>
                         </div>
                     </div>
                 </header>
@@ -550,87 +516,59 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     HERO
                 ════════════════════════════════════════ */}
-                <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_40%,rgba(0,229,255,0.07)_0%,transparent_70%)]" />
-                    <ParticleCanvas />
+                <section className="relative pt-24 pb-16 md:pt-32 md:pb-20 overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,229,255,0.06)_0%,transparent_70%)]" />
 
-                    <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+                    <div className="max-w-6xl mx-auto px-6 relative z-10">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            
+                            {/* Left: Content */}
+                            <div className="text-center md:text-left">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-medium mb-6">
+                                    <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                                    Enterprise Data Trust Platform
+                                </div>
+                                
+                                <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
+                                    Data You Can <span className="text-cyan-400">Trust</span>
+                                </h1>
+                                
+                                <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto md:mx-0 mb-8">
+                                    Validate, score, and secure your datasets with AI-powered quality assurance and zero-trust access controls.
+                                </p>
 
-                        {/* PERMISSION GATE EMBLEM */}
-                        <PermissionGateEmblem visible={heroVisible} />
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                                    <Link
+                                        to="/login"
+                                        onClick={handleSignInFromLanding}
+                                        className="px-6 py-3 bg-white text-slate-900 font-semibold rounded-lg hover:bg-cyan-50 transition-all"
+                                    >
+                                        Sign In
+                                    </Link>
+                                    <button
+                                        onClick={handleRequestPlatformAccess}
+                                        className="px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all"
+                                    >
+                                        Request Access
+                                    </button>
+                                </div>
 
-                        {/* Title */}
-                        <h1 className={`
-                            redoubt-font hero-title-glow
-                            text-6xl md:text-[92px] leading-none font-black tracking-[-0.04em] mb-6
-                            transition-all duration-700
-                            ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
-                        `}>
-                            REDOUBT
-                        </h1>
-
-                        {/* Divider */}
-                        <div className={`flex justify-center mb-6 transition-all duration-700 delay-300 ${heroVisible ? 'opacity-100' : 'opacity-0'}`}>
-                            <div className="h-px w-24 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
-                        </div>
-
-                        {/* Typed tagline */}
-                        <p className={`
-                            text-sm md:text-base font-medium text-cyan-300 tracking-[0.22em] mb-12
-                            transition-all duration-700 delay-500
-                            ${heroVisible ? 'opacity-100' : 'opacity-0'}
-                        `}>
-                            {taglineTyped || 'LAYERED DEFENSE FOR DATA CONFIDENCE'}
-                        </p>
-
-                        {/* CTA buttons */}
-                        <div className={`
-                            flex flex-col sm:flex-row gap-4 justify-center
-                            transition-all duration-700 delay-700
-                            ${heroVisible ? 'opacity-100' : 'opacity-0'}
-                        `}>
-                            <button
-                                onClick={handleAdminAccessFromLanding}
-                                className="px-10 py-4 border border-cyan-500/50 text-cyan-100 font-medium rounded-2xl text-lg backdrop-blur-xl transition-all hover:bg-cyan-500/10 hover:border-cyan-300"
-                            >
-                                Open Admin Console
-                            </button>
-                            <Link
-                                to="/login"
-                                onClick={handleSignInFromLanding}
-                                className="group relative px-10 py-4 bg-white text-[#050C1F] font-semibold rounded-2xl text-lg overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
-                            >
-                                Sign In →
-                            </Link>
-                            <button
-                                onClick={handleRequestPlatformAccess}
-                                className="px-10 py-4 border border-cyan-400/60 hover:border-cyan-300 text-cyan-100 font-medium rounded-2xl text-lg backdrop-blur-xl transition-all hover:bg-cyan-500/10"
-                            >
-                                Request Platform Access
-                            </button>
-                        </div>
-
-                        {/* Compliance badges */}
-                        <div
-                            ref={complianceRef.ref}
-                            className={`mt-20 transition-all duration-1000 ${heroVisible ? 'opacity-100' : 'opacity-0'}`}
-                        >
-                            <p className="text-xs uppercase tracking-[0.125em] text-slate-400 mb-5">
-                                Enterprise infrastructure inherited
-                            </p>
-                            <div className="flex flex-wrap justify-center gap-5">
-                                {[
-                                    { label: 'SOC 2 Type II', color: 'blue'    },
-                                    { label: 'ISO 27001',     color: 'blue'    },
-                                    { label: 'HIPAA + GDPR',  color: 'emerald' }
-                                ].map((b, i) => (
-                                    <div key={i} className="glass px-7 py-4 rounded-2xl flex flex-col items-center min-w-[168px]">
-                                        <span className={`text-sm font-semibold ${b.color === 'blue' ? 'text-sky-200' : 'text-emerald-200'}`}>
-                                            {b.label}
+                                <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 justify-center md:justify-start text-sm text-slate-500">
+                                    {['SOC 2 Certified', 'ISO 27001', 'HIPAA', 'GDPR'].map((certification) => (
+                                        <span key={certification} className="inline-flex items-center gap-2">
+                                            <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                                            <span className="leading-tight">
+                                                <span className="block">{certification}</span>
+                                                <span className="block text-[10px] tracking-wide text-slate-600">via AWS</span>
+                                            </span>
                                         </span>
-                                        <span className="text-[10px] text-slate-400 mt-1">via AWS • Inherited</span>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right: Visual */}
+                            <div className="hidden md:block relative">
+                                <PermissionGateEmblem visible={heroVisible} />
                             </div>
                         </div>
                     </div>
@@ -639,49 +577,46 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     STATS
                 ════════════════════════════════════════ */}
-                <section
-                    className="py-16 border-b border-white/5"
-                    style={{ background: 'linear-gradient(180deg,#050C1F 0%,#020817 100%)' }}
-                >
-                    <div ref={statsRef.ref} className="max-w-5xl mx-auto px-6 grid grid-cols-3 gap-6">
-                        {[
-                            { value: `${datasetsCount.toLocaleString()}+`, label: 'Verified Datasets', icon: '🔒' },
-                            { value: `${verifiedCount}%`,                  label: 'Accuracy Rate',     icon: '📈' },
-                            { value: `${partnersCount}+`,                  label: 'Trusted Partners',  icon: '🤝' }
-                        ].map((stat, i) => (
-                            <div key={i} className="glass rounded-3xl p-8 text-center cyber-glow">
-                                <div className="text-6xl mb-6">{stat.icon}</div>
-                                <div className="redoubt-font text-5xl font-bold text-white mb-1">{stat.value}</div>
-                                <div className="text-slate-400 text-sm tracking-wide">{stat.label}</div>
-                            </div>
-                        ))}
+                <section className="py-12 border-y border-white/5 bg-slate-900/50">
+                    <div ref={statsRef.ref} className="max-w-6xl mx-auto px-6">
+                        <div className="grid grid-cols-3 gap-8">
+                            {[
+                                { value: `${datasetsCount.toLocaleString()}+`, label: 'Verified Datasets' },
+                                { value: `${verifiedCount}%`, label: 'Accuracy Rate' },
+                                { value: `${partnersCount}+`, label: 'Trusted Partners' }
+                            ].map((stat, i) => (
+                                <div key={i} className="text-center">
+                                    <div className="redoubt-font text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                                    <div className="text-slate-500 text-sm">{stat.label}</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
                 {/* ════════════════════════════════════════
                     HOW IT WORKS
                 ════════════════════════════════════════ */}
-                <section
-                    id="how-it-works"
-                    className="py-24"
-                    style={{ background: 'linear-gradient(180deg,#020817 0%,#050C1F 100%)' }}
-                >
+                <section id="how-it-works" className="py-20 bg-slate-900">
                     <div className="max-w-6xl mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <div className="inline text-cyan-400 text-xs font-medium tracking-[0.2em]">THE PIPELINE</div>
-                            <h2 className="redoubt-font text-5xl font-semibold mt-3">How Redoubt Works</h2>
+                        <div className="text-center mb-12">
+                            <h2 className="redoubt-font text-3xl font-semibold text-white">How Redoubt Works</h2>
+                            <p className="text-slate-400 mt-3 max-w-2xl mx-auto">A streamlined pipeline from dataset submission to verified, secure access.</p>
                         </div>
-                        <div className="grid md:grid-cols-4 gap-6">
+                        <div className="grid md:grid-cols-4 gap-8">
                             {[
-                                { num: '01', title: 'Controlled Onboarding', desc: 'Secure submission with metadata & governance' },
-                                { num: '02', title: 'AI Quality Engine',     desc: 'Automated validation, anomaly detection, scoring' },
-                                { num: '03', title: 'Confidence Scoring',    desc: 'Transparent multi-factor trust metrics' },
-                                { num: '04', title: 'Audited Access',        desc: 'Zero-trust RBAC with immutable audit logs' }
+                                { num: '01', title: 'Submit', desc: 'Upload datasets with metadata and governance documentation' },
+                                { num: '02', title: 'Validate', desc: 'AI-powered quality checks detect anomalies and bias' },
+                                { num: '03', title: 'Score', desc: 'Receive transparent confidence scores based on multiple factors' },
+                                { num: '04', title: 'Access', desc: 'Zero-trust RBAC with complete audit trail' }
                             ].map((step, i) => (
-                                <div key={i} className="glass rounded-3xl p-8 cyber-glow">
-                                    <div className="text-cyan-400 text-xs font-mono mb-6">STEP {step.num}</div>
-                                    <h3 className="redoubt-font text-2xl font-medium mb-3">{step.title}</h3>
-                                    <p className="text-slate-400 text-[15px]">{step.desc}</p>
+                                <div key={i} className="relative">
+                                    <div className="text-cyan-400 text-sm font-mono mb-3">Step {step.num}</div>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                                    <p className="text-slate-400 text-sm">{step.desc}</p>
+                                    {i < 3 && (
+                                        <div className="hidden md:block absolute top-6 right-0 w-8 h-px bg-slate-700"></div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -691,30 +626,27 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     TRUST & VERIFICATION
                 ════════════════════════════════════════ */}
-                <section
-                    id="security"
-                    ref={trustRef.ref}
-                    className="py-24"
-                    style={{ background: 'linear-gradient(180deg,#050C1F 0%,#020817 100%)' }}
-                >
+                <section id="security" ref={trustRef.ref} className="py-20 bg-slate-800">
                     <div className="max-w-6xl mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="redoubt-font text-5xl font-semibold">Trust by Design</h2>
-                            <p className="text-slate-400 mt-4 max-w-md mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="redoubt-font text-3xl font-semibold text-white">Trust by Design</h2>
+                            <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
                                 Every dataset is validated, scored, and secured before it ever reaches you.
                             </p>
                         </div>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
-                                { title: 'AI Validation',     desc: 'Real-time quality & bias detection' },
-                                { title: 'Provider Vetting',  desc: 'Identity + credential verification' },
+                                { title: 'AI Validation', desc: 'Real-time quality & bias detection' },
+                                { title: 'Provider Vetting', desc: 'Identity + credential verification' },
                                 { title: 'Confidence Engine', desc: 'Live, transparent scoring' },
                                 { title: 'Zero-Trust Access', desc: 'Full audit trail & revocation' }
                             ].map((item, i) => (
-                                <div key={i} className="glass rounded-3xl p-8 cyber-glow">
-                                    <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6 text-cyan-400 text-2xl">✓</div>
-                                    <h3 className="text-xl font-medium mb-3">{item.title}</h3>
-                                    <p className="text-slate-400">{item.desc}</p>
+                                <div key={i} className="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-4 text-cyan-400">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <h3 className="text-lg font-medium text-white mb-2">{item.title}</h3>
+                                    <p className="text-slate-400 text-sm">{item.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -724,27 +656,23 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     SOLUTIONS
                 ════════════════════════════════════════ */}
-                <section
-                    id="solutions"
-                    className="py-24"
-                    style={{ background: 'linear-gradient(180deg,#020817 0%,#050C1F 100%)' }}
-                >
+                <section id="solutions" className="py-20 bg-slate-900">
                     <div className="max-w-6xl mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="redoubt-font text-5xl font-semibold">Built for Every Team</h2>
+                        <div className="text-center mb-12">
+                            <h2 className="redoubt-font text-3xl font-semibold text-white">Built for Every Team</h2>
                         </div>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
-                                { title: 'Researchers',       desc: 'Academic & clinical datasets' },
-                                { title: 'AI/ML Teams',       desc: 'High-quality training data' },
-                                { title: 'Enterprises',       desc: 'Regulated production pipelines' },
-                                { title: 'Data Contributors', desc: 'Earn from verified contributions' }
+                                { title: 'Researchers', desc: 'Academic & clinical datasets' },
+                                { title: 'AI/ML Teams', desc: 'High-quality training data' },
+                                { title: 'Enterprises', desc: 'Regulated production pipelines' },
+                                { title: 'Contributors', desc: 'Earn from verified contributions' }
                             ].map((s, i) => (
-                                <TiltCard key={i} className="glass rounded-3xl p-8 cyber-glow h-full">
-                                    <h3 className="redoubt-font text-2xl font-medium mb-4">{s.title}</h3>
-                                    <p className="text-slate-400 mb-6">{s.desc}</p>
-                                    <span className="text-xs uppercase tracking-widest text-cyan-400">Learn more →</span>
-                                </TiltCard>
+                                <div key={i} className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-cyan-500/50 transition-colors">
+                                    <h3 className="text-lg font-semibold text-white mb-3">{s.title}</h3>
+                                    <p className="text-slate-400 text-sm mb-4">{s.desc}</p>
+                                    <a href="#" className="text-cyan-400 text-sm hover:underline">Learn more →</a>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -753,37 +681,27 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     WHO CAN JOIN
                 ════════════════════════════════════════ */}
-                <section
-                    id="join"
-                    ref={whoCanJoinRef.ref}
-                    className="py-24"
-                    style={{ background: 'linear-gradient(180deg,#050C1F 0%,#020817 100%)' }}
-                >
+                <section id="join" ref={whoCanJoinRef.ref} className="py-20 bg-slate-800">
                     <div className="max-w-6xl mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <div className="text-xs uppercase tracking-[0.2em] text-emerald-400">NOW OPEN</div>
-                            <h2 className="redoubt-font text-5xl font-semibold mt-3">Who Can Join Today</h2>
+                        <div className="text-center mb-12">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium mb-4">
+                                <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                                Now Open
+                            </div>
+                            <h2 className="redoubt-font text-3xl font-semibold text-white">Who Can Join</h2>
                         </div>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[
-                                { emoji: '🏥', title: 'Healthcare AI Startups' },
-                                { emoji: '💳', title: 'Fintech & Risk Teams'   },
-                                { emoji: '🔬', title: 'Research Institutions'  },
-                                { emoji: '🎓', title: 'Universities & Labs'    },
-                                { emoji: '🌍', title: 'Climate & Environment'  },
-                                { emoji: '🧬', title: 'Early-Stage Biotech'    }
+                                { title: 'Healthcare AI Startups' },
+                                { title: 'Fintech & Risk Teams' },
+                                { title: 'Research Institutions' },
+                                { title: 'Universities & Labs' },
+                                { title: 'Climate & Environment' },
+                                { title: 'Early-Stage Biotech' }
                             ].map((item, i) => (
-                                <div key={i}>
-                                    <TiltCard>
-                                        <div className="glass rounded-3xl p-8 text-center h-full border border-emerald-500/20 hover:border-emerald-400/40 transition-all">
-                                            <div className="text-6xl mb-8">{item.emoji}</div>
-                                            <h3 className="text-xl font-medium">{item.title}</h3>
-                                            <div className="mt-6 inline-flex items-center gap-2 text-xs bg-emerald-500/10 text-emerald-400 px-5 py-1.5 rounded-full">
-                                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                                Accepting Now
-                                            </div>
-                                        </div>
-                                    </TiltCard>
+                                <div key={i} className="bg-slate-900 rounded-lg p-5 border border-slate-700 flex items-center justify-between">
+                                    <span className="text-white font-medium">{item.title}</span>
+                                    <span className="text-emerald-400 text-xs">✓ Open</span>
                                 </div>
                             ))}
                         </div>
@@ -793,45 +711,31 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     FINAL CTA
                 ════════════════════════════════════════ */}
-                <section
-                    className="py-28 relative"
-                    style={{ background: 'linear-gradient(135deg,#020817 0%,#0a1628 100%)' }}
-                >
-                    <div className="max-w-4xl mx-auto px-6 text-center">
-                        <div className="inline-flex px-5 py-2 rounded-3xl bg-black/60 border border-cyan-400/30 mb-8">
-                            <span className="text-cyan-300 text-sm font-medium">SECURED ONBOARDING LIVE</span>
-                        </div>
-                        <h2 className="text-5xl md:text-7xl font-semibold leading-none tracking-tighter mb-6">
-                            Participation is by{' '}
-                            <span className="block text-cyan-400">invitation &amp; verification only</span>
+                <section className="py-20 bg-slate-900">
+                    <div className="max-w-3xl mx-auto px-6 text-center">
+                        <h2 className="text-3xl font-semibold text-white mb-4">
+                            Ready to get started?
                         </h2>
-                        <p className="text-xl text-slate-300 max-w-lg mx-auto mb-12">
-                            Every participant is identity-verified. Every dataset is scored. Every access is audited.
+                        <p className="text-slate-400 mb-8">
+                            Join the trusted network of organizations leveraging verified data for AI and analytics.
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-5 justify-center">
-                            <button
-                                onClick={handleAdminAccessFromLanding}
-                                className="px-12 py-5 border-2 border-cyan-500/70 rounded-3xl text-lg font-medium text-cyan-100 hover:bg-cyan-500/10 transition-all"
-                            >
-                                Admin Console
-                            </button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
                                 to="/login"
                                 onClick={handleSignInFromLanding}
-                                className="px-12 py-5 bg-white text-[#050C1F] font-semibold rounded-3xl text-lg hover:bg-cyan-100 transition-all"
+                                className="px-8 py-3 bg-white text-slate-900 font-semibold rounded-lg hover:bg-cyan-50 transition-all"
                             >
                                 Sign In
                             </Link>
                             <button
                                 onClick={handleRequestPlatformAccess}
-                                className="px-12 py-5 border-2 border-cyan-400 rounded-3xl text-lg font-medium hover:bg-cyan-400 hover:text-black transition-all"
+                                className="px-8 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all"
                             >
                                 Request Access
                             </button>
                         </div>
                     </div>
                 </section>
-
             </div>{/* end body-font wrapper */}
         </div>
     )
