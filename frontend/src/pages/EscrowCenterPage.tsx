@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
@@ -21,6 +21,7 @@ type EscrowStatus = Extract<
 >
 
 type AccessMethod = 'platform' | 'download'
+type EscrowWorkspace = 'overview' | 'transactions' | 'riskControls' | 'disputes'
 
 type EscrowTransaction = {
     id: string
@@ -53,13 +54,20 @@ const statusStyles: Record<EscrowStatus, { badge: string; text: string }> = {
     DISPUTE_OPEN: { badge: 'border-rose-500/40 bg-rose-500/10 text-rose-300', text: CONTRACT_STATE_LABELS.DISPUTE_OPEN }
 }
 
-const accessMethodStyles: Record<AccessMethod, { badge: string; icon: string }> = {
-    platform: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', icon: '🔒' },
-    download: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', icon: '⬇️' }
+const accessMethodStyles: Record<AccessMethod, { badge: string; token: string; label: string }> = {
+    platform: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', token: 'PL', label: 'Platform Only' },
+    download: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', token: 'DL', label: 'Platform + Download' }
 }
 
 const filterTabs = ['All', 'Active', 'Pending', 'Release Pending', 'Disputed', 'Released'] as const
 type FilterTab = (typeof filterTabs)[number]
+const workspaceTabs: Array<{ key: EscrowWorkspace; label: string; hint: string }> = [
+    { key: 'overview', label: 'Overview', hint: 'Track priority escrow actions with minimal scrolling.' },
+    { key: 'transactions', label: 'Transactions', hint: 'Browse the full ledger with search, filters, and paging.' },
+    { key: 'riskControls', label: 'Risk & Controls', hint: 'Open governance, guardrails, and operational intelligence.' },
+    { key: 'disputes', label: 'Disputes', hint: 'Review and resolve escalations requiring action.' }
+]
+const rowsPerPageOptions = [6, 8, 10, 12]
 const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
 const activeDisputes = [
     { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', raisedBy: 'part_anon_008', reason: 'Data schema mismatch from description', raised: '2026-03-09', status: 'Under Investigation' }
@@ -68,8 +76,10 @@ const activeDisputes = [
 export default function EscrowCenterPage() {
     const [selectedId, setSelectedId] = useState('ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
-    const [rowsPerPage, setRowsPerPage] = useState(10)
+    const [rowsPerPage, setRowsPerPage] = useState(8)
     const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
+    const [activeWorkspace, setActiveWorkspace] = useState<EscrowWorkspace>('overview')
+    const [searchQuery, setSearchQuery] = useState('')
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [starRating, setStarRating] = useState(0)
     const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -77,7 +87,7 @@ export default function EscrowCenterPage() {
     const [showSuccessToast, setShowSuccessToast] = useState(false)
 
     const selectedTransaction = useMemo(() => {
-        return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[2]
+        return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[0]
     }, [selectedId])
     const releasePaymentGuardrail = useMemo(
         () => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status),
@@ -93,13 +103,51 @@ export default function EscrowCenterPage() {
     )
 
     const filteredTransactions = useMemo(() => {
-        if (activeFilter === 'All') return escrowTransactions
-        if (activeFilter === 'Active') return escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE')
-        if (activeFilter === 'Pending') return escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD')
-        if (activeFilter === 'Release Pending') return escrowTransactions.filter(t => t.status === 'RELEASE_PENDING')
-        if (activeFilter === 'Disputed') return escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN')
-        return escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER')
-    }, [activeFilter])
+        const base =
+            activeFilter === 'All'
+                ? escrowTransactions
+                : activeFilter === 'Active'
+                  ? escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE')
+                  : activeFilter === 'Pending'
+                    ? escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD')
+                    : activeFilter === 'Release Pending'
+                      ? escrowTransactions.filter(t => t.status === 'RELEASE_PENDING')
+                      : activeFilter === 'Disputed'
+                        ? escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN')
+                        : escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER')
+
+        const query = searchQuery.trim().toLowerCase()
+        if (!query) return base
+        return base.filter(transaction =>
+            [transaction.id, transaction.dataset, transaction.buyer, transaction.provider, transaction.amount, statusStyles[transaction.status].text]
+                .some(value => value.toLowerCase().includes(query))
+        )
+    }, [activeFilter, searchQuery])
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [activeFilter, rowsPerPage, searchQuery])
+
+    useEffect(() => {
+        if (filteredTransactions.length === 0) return
+        if (!filteredTransactions.some(transaction => transaction.id === selectedId)) {
+            setSelectedId(filteredTransactions[0].id)
+        }
+    }, [filteredTransactions, selectedId])
+
+    const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredTransactions.length / rowsPerPage)), [filteredTransactions.length, rowsPerPage])
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages)
+        }
+    }, [currentPage, totalPages])
+
+    const paginatedTransactions = useMemo(() => {
+        const startIndex = (currentPage - 1) * rowsPerPage
+        return filteredTransactions.slice(startIndex, startIndex + rowsPerPage)
+    }, [currentPage, filteredTransactions, rowsPerPage])
+
     const buyerPortfolioDigests = useMemo(
         () =>
             filteredTransactions.map(transaction => ({
@@ -111,8 +159,8 @@ export default function EscrowCenterPage() {
     )
 
     const totalPageValue = useMemo(() => {
-        return filteredTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
-    }, [filteredTransactions])
+        return paginatedTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
+    }, [paginatedTransactions])
 
     const summaryStats = useMemo(() => {
         const activeEscrows = escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE').length
@@ -131,9 +179,7 @@ export default function EscrowCenterPage() {
     }, [])
 
     const toggleTag = (tag: string) => {
-        setSelectedTags(prev => 
-            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-        )
+        setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
     }
 
     const handleSubmitFeedback = () => {
@@ -142,11 +188,16 @@ export default function EscrowCenterPage() {
         setTimeout(() => setShowSuccessToast(false), 3000)
     }
 
+    const pageStartIndex = filteredTransactions.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1
+    const pageEndIndex = Math.min(currentPage * rowsPerPage, filteredTransactions.length)
+    const hasFilteredResults = filteredTransactions.length > 0
+    const selectedWorkspaceHint = workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint ?? ''
+
     return (
         <div className="container mx-auto px-4 py-10 space-y-6 text-white">
             {showSuccessToast && (
-                <div className="fixed top-4 right-4 z-50 bg-emerald-600/90 border border-emerald-400 text-white px-4 py-3 rounded-lg shadow-lg animate-pulse">
-                    Payment released successfully ✓
+                <div className="fixed top-4 right-4 z-50 rounded-lg border border-emerald-400 bg-emerald-600/90 px-4 py-3 text-white shadow-lg">
+                    Payment released successfully
                 </div>
             )}
 
@@ -172,51 +223,82 @@ export default function EscrowCenterPage() {
                 ))}
             </section>
 
-            <ResilienceInsightsPanel
-                digests={buyerPortfolioDigests}
-                compact
-                title="Buyer Portfolio Resilience"
-            />
-            <PortfolioAlertBoard
-                digests={buyerPortfolioDigests}
-                compact
-                title="Buyer Portfolio Alerts"
-            />
-            <RemediationQueuePanel
-                digests={buyerPortfolioDigests}
-                compact
-                title="Buyer Remediation Queue"
-            />
-            <ReadinessCertificationPanel
-                digests={buyerPortfolioDigests}
-                compact
-                title="Buyer Launch Certification"
-            />
+            <section className="rounded-xl border border-slate-700/70 bg-slate-900/55 px-4 py-3">
+                <div className="flex flex-wrap gap-2">
+                    {workspaceTabs.map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveWorkspace(tab.key)}
+                            className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                activeWorkspace === tab.key
+                                    ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                    : 'border-slate-700/80 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">{selectedWorkspaceHint}</p>
+            </section>
 
-            <section className="grid lg:grid-cols-[2fr_1fr] gap-6">
-                <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between flex-wrap gap-3">
-                        <div>
-                            <h2 className="text-lg font-semibold">Escrow Transactions</h2>
+            {(activeWorkspace === 'overview' || activeWorkspace === 'transactions') && (
+                <section className="grid items-start gap-6 lg:grid-cols-[1.9fr_1fr]">
+                    <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/60">
+                        <div className="border-b border-slate-700 px-5 py-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h2 className="text-lg font-semibold">Escrow Transactions</h2>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        {activeWorkspace === 'overview'
+                                            ? 'Priority operations view with immediate actions.'
+                                            : 'Full transaction workspace with search and paging controls.'}
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {filterTabs.map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveFilter(tab)}
+                                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                                activeFilter === tab
+                                                    ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-200'
+                                                    : 'border-slate-700 text-slate-400 hover:text-white'
+                                            }`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <label className="w-full sm:max-w-xs">
+                                    <span className="sr-only">Search transactions</span>
+                                    <input
+                                        value={searchQuery}
+                                        onChange={event => setSearchQuery(event.target.value)}
+                                        placeholder="Search ID, dataset, buyer or provider"
+                                        className="w-full rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+                                    />
+                                </label>
+                                <label className="flex items-center gap-2 text-xs text-slate-400">
+                                    Rows
+                                    <select
+                                        value={rowsPerPage}
+                                        onChange={event => setRowsPerPage(parseInt(event.target.value, 10))}
+                                        className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                                    >
+                                        {rowsPerPageOptions.map(option => (
+                                            <option key={option} value={option}>
+                                                {option}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
                         </div>
-                        <div className="flex gap-1">
-                            {filterTabs.map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveFilter(tab)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                        activeFilter === tab
-                                            ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200'
-                                            : 'border border-slate-700 text-slate-400 hover:text-white'
-                                    }`}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[980px] text-left text-sm">
                             <thead className="bg-slate-900/90 text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="px-3 py-3 font-medium">Request ID</th>
@@ -229,8 +311,8 @@ export default function EscrowCenterPage() {
                                     <th className="px-3 py-3 font-medium">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                {filteredTransactions.map(row => {
+                                <tbody className="divide-y divide-slate-800">
+                                    {paginatedTransactions.map(row => {
                                     const isSelected = row.id === selectedId
                                     const statusStyle = statusStyles[row.status]
                                     const accessStyle = accessMethodStyles[row.accessMethod]
@@ -246,8 +328,9 @@ export default function EscrowCenterPage() {
                                             <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.provider}</td>
                                             <td className="px-3 py-3 text-slate-200 font-mono">{row.amount}</td>
                                             <td className="px-3 py-3">
-                                                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessStyle.badge}`}>
-                                                    {accessStyle.icon} {row.accessMethod === 'platform' ? 'Platform Only' : 'Platform + Download'}
+                                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessStyle.badge}`}>
+                                                    <span className="font-semibold tracking-[0.1em]">{accessStyle.token}</span>
+                                                    {accessStyle.label}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-3">
@@ -255,7 +338,7 @@ export default function EscrowCenterPage() {
                                                     <span
                                                         className={`h-1.5 w-1.5 rounded-full ${
                                                             row.status === 'ACCESS_ACTIVE'
-                                                                ? 'bg-blue-400 animate-pulse'
+                                                                ? 'bg-blue-400'
                                                                 : row.status === 'DISPUTE_OPEN'
                                                                   ? 'bg-rose-400'
                                                                   : row.status === 'FUNDS_HELD' || row.status === 'REQUEST_SUBMITTED'
@@ -272,95 +355,74 @@ export default function EscrowCenterPage() {
                                             </td>
                                             <td className="px-3 py-3">
                                                 <button className="px-2 py-1 rounded border border-slate-600 text-xs text-slate-300 hover:border-cyan-500 hover:text-cyan-200 transition-colors">
-                                                    VIEW
+                                                    OPEN
                                                 </button>
                                             </td>
                                         </tr>
                                     )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-700 bg-slate-900/50">
-                        <div className="text-xs text-slate-400">Total Escrow Value (this page): <span className="text-cyan-300 font-mono font-semibold">${totalPageValue.toLocaleString()}</span></div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500">10 per page</span>
-                            <button className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:text-white">Prev</button>
-                            <button className="rounded bg-cyan-500/20 border border-cyan-500/40 px-2 py-1 text-xs text-cyan-200">1</button>
-                            <button className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:text-white">2</button>
-                            <button className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:text-white">3</button>
-                            <button className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 hover:text-white">Next</button>
+                                    })}
+                                    {paginatedTransactions.length === 0 && (
+                                        <tr>
+                                            <td colSpan={8} className="px-4 py-10 text-center text-sm text-slate-400">
+                                                No escrow transactions match this filter and search query.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="flex flex-col gap-3 border-t border-slate-700 bg-slate-900/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-xs text-slate-400">
+                                {hasFilteredResults ? (
+                                    <>
+                                        Showing {pageStartIndex}-{pageEndIndex} of {filteredTransactions.length} records. Page value:{' '}
+                                        <span className="text-cyan-300 font-mono font-semibold">${totalPageValue.toLocaleString()}</span>
+                                    </>
+                                ) : (
+                                    'No records in this view.'
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={!hasFilteredResults || currentPage === 1}
+                                    className={`rounded border px-2 py-1 text-xs ${
+                                        !hasFilteredResults || currentPage === 1
+                                            ? 'cursor-not-allowed border-slate-700 text-slate-600'
+                                            : 'border-slate-600 text-slate-300 hover:text-white'
+                                    }`}
+                                >
+                                    Prev
+                                </button>
+                                <span className="text-xs text-slate-400">
+                                    Page {hasFilteredResults ? currentPage : 0} / {hasFilteredResults ? totalPages : 0}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={!hasFilteredResults || currentPage === totalPages}
+                                    className={`rounded border px-2 py-1 text-xs ${
+                                        !hasFilteredResults || currentPage === totalPages
+                                            ? 'cursor-not-allowed border-slate-700 text-slate-600'
+                                            : 'border-slate-600 text-slate-300 hover:text-white'
+                                    }`}
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-5">
+                    <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-5 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                     <div>
-                        <h2 className="text-lg font-semibold">Escrow Detail — {selectedTransaction.id}</h2>
+                        <h2 className="text-lg font-semibold">Escrow Detail - {selectedTransaction.id}</h2>
                         <p className="text-xs text-slate-400 mt-1">Active escrow monitoring for {selectedTransaction.dataset}</p>
                         <div className="mt-2">
-                            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessMethodStyles[selectedTransaction.accessMethod].badge}`}>
-                                {accessMethodStyles[selectedTransaction.accessMethod].icon} {selectedTransaction.accessMethod === 'platform' ? 'Platform Only' : 'Platform + Download'}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessMethodStyles[selectedTransaction.accessMethod].badge}`}>
+                                <span className="font-semibold tracking-[0.1em]">{accessMethodStyles[selectedTransaction.accessMethod].token}</span>
+                                {accessMethodStyles[selectedTransaction.accessMethod].label}
                             </span>
                         </div>
                     </div>
-
-                    <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
-                    <ContractHealthPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        compact
-                        title="Escrow Integrity Monitor"
-                    />
-                    <TransitionImpactPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Action Impact Simulator"
-                    />
-                    <ControlTowerPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Buyer Control Tower"
-                    />
-                    <PolicyAttestationPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Buyer Policy Attestation"
-                    />
-                    <DecisionGatePanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Buyer Decision Gate"
-                    />
-                    <AlertCenterPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Buyer Alert Center"
-                    />
-                    <ExecutionRunbookPanel
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        role="buyer"
-                        compact
-                        title="Execution Runbook"
-                    />
-
-                    <SecurityAuditTimeline
-                        contractId={selectedTransaction.id}
-                        state={selectedTransaction.status}
-                        compact
-                        title="Status + Policy Timeline"
-                    />
 
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between text-sm">
@@ -374,44 +436,36 @@ export default function EscrowCenterPage() {
                     </div>
 
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                        <div className="text-sm font-medium text-slate-200 mb-2">Monitoring Summary</div>
+                            <div className="text-sm font-medium text-slate-200 mb-2">Monitoring Summary</div>
                         <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
                             <div>API calls made: 23</div>
                             <div>Export attempts: 0</div>
                             <div>Policy violations: 0</div>
-                            <div className="text-emerald-300">Status: Clean ✓</div>
+                            <div className="text-emerald-300">Status: Clean</div>
                         </div>
                     </div>
 
                     {selectedTransaction.accessMethod === 'download' && (
                         <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
                             <div className="text-sm font-medium text-slate-200 mb-3">Download Access</div>
-                            <div className="space-y-2 text-xs">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <span className="text-emerald-400">✓</span> Encrypted Download Available
-                                </div>
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <span className="text-slate-500">|</span> AES-256 encrypted | Watermarked
-                                </div>
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <span className="text-slate-500">|</span> Valid for: 24 hours after release
-                                </div>
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <span className="text-slate-500">|</span> Downloads remaining: 1 of 1
-                                </div>
-                                <button 
+                            <div className="space-y-2 text-xs text-slate-300">
+                                <div>Encrypted download is available after release.</div>
+                                <div>AES-256 encryption and watermarking are enforced.</div>
+                                <div>Valid for 24 hours after release.</div>
+                                <div>Downloads remaining: 1 of 1.</div>
+                                <button
                                     disabled
                                     className="w-full mt-2 rounded-lg bg-blue-600/50 px-3 py-2 text-xs font-medium text-blue-200 cursor-not-allowed"
                                 >
                                     Download Dataset
                                 </button>
-                                <div className="text-[10px] text-slate-500 text-center">Provider will be notified on download</div>
+                                <div className="text-[10px] text-slate-500 text-center">Provider is notified after each download event.</div>
                             </div>
                         </div>
                     )}
 
                     <div className="grid gap-2">
-                        <button 
+                        <button
                             onClick={() => setShowFeedbackModal(true)}
                             disabled={!releasePaymentGuardrail.allowed}
                             className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -420,7 +474,7 @@ export default function EscrowCenterPage() {
                                     : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
                             }`}
                         >
-                            Confirm & Release Payment
+                            Confirm and Release Payment
                         </button>
                         <p className={`text-[11px] ${releasePaymentGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
                             {releasePaymentGuardrail.allowed
@@ -460,12 +514,132 @@ export default function EscrowCenterPage() {
                     </div>
                 </div>
             </section>
+            )}
+
+            {activeWorkspace === 'riskControls' && (
+                <>
+                    <section className="rounded-xl border border-slate-700 bg-slate-900/55 p-4">
+                        <h2 className="text-lg font-semibold">Risk and Controls Workspace</h2>
+                        <p className="mt-1 text-sm text-slate-400">
+                            Focused escrow: <span className="font-mono text-cyan-300">{selectedTransaction.id}</span> ({selectedTransaction.dataset})
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">Use the Transactions workspace to change the focused escrow record.</p>
+                    </section>
+
+                    <section className="grid gap-6 xl:grid-cols-2">
+                        <ResilienceInsightsPanel digests={buyerPortfolioDigests} compact title="Buyer Portfolio Resilience" />
+                        <PortfolioAlertBoard digests={buyerPortfolioDigests} compact title="Buyer Portfolio Alerts" />
+                        <RemediationQueuePanel digests={buyerPortfolioDigests} compact title="Buyer Remediation Queue" />
+                        <ReadinessCertificationPanel digests={buyerPortfolioDigests} compact title="Buyer Launch Certification" />
+                    </section>
+
+                    <section className="grid gap-6 xl:grid-cols-2">
+                        <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
+                        <ContractHealthPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            compact
+                            title="Escrow Integrity Monitor"
+                        />
+                        <TransitionImpactPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Action Impact Simulator"
+                        />
+                        <ControlTowerPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Buyer Control Tower"
+                        />
+                        <PolicyAttestationPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Buyer Policy Attestation"
+                        />
+                        <DecisionGatePanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Buyer Decision Gate"
+                        />
+                        <AlertCenterPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Buyer Alert Center"
+                        />
+                        <ExecutionRunbookPanel
+                            contractId={selectedTransaction.id}
+                            state={selectedTransaction.status}
+                            role="buyer"
+                            compact
+                            title="Execution Runbook"
+                        />
+                        <div className="xl:col-span-2">
+                            <SecurityAuditTimeline
+                                contractId={selectedTransaction.id}
+                                state={selectedTransaction.status}
+                                compact
+                                title="Status + Policy Timeline"
+                            />
+                        </div>
+                    </section>
+                </>
+            )}
+
+            {activeWorkspace === 'disputes' && (
+                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
+                    <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">Active Disputes</h2>
+                            <p className="text-xs text-slate-500">Escalations requiring review</p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        {activeDisputes.map(dispute => (
+                            <div key={dispute.id} className="bg-slate-900/70 border border-rose-500/30 rounded-xl p-4">
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                                    <div className="space-y-1">
+                                        <div className="text-sm font-semibold text-white">{dispute.id} | {dispute.dataset}</div>
+                                        <div className="text-xs text-slate-400">Raised by: {dispute.raisedBy}</div>
+                                        <div className="text-xs text-slate-400">Reason: "{dispute.reason}"</div>
+                                        <div className="text-xs text-slate-500">Raised: {dispute.raised}</div>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-medium text-amber-200">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                        {dispute.status}
+                                    </span>
+                                </div>
+                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <button className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-400 hover:text-white">
+                                        View Evidence
+                                    </button>
+                                    <button className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-medium text-white">
+                                        Arbitrate: Refund Buyer
+                                    </button>
+                                    <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-xs font-medium text-white">
+                                        Arbitrate: Disburse Funds
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {showFeedbackModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-semibold">Rate Your Experience</h2>
-                        <p className="text-sm text-slate-400 mt-1">{selectedTransaction.dataset} — {selectedTransaction.id}</p>
+                        <p className="text-sm text-slate-400 mt-1">{selectedTransaction.dataset} - {selectedTransaction.id}</p>
                         <p className="text-xs text-slate-500 mt-1">Your feedback directly impacts the provider's trust score</p>
 
                         <div className="mt-5">
@@ -475,8 +649,6 @@ export default function EscrowCenterPage() {
                                     <button
                                         key={star}
                                         onClick={() => setStarRating(star)}
-                                        onMouseEnter={() => setStarRating(star)}
-                                        onMouseLeave={() => {}}
                                         className="text-2xl transition-colors"
                                     >
                                         {starRating >= star ? '⭐' : '☆'}
@@ -503,7 +675,7 @@ export default function EscrowCenterPage() {
                                                     : 'border-slate-600 text-slate-400 hover:text-white'
                                             }`}
                                         >
-                                            {isSelected ? '✓' : ''} {tag}
+                                            {isSelected ? 'OK' : ''} {tag}
                                         </button>
                                     )
                                 })}
@@ -521,65 +693,26 @@ export default function EscrowCenterPage() {
                             <div className="text-[10px] text-slate-500 text-right mt-1">{comment.length}/300</div>
                         </div>
 
-                        <div className="mt-4 text-xs text-slate-500">
-                            ⓘ Your rating updates the provider's trust score within 24 hours. Ratings are anonymous.
-                        </div>
+                        <div className="mt-4 text-xs text-slate-500">Info: Your rating updates the provider's trust score within 24 hours. Ratings are anonymous.</div>
 
                         <div className="mt-5 flex gap-3">
                             <button
                                 onClick={() => setShowFeedbackModal(false)}
                                 className="flex-1 rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white"
                             >
-                                Skip & Release
+                                Skip and Release
                             </button>
                             <button
                                 onClick={handleSubmitFeedback}
                                 className="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-medium text-white"
                             >
-                                Submit & Release
+                                Submit and Release
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
-                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                    <div>
-                        <h2 className="text-lg font-semibold">Active Disputes</h2>
-                        <p className="text-xs text-slate-500">Escalations requiring review</p>
-                    </div>
-                </div>
-                <div className="space-y-4">
-                    {activeDisputes.map(dispute => (
-                        <div key={dispute.id} className="bg-slate-900/70 border border-rose-500/30 rounded-xl p-4">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
-                                <div className="space-y-1">
-                                    <div className="text-sm font-semibold text-white">{dispute.id} | {dispute.dataset}</div>
-                                    <div className="text-xs text-slate-400">Raised by: {dispute.raisedBy}</div>
-                                    <div className="text-xs text-slate-400">Reason: "{dispute.reason}"</div>
-                                    <div className="text-xs text-slate-500">Raised: {dispute.raised}</div>
-                                </div>
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-medium text-amber-200">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                    {dispute.status}
-                                </span>
-                            </div>
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                <button className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-400 hover:text-white">
-                                    View Evidence
-                                </button>
-                                <button className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-medium text-white">
-                                    Arbitrate: Refund Buyer
-                                </button>
-                                <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-xs font-medium text-white">
-                                    Arbitrate: Disburse Funds
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
         </div>
     )
 }
