@@ -58,6 +58,8 @@ import TrustGlossaryPage from './pages/TrustGlossaryPage'
 import DeploymentModelPage from './pages/DeploymentModelPage'
 import GuidedTourPage from './pages/GuidedTourPage'
 import DataLineagePage from './pages/DataLineagePage'
+import CompliancePassportPage from './pages/CompliancePassportPage'
+import RightsQuoteBuilderPage from './pages/RightsQuoteBuilderPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -185,12 +187,14 @@ function App() {
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
+                    <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />
                     <Route path="datasets/:id/quality-breakdown" element={<DatasetQualityBreakdownPage />} />
                     <Route path="access-requests" element={<AccessRequestsPage />} />
                     <Route path="access-requests/:requestId" element={<AccessRequestDetailPage />} />
                     <Route path="requests" element={<Navigate to="/access-requests" replace />} />
                     <Route path="escrow-center" element={<EscrowCenterPage />} />
                     <Route path="trust-profile" element={<TrustProfilePage />} />
+                    <Route path="compliance-passport" element={<CompliancePassportPage />} />
                     <Route path="trust-score-history" element={<TrustScoreHistoryPage />} />
                     <Route path="contributions" element={<ContributionsPage />} />
                     <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />

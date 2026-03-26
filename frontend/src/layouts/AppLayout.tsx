@@ -32,6 +32,7 @@ const navGroups: NavGroup[] = [
         title: 'Trust & Consent',
         items: [
             { label: 'Trust Profile', to: '/trust-profile' },
+            { label: 'Compliance Passport', to: '/compliance-passport' },
             { label: 'Consent', to: '/consent-tracker' },
             { label: 'Trust Glossary', to: '/trust-glossary' }
         ]

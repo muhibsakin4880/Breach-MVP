@@ -16,6 +16,16 @@ import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
 import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
+import {
+    buildCompliancePassport,
+    buildRequestPrefillFromPassport,
+    passportStatusMeta
+} from '../domain/compliancePassport'
+import {
+    buildRequestPrefillFromQuote,
+    formatUsd,
+    loadRightsQuotes
+} from '../domain/rightsQuoteBuilder'
 
 const STATUS_STEPS = [
     {
@@ -35,11 +45,24 @@ const STATUS_STEPS = [
     }
 ] as const
 
+type AccessRequestPrefill = ReturnType<typeof buildRequestPrefillFromPassport> & {
+    quoteId?: string
+    quoteSummary?: string
+}
+
+type DatasetDetailLocationState = {
+    openAccessRequest?: boolean
+    prefillAccessRequest?: AccessRequestPrefill
+} | null
+
 export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
     const navigate = useNavigate()
     const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
+    const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
+    const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
+    const latestSavedQuote = useMemo(() => loadRightsQuotes(dataset.id)[0] ?? null, [dataset.id, location.key])
     const [requestStatus, setRequestStatus] = useState<RequestStatus>(dataset.access.status)
     const [showRequestModal, setShowRequestModal] = useState(false)
     const [showRiskAssessment, setShowRiskAssessment] = useState(false)
@@ -51,7 +74,20 @@ export default function DatasetDetailPage() {
     const [complianceChecked, setComplianceChecked] = useState(false)
     const [escrowWindow, setEscrowWindow] = useState('24 hours')
     const [escrowActive, setEscrowActive] = useState(false)
+    const [requestPrefillNote, setRequestPrefillNote] = useState<string | null>(null)
+    const [requestQuoteSummary, setRequestQuoteSummary] = useState<string | null>(null)
     const openRequestModal = () => setShowRequestModal(true)
+
+    function applyRequestPrefill(prefill: AccessRequestPrefill) {
+        setOrgType(prefill.orgType)
+        setAffiliation(prefill.affiliation)
+        setIntendedUsage(prefill.intendedUsage)
+        setDuration(prefill.duration)
+        setUsageScale(prefill.usageScale)
+        setComplianceChecked(prefill.complianceChecked)
+        setRequestPrefillNote(prefill.note)
+        setRequestQuoteSummary(prefill.quoteSummary ?? null)
+    }
 
     useEffect(() => {
         setRequestStatus(dataset.access.status)
@@ -64,12 +100,19 @@ export default function DatasetDetailPage() {
         setEscrowWindow('24 hours')
         setEscrowActive(false)
         setShowRiskAssessment(false)
+        setRequestPrefillNote(null)
+        setRequestQuoteSummary(null)
     }, [dataset])
 
     useEffect(() => {
-        const shouldAutoOpen = Boolean((location.state as { openAccessRequest?: boolean } | null)?.openAccessRequest)
+        const state = location.state as DatasetDetailLocationState
+        const shouldAutoOpen = Boolean(state?.openAccessRequest)
 
-        if (!shouldAutoOpen) return
+        if (state?.prefillAccessRequest) {
+            applyRequestPrefill(state.prefillAccessRequest)
+        }
+
+        if (!shouldAutoOpen && !state?.prefillAccessRequest) return
 
         openRequestModal()
         navigate(location.pathname, { replace: true, state: null })
@@ -370,6 +413,20 @@ export default function DatasetDetailPage() {
                                         <li key={note}>{note}</li>
                                     ))}
                                 </ul>
+                                <div className="mt-5 flex flex-wrap gap-3">
+                                    <button
+                                        onClick={openRequestModal}
+                                        className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                                    >
+                                        Request Access
+                                    </button>
+                                    <Link
+                                        to={`/datasets/${dataset.id}/rights-quote`}
+                                        className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
+                                    >
+                                        Build Rights Quote
+                                    </Link>
+                                </div>
                             </div>
 
                             <div>
@@ -456,6 +513,101 @@ export default function DatasetDetailPage() {
                                 >
                                     Risk Assessment
                                 </button>
+                            </div>
+
+                            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">Reusable Compliance Passport</div>
+                                        <div className="mt-1 text-xs text-slate-300">
+                                            {compliancePassport.passportId} · {compliancePassport.completionPercent}% complete
+                                        </div>
+                                    </div>
+                                    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${passportStatus.classes}`}>
+                                        {passportStatus.label}
+                                    </span>
+                                </div>
+                                <p className="mt-3 text-xs text-slate-300">{passportStatus.detail}</p>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => {
+                                            applyRequestPrefill(buildRequestPrefillFromPassport(compliancePassport))
+                                            openRequestModal()
+                                        }}
+                                        className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                                    >
+                                        Use In Request
+                                    </button>
+                                    <Link
+                                        to="/compliance-passport"
+                                        className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:border-emerald-400/50 hover:bg-white/5"
+                                    >
+                                        Open Passport
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="rounded-xl border border-cyan-500/30 bg-slate-950/55 p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">Latest Rights Quote</div>
+                                        <div className="mt-1 text-xs text-slate-400">Commercial terms built from configurable usage rights.</div>
+                                    </div>
+                                    {latestSavedQuote && (
+                                        <span className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100">
+                                            {formatUsd(latestSavedQuote.totalUsd)}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {latestSavedQuote ? (
+                                    <>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {latestSavedQuote.rightsSummary.slice(0, 3).map(item => (
+                                                <span key={item} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] text-slate-200">
+                                                    {item}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className="mt-3 text-xs text-slate-400">
+                                            Quote {latestSavedQuote.id} · Valid until{' '}
+                                            {new Date(latestSavedQuote.expiresAt).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
+                                        </div>
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    applyRequestPrefill(buildRequestPrefillFromQuote(latestSavedQuote, compliancePassport))
+                                                    openRequestModal()
+                                                }}
+                                                className="rounded-lg bg-cyan-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400"
+                                            >
+                                                Use Quote In Request
+                                            </button>
+                                            <Link
+                                                to={`/datasets/${dataset.id}/rights-quote`}
+                                                className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:border-cyan-400/50 hover:bg-white/5"
+                                            >
+                                                Refine Quote
+                                            </Link>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="mt-3">
+                                        <p className="text-xs text-slate-400">
+                                            No quote saved yet. Build one to turn delivery, usage, term, and exclusivity into a reusable commercial package.
+                                        </p>
+                                        <Link
+                                            to={`/datasets/${dataset.id}/rights-quote`}
+                                            className="mt-4 inline-flex rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
+                                        >
+                                            Build Rights Quote
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5 space-y-5">
@@ -657,6 +809,31 @@ export default function DatasetDetailPage() {
                                 X
                             </button>
                         </div>
+
+                        <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-semibold text-white">Reusable Compliance Passport</div>
+                                    <div className="mt-1 text-xs text-slate-300">
+                                        Reuse organization, verification, and legal declarations instead of re-entering them here.
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => applyRequestPrefill(buildRequestPrefillFromPassport(compliancePassport))}
+                                    className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                                >
+                                    Apply Passport
+                                </button>
+                            </div>
+                        </div>
+
+                        {requestPrefillNote && (
+                            <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                                <div className="font-semibold">Reusable context applied</div>
+                                <div className="mt-1 text-cyan-50/85">{requestPrefillNote}</div>
+                                {requestQuoteSummary && <div className="mt-2 text-xs text-cyan-50/75">{requestQuoteSummary}</div>}
+                            </div>
+                        )}
 
                         <div className="space-y-4">
                             <div>
