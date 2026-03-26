@@ -14,7 +14,13 @@ import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
 import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
-import { loadEscrowCheckoutTransactions } from '../domain/escrowCheckout'
+import {
+    loadEscrowCheckouts,
+    loadEscrowCheckoutTransactions,
+    outcomeStageMeta,
+    releaseEscrowToProvider,
+    saveEscrowCheckout
+} from '../domain/escrowCheckout'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -104,11 +110,13 @@ const activeDisputes = [
 ]
 
 export default function EscrowCenterPage() {
+    const [recordsVersion, setRecordsVersion] = useState(0)
+    const escrowCheckoutRecords = useMemo(() => loadEscrowCheckouts(), [recordsVersion])
     const escrowTransactions = useMemo(
         () => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions],
-        []
+        [recordsVersion]
     )
-    const [selectedId, setSelectedId] = useState('ESC-2026-003')
+    const [selectedId, setSelectedId] = useState(() => loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(8)
     const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
@@ -123,7 +131,19 @@ export default function EscrowCenterPage() {
 
     const selectedTransaction = useMemo(() => {
         return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[0]
-    }, [selectedId])
+    }, [escrowTransactions, selectedId])
+    const selectedCheckoutRecord = useMemo(
+        () => escrowCheckoutRecords.find(record => record.escrowId === selectedTransaction?.id) ?? null,
+        [escrowCheckoutRecords, selectedTransaction]
+    )
+    const checkoutRecordByEscrowId = useMemo(
+        () => new Map(escrowCheckoutRecords.map(record => [record.escrowId, record])),
+        [escrowCheckoutRecords]
+    )
+    const protectedDealCount = escrowCheckoutRecords.length
+    const automaticCreditCount = escrowCheckoutRecords.filter(
+        record => record.outcomeProtection.credits.status === 'issued'
+    ).length
     const releasePaymentGuardrail = useMemo(
         () => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status),
         [selectedTransaction.status]
@@ -157,7 +177,7 @@ export default function EscrowCenterPage() {
             [transaction.id, transaction.dataset, transaction.buyer, transaction.provider, transaction.amount, statusStyles[transaction.status].text]
                 .some(value => value.toLowerCase().includes(query))
         )
-    }, [activeFilter, searchQuery])
+    }, [activeFilter, escrowTransactions, searchQuery])
 
     useEffect(() => {
         setCurrentPage(1)
@@ -209,9 +229,11 @@ export default function EscrowCenterPage() {
             { label: 'Pending Review/Hold', value: `${pendingReview}` },
             { label: 'Released Cases', value: `${released}` },
             { label: 'Disputes', value: `${disputes}` },
+            { label: 'Protected Deals', value: `${protectedDealCount}` },
+            { label: 'Auto Credits', value: `${automaticCreditCount}` },
             { label: 'Total Value in Escrow', value: `$${totalValue.toLocaleString()}` }
         ]
-    }, [])
+    }, [automaticCreditCount, escrowTransactions, protectedDealCount])
 
     const toggleTag = (tag: string) => {
         setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
@@ -219,6 +241,15 @@ export default function EscrowCenterPage() {
 
     const handleSubmitFeedback = () => {
         setShowFeedbackModal(false)
+        setShowSuccessToast(true)
+        setTimeout(() => setShowSuccessToast(false), 3000)
+    }
+
+    const handleReleaseSelectedCheckout = () => {
+        if (!selectedCheckoutRecord || selectedCheckoutRecord.lifecycleState !== 'RELEASE_PENDING') return
+        const nextRecord = releaseEscrowToProvider(selectedCheckoutRecord)
+        saveEscrowCheckout(nextRecord)
+        setRecordsVersion(current => current + 1)
         setShowSuccessToast(true)
         setTimeout(() => setShowSuccessToast(false), 3000)
     }
@@ -352,7 +383,24 @@ export default function EscrowCenterPage() {
                 </div>
             </header>
 
-            <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {protectedDealCount > 0 && (
+                <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <div className="text-sm font-semibold text-white">Outcome-protected deals are active in this ledger</div>
+                            <div className="mt-1 text-xs text-emerald-100/80">
+                                {protectedDealCount} protected deal{protectedDealCount === 1 ? '' : 's'} loaded with buyer-validation gates
+                                {automaticCreditCount > 0 ? ` and ${automaticCreditCount} automatic credit${automaticCreditCount === 1 ? '' : 's'} issued.` : '.'}
+                            </div>
+                        </div>
+                        <div className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
+                            Visible in Escrow Center
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            <section className="grid sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
                 {summaryStats.map(stat => (
                     <div key={stat.label} className="bg-slate-900/70 border border-slate-700 rounded-xl p-4">
                         <div className="text-xs uppercase tracking-[0.14em] text-slate-500">{stat.label}</div>
@@ -436,7 +484,7 @@ export default function EscrowCenterPage() {
                             </div>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[980px] text-left text-sm">
+                            <table className="w-full min-w-[1120px] text-left text-sm">
                             <thead className="bg-slate-900/90 text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="px-3 py-3 font-medium">Request ID</th>
@@ -444,6 +492,7 @@ export default function EscrowCenterPage() {
                                     <th className="px-3 py-3 font-medium">Buyer</th>
                                     <th className="px-3 py-3 font-medium">Provider</th>
                                     <th className="px-3 py-3 font-medium">Amount</th>
+                                    <th className="px-3 py-3 font-medium">Protection</th>
                                     <th className="px-3 py-3 font-medium">Access Method</th>
                                     <th className="px-3 py-3 font-medium">Status</th>
                                     <th className="px-3 py-3 font-medium">Action</th>
@@ -454,6 +503,7 @@ export default function EscrowCenterPage() {
                                     const isSelected = row.id === selectedId
                                     const statusStyle = statusStyles[row.status]
                                     const accessStyle = accessMethodStyles[row.accessMethod]
+                                    const checkoutRecord = checkoutRecordByEscrowId.get(row.id)
                                     return (
                                         <tr
                                             key={row.id}
@@ -465,6 +515,18 @@ export default function EscrowCenterPage() {
                                             <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.buyer}</td>
                                             <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.provider}</td>
                                             <td className="px-3 py-3 text-slate-200 font-mono">{row.amount}</td>
+                                            <td className="px-3 py-3">
+                                                {checkoutRecord ? (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                                                        {outcomeStageMeta[checkoutRecord.outcomeProtection.stage].label}
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                                                        Standard escrow
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-3 py-3">
                                                 <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessStyle.badge}`}>
                                                     <span className="font-semibold tracking-[0.1em]">{accessStyle.token}</span>
@@ -501,7 +563,7 @@ export default function EscrowCenterPage() {
                                     })}
                                     {paginatedTransactions.length === 0 && (
                                         <tr>
-                                            <td colSpan={8} className="px-4 py-10 text-center text-sm text-slate-400">
+                                            <td colSpan={9} className="px-4 py-10 text-center text-sm text-slate-400">
                                                 No escrow transactions match this filter and search query.
                                             </td>
                                         </tr>
@@ -554,24 +616,76 @@ export default function EscrowCenterPage() {
                     <div>
                         <h2 className="text-lg font-semibold">Escrow Detail - {selectedTransaction.id}</h2>
                         <p className="text-xs text-slate-400 mt-1">Active escrow monitoring for {selectedTransaction.dataset}</p>
-                        <div className="mt-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessMethodStyles[selectedTransaction.accessMethod].badge}`}>
                                 <span className="font-semibold tracking-[0.1em]">{accessMethodStyles[selectedTransaction.accessMethod].token}</span>
                                 {accessMethodStyles[selectedTransaction.accessMethod].label}
                             </span>
+                            {selectedCheckoutRecord ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                                    Outcome-protected deal
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                                    Standard escrow record
+                                </span>
+                            )}
                         </div>
                     </div>
 
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-slate-400">Escrow window</span>
-                            <span className="text-amber-300 font-mono font-medium">47:23:11 remaining</span>
+                            <span className="text-amber-300 font-mono font-medium">
+                                {selectedCheckoutRecord
+                                    ? `${selectedCheckoutRecord.configuration.reviewWindowHours} hours`
+                                    : '47:23:11 remaining'}
+                            </span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-slate-400">Access type</span>
-                            <span className="text-slate-200">48 hours Extended</span>
+                            <span className="text-slate-200">
+                                {selectedCheckoutRecord
+                                    ? selectedCheckoutRecord.configuration.accessMode.replace(/_/g, ' ')
+                                    : '48 hours Extended'}
+                            </span>
                         </div>
                     </div>
+
+                    {selectedCheckoutRecord ? (
+                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-medium text-slate-200">Outcome Protection</div>
+                                    <div className="mt-1 text-xs text-slate-400">
+                                        Metadata preview included · Paid evaluation {selectedCheckoutRecord.outcomeProtection.evaluationFeeUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+                                    </div>
+                                </div>
+                                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-200">
+                                    {outcomeStageMeta[selectedCheckoutRecord.outcomeProtection.stage].label}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                                <div>Schema version: {selectedCheckoutRecord.outcomeProtection.commitments.schemaVersion}</div>
+                                <div>Expected fields: {selectedCheckoutRecord.outcomeProtection.commitments.expectedFieldCount}</div>
+                                <div>Freshness: {selectedCheckoutRecord.outcomeProtection.commitments.freshnessCommitment}</div>
+                                <div>Confidence floor: {selectedCheckoutRecord.outcomeProtection.commitments.confidenceFloor}%</div>
+                            </div>
+                            {selectedCheckoutRecord.outcomeProtection.credits.status === 'issued' && (
+                                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">
+                                    {selectedCheckoutRecord.outcomeProtection.credits.reason} Credit: {selectedCheckoutRecord.outcomeProtection.credits.amountUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-900/70 border border-dashed border-slate-700 rounded-lg p-4">
+                            <div className="text-sm font-medium text-slate-200">Outcome Protection</div>
+                            <div className="mt-1 text-xs text-slate-400">
+                                This record is part of the legacy escrow set. Outcome-protected state appears on deals started through Escrow-Native Checkout, where the buyer validation gate and automatic-credit logic are attached to the contract.
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
                             <div className="text-sm font-medium text-slate-200 mb-2">Monitoring Summary</div>
@@ -587,7 +701,7 @@ export default function EscrowCenterPage() {
                         <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
                             <div className="text-sm font-medium text-slate-200 mb-3">Download Access</div>
                             <div className="space-y-2 text-xs text-slate-300">
-                                <div>Encrypted download is available after release.</div>
+                                <div>Encrypted download is available after buyer validation and release.</div>
                                 <div>AES-256 encryption and watermarking are enforced.</div>
                                 <div>Valid for 24 hours after release.</div>
                                 <div>Downloads remaining: 1 of 1.</div>
@@ -604,7 +718,13 @@ export default function EscrowCenterPage() {
 
                     <div className="grid gap-2">
                         <button
-                            onClick={() => setShowFeedbackModal(true)}
+                            onClick={() => {
+                                if (selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING') {
+                                    handleReleaseSelectedCheckout()
+                                    return
+                                }
+                                setShowFeedbackModal(true)
+                            }}
                             disabled={!releasePaymentGuardrail.allowed}
                             className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                 releasePaymentGuardrail.allowed
@@ -616,7 +736,9 @@ export default function EscrowCenterPage() {
                         </button>
                         <p className={`text-[11px] ${releasePaymentGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
                             {releasePaymentGuardrail.allowed
-                                ? 'Release is available for this escrow state.'
+                                ? selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING'
+                                    ? 'Buyer validation completed. Release is now unlocked by outcome protection policy.'
+                                    : 'Release is available for this escrow state.'
                                 : releasePaymentGuardrail.reason}
                         </p>
                         <button

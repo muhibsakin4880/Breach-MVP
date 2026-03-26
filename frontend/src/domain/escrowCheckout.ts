@@ -7,9 +7,16 @@ export type EscrowCheckoutAccessMode = 'clean_room' | 'aggregated_export' | 'enc
 export type EscrowPaymentMethod = 'wallet' | 'wire' | 'card'
 export type EscrowReviewWindowHours = 24 | 48 | 72
 
-type EscrowCheckoutLifecycle = Extract<ContractLifecycleState, 'FUNDS_HELD' | 'ACCESS_ACTIVE'>
+export type OutcomeIssueType = 'schema_mismatch' | 'freshness_miss'
+
+type EscrowCheckoutLifecycle = Extract<
+    ContractLifecycleState,
+    'FUNDS_HELD' | 'ACCESS_ACTIVE' | 'RELEASE_PENDING' | 'RELEASED_TO_PROVIDER' | 'DISPUTE_OPEN'
+>
 type WorkspaceStatus = 'planned' | 'ready'
 type CredentialStatus = 'planned' | 'issued'
+type OutcomeStage = 'evaluation_pending' | 'evaluation_active' | 'validated' | 'credit_issued' | 'released'
+type OutcomeValidationStatus = 'pending' | 'confirmed' | 'issue_reported'
 
 export type EscrowCheckoutConfig = {
     accessMode: EscrowCheckoutAccessMode
@@ -63,6 +70,32 @@ export type EscrowCheckoutRecord = {
         scopes: string[]
         tokenTtlMinutes: number
     }
+    outcomeProtection: {
+        metadataPreviewIncluded: boolean
+        evaluationFeeUsd: number
+        stage: OutcomeStage
+        commitments: {
+            schemaVersion: string
+            expectedFieldCount: number
+            freshnessCommitment: string
+            confidenceFloor: number
+        }
+        validation: {
+            status: OutcomeValidationStatus
+            issueTypes: OutcomeIssueType[]
+            note?: string
+            updatedAt?: string
+        }
+        credits: {
+            status: 'none' | 'issued'
+            amountUsd: number
+            reason?: string
+            issuedAt?: string
+        }
+        release?: {
+            releasedAt?: string
+        }
+    }
 }
 
 export type EscrowCenterTransaction = {
@@ -72,12 +105,13 @@ export type EscrowCenterTransaction = {
     provider: string
     amount: string
     accessMethod: 'platform' | 'download'
-    status: Extract<ContractLifecycleState, 'FUNDS_HELD' | 'ACCESS_ACTIVE'>
+    status: Extract<ContractLifecycleState, 'FUNDS_HELD' | 'ACCESS_ACTIVE' | 'RELEASE_PENDING' | 'RELEASED_TO_PROVIDER' | 'DISPUTE_OPEN'>
 }
 
 const ESCROW_CHECKOUT_STORAGE_KEY = 'Redoubt:escrowCheckouts'
 
 const nowIso = () => new Date().toISOString()
+const roundToNearest25 = (value: number) => Math.round(value / 25) * 25
 
 const buildStableHash = (input: string) => {
     let hash = 0
@@ -109,6 +143,26 @@ const workspaceNameFromAccessMode = (dataset: DatasetDetail, accessMode: EscrowC
     if (accessMode === 'encrypted_download') return `${dataset.category} delivery workspace`
     if (accessMode === 'aggregated_export') return `${dataset.category} governed analytics workspace`
     return `${dataset.category} clean room`
+}
+
+const buildSchemaVersion = (dataset: DatasetDetail) =>
+    buildStableHash(dataset.preview.sampleSchema.map(field => `${field.field}:${field.type}`).join('|'))
+
+const buildEvaluationFee = (quote: RightsQuote) => roundToNearest25(Math.max(quote.totalUsd * 0.18, 250))
+
+const creditRateForIssues = (issueTypes: OutcomeIssueType[]) => {
+    const normalized = Array.from(new Set(issueTypes))
+    if (normalized.includes('schema_mismatch') && normalized.includes('freshness_miss')) return 0.35
+    if (normalized.includes('schema_mismatch')) return 0.2
+    return 0.15
+}
+
+const issueSummary = (issueTypes: OutcomeIssueType[]) => {
+    if (issueTypes.includes('schema_mismatch') && issueTypes.includes('freshness_miss')) {
+        return 'schema and freshness commitments missed'
+    }
+    if (issueTypes.includes('schema_mismatch')) return 'schema commitment missed'
+    return 'freshness commitment missed'
 }
 
 const scopesFromQuote = (quote: RightsQuote, accessMode: EscrowCheckoutAccessMode) => {
@@ -160,6 +214,40 @@ export const paymentMethodMeta: Record<
 
 export const reviewWindowOptions: EscrowReviewWindowHours[] = [24, 48, 72]
 
+export const outcomeIssueMeta: Record<OutcomeIssueType, { label: string; detail: string }> = {
+    schema_mismatch: {
+        label: 'Schema mismatch',
+        detail: 'Delivered fields or required schema shape diverged from the contracted rights package.'
+    },
+    freshness_miss: {
+        label: 'Freshness miss',
+        detail: 'The delivered data did not meet the freshness commitment captured at checkout.'
+    }
+}
+
+export const outcomeStageMeta: Record<OutcomeStage, { label: string; detail: string }> = {
+    evaluation_pending: {
+        label: 'Evaluation pending',
+        detail: 'Metadata preview is live, and the paid clean-room evaluation starts after workspace activation.'
+    },
+    evaluation_active: {
+        label: 'Evaluation active',
+        detail: 'Buyer is validating schema, freshness, and access commitments inside the governed workspace.'
+    },
+    validated: {
+        label: 'Validated',
+        detail: 'Buyer confirmed the committed outcome and escrow can move into release.'
+    },
+    credit_issued: {
+        label: 'Credit issued',
+        detail: 'A protected commitment missed and an automatic credit was applied before payout.'
+    },
+    released: {
+        label: 'Released',
+        detail: 'Buyer validated the deal outcome and escrow was released to the provider.'
+    }
+}
+
 export const getRecommendedCheckoutConfig = (quote: RightsQuote): EscrowCheckoutConfig => ({
     accessMode: accessModeFromQuote(quote),
     reviewWindowHours: quote.input.validationWindowHours,
@@ -180,6 +268,8 @@ export const getPlannedWorkspaceLaunchPath = (accessMode: EscrowCheckoutAccessMo
 
 export const getPlannedCredentialScopes = (quote: RightsQuote, accessMode: EscrowCheckoutAccessMode) =>
     scopesFromQuote(quote, accessMode)
+
+export const getOutcomeEvaluationFee = (quote: RightsQuote) => buildEvaluationFee(quote)
 
 export const buildEscrowDueUseAgreement = (
     dataset: DatasetDetail,
@@ -255,6 +345,25 @@ export const buildEscrowCheckoutRecord = (
             status: 'planned',
             scopes: scopesFromQuote(quote, config.accessMode),
             tokenTtlMinutes: config.accessMode === 'encrypted_download' ? 90 : 180
+        },
+        outcomeProtection: {
+            metadataPreviewIncluded: true,
+            evaluationFeeUsd: buildEvaluationFee(quote),
+            stage: 'evaluation_pending',
+            commitments: {
+                schemaVersion: buildSchemaVersion(dataset),
+                expectedFieldCount: dataset.preview.sampleSchema.length,
+                freshnessCommitment: dataset.preview.freshnessLabel,
+                confidenceFloor: Math.max(80, dataset.confidenceScore - 4)
+            },
+            validation: {
+                status: 'pending',
+                issueTypes: []
+            },
+            credits: {
+                status: 'none',
+                amountUsd: 0
+            }
         }
     }
 }
@@ -283,6 +392,82 @@ export const issueEscrowScopedCredentials = (record: EscrowCheckoutRecord): Escr
             credentialId: buildId('TOK', `${record.quoteId}:${record.workspace.workspaceId}`),
             issuedAt: issuedAt.toISOString(),
             expiresAt
+        },
+        outcomeProtection: {
+            ...record.outcomeProtection,
+            stage: 'evaluation_active',
+            validation: {
+                ...record.outcomeProtection.validation,
+                updatedAt: issuedAt.toISOString()
+            }
+        }
+    }
+}
+
+export const confirmOutcomeValidation = (record: EscrowCheckoutRecord, note?: string): EscrowCheckoutRecord => {
+    const updatedAt = nowIso()
+
+    return {
+        ...record,
+        updatedAt,
+        lifecycleState: 'RELEASE_PENDING',
+        outcomeProtection: {
+            ...record.outcomeProtection,
+            stage: 'validated',
+            validation: {
+                status: 'confirmed',
+                issueTypes: [],
+                note,
+                updatedAt
+            }
+        }
+    }
+}
+
+export const issueAutomaticOutcomeCredit = (
+    record: EscrowCheckoutRecord,
+    issueTypes: OutcomeIssueType[],
+    note?: string
+): EscrowCheckoutRecord => {
+    const updatedAt = nowIso()
+    const amountUsd = roundToNearest25(record.funding.amountUsd * creditRateForIssues(issueTypes))
+
+    return {
+        ...record,
+        updatedAt,
+        lifecycleState: 'DISPUTE_OPEN',
+        outcomeProtection: {
+            ...record.outcomeProtection,
+            stage: 'credit_issued',
+            validation: {
+                status: 'issue_reported',
+                issueTypes,
+                note,
+                updatedAt
+            },
+            credits: {
+                status: 'issued',
+                amountUsd,
+                reason: `Automatic credit issued because ${issueSummary(issueTypes)}.`,
+                issuedAt: updatedAt
+            }
+        }
+    }
+}
+
+export const releaseEscrowToProvider = (record: EscrowCheckoutRecord): EscrowCheckoutRecord => {
+    const updatedAt = nowIso()
+
+    return {
+        ...record,
+        updatedAt,
+        lifecycleState: 'RELEASED_TO_PROVIDER',
+        outcomeProtection: {
+            ...record.outcomeProtection,
+            stage: 'released',
+            release: {
+                releasedAt: updatedAt
+            }
         }
     }
 }

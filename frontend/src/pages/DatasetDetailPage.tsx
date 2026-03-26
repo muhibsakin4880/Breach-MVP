@@ -303,12 +303,24 @@ export default function DatasetDetailPage() {
                             </div>
 
                             <div className="mt-8">
-                                <Link
-                                    to={`/datasets/${dataset.id}/quality-breakdown`}
-                                    className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
-                                >
-                                    View Quality Breakdown
-                                </Link>
+                                <div className="flex flex-wrap gap-3">
+                                    <Link
+                                        to={`/datasets/${dataset.id}/quality-breakdown`}
+                                        className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+                                    >
+                                        Free Metadata Preview
+                                    </Link>
+                                    <Link
+                                        to={`/datasets/${dataset.id}/escrow-checkout`}
+                                        state={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
+                                        className="inline-flex items-center px-4 py-2 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 font-semibold transition-colors hover:bg-emerald-500/20"
+                                    >
+                                        Start Paid Evaluation
+                                    </Link>
+                                </div>
+                                <p className="mt-3 text-xs text-slate-400">
+                                    Metadata preview is free. Paid clean-room evaluation unlocks buyer validation, escrow release gates, and automatic credits if schema or freshness commitments miss.
+                                </p>
                             </div>
                         </div>
 

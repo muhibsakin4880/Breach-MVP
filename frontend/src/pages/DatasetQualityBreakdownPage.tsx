@@ -120,13 +120,24 @@ export default function DatasetQualityBreakdownPage() {
                         </div>
                         <h1 className="text-3xl font-bold">Quality Breakdown for {dataset.title}</h1>
                         <p className="text-slate-400 mt-2">Signal-by-signal view of the checks backing the confidence score and AI-generated summary.</p>
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                            Free metadata preview
+                        </div>
                     </div>
-                    <Link
-                        to={`/datasets/${dataset.id}`}
-                        className="inline-flex items-center px-5 py-2.5 rounded-lg border border-slate-700 hover:border-blue-500 text-slate-200 hover:text-white transition-colors self-start"
-                    >
-                        Back to Dataset Detail
-                    </Link>
+                    <div className="flex flex-wrap gap-3 self-start">
+                        <Link
+                            to={`/datasets/${dataset.id}/escrow-checkout`}
+                            className="inline-flex items-center px-5 py-2.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20 transition-colors"
+                        >
+                            Start Paid Clean-Room Evaluation
+                        </Link>
+                        <Link
+                            to={`/datasets/${dataset.id}`}
+                            className="inline-flex items-center px-5 py-2.5 rounded-lg border border-slate-700 hover:border-blue-500 text-slate-200 hover:text-white transition-colors"
+                        >
+                            Back to Dataset Detail
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

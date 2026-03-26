@@ -6,20 +6,27 @@ import {
     buildEscrowCheckoutRecord,
     buildEscrowDueUseAgreement,
     checkoutAccessModeMeta,
+    confirmOutcomeValidation,
     describeCheckoutPaymentMethod,
     getPlannedCredentialScopes,
+    getOutcomeEvaluationFee,
     getPlannedWorkspaceLaunchPath,
     getPlannedWorkspaceName,
     getRecommendedCheckoutConfig,
+    issueAutomaticOutcomeCredit,
     issueEscrowScopedCredentials,
     loadEscrowCheckoutByQuoteId,
+    outcomeIssueMeta,
+    outcomeStageMeta,
     paymentMethodMeta,
     provisionEscrowWorkspace,
+    releaseEscrowToProvider,
     reviewWindowOptions,
     saveEscrowCheckout,
     type EscrowCheckoutConfig,
     type EscrowCheckoutRecord,
     type EscrowCheckoutAccessMode,
+    type OutcomeIssueType,
     type EscrowPaymentMethod,
     type EscrowReviewWindowHours
 } from '../domain/escrowCheckout'
@@ -107,6 +114,21 @@ export default function EscrowCheckoutPage() {
     const acceptedForFunding = checkoutRecord ? checkoutRecord.dua.accepted : duaAccepted
     const workspaceReady = checkoutRecord?.workspace.status === 'ready'
     const credentialsIssued = checkoutRecord?.credentials.status === 'issued'
+    const outcomeStage = checkoutRecord?.outcomeProtection.stage ?? 'evaluation_pending'
+    const outcomeStatus = outcomeStageMeta[outcomeStage]
+    const evaluationFeeUsd = checkoutRecord?.outcomeProtection.evaluationFeeUsd ?? getOutcomeEvaluationFee(selectedQuote)
+    const outcomeValidation = checkoutRecord?.outcomeProtection.validation ?? {
+        status: 'pending',
+        issueTypes: [] as OutcomeIssueType[],
+        note: undefined,
+        updatedAt: undefined
+    }
+    const outcomeCredits = checkoutRecord?.outcomeProtection.credits ?? {
+        status: 'none',
+        amountUsd: 0,
+        reason: undefined,
+        issuedAt: undefined
+    }
 
     const updateConfig = <T extends keyof EscrowCheckoutConfig>(field: T, value: EscrowCheckoutConfig[T]) => {
         if (configurationLocked) return
@@ -148,6 +170,40 @@ export default function EscrowCheckoutPage() {
         saveRecord(
             nextRecord,
             `Scoped credentials ${nextRecord.credentials.credentialId} were issued with ${nextRecord.credentials.tokenTtlMinutes}-minute TTL enforcement.`
+        )
+    }
+
+    const handleConfirmOutcome = () => {
+        if (!checkoutRecord || !credentialsIssued) return
+        const nextRecord = confirmOutcomeValidation(
+            checkoutRecord,
+            'Buyer confirmed that schema and freshness commitments match the contracted deal.'
+        )
+        saveRecord(
+            nextRecord,
+            'Buyer validation is complete. Escrow has moved to release-pending status.'
+        )
+    }
+
+    const handleIssueCredit = (issueTypes: OutcomeIssueType[]) => {
+        if (!checkoutRecord || !credentialsIssued) return
+        const nextRecord = issueAutomaticOutcomeCredit(
+            checkoutRecord,
+            issueTypes,
+            `Buyer reported ${issueTypes.map(issueType => outcomeIssueMeta[issueType].label.toLowerCase()).join(' and ')} during protected evaluation.`
+        )
+        saveRecord(
+            nextRecord,
+            `${formatUsd(nextRecord.outcomeProtection.credits.amountUsd)} automatic credit issued. Escrow remains held while the miss is reviewed.`
+        )
+    }
+
+    const handleReleaseEscrow = () => {
+        if (!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING') return
+        const nextRecord = releaseEscrowToProvider(checkoutRecord)
+        saveRecord(
+            nextRecord,
+            'Buyer validation passed and escrow has been released to the provider.'
         )
     }
 
@@ -428,6 +484,169 @@ export default function EscrowCheckoutPage() {
                                 </div>
                             </div>
                         </section>
+
+                        <section className="rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">Outcome Protection</h2>
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        Metadata preview is free, clean-room evaluation is paid, payout waits for buyer validation,
+                                        and schema or freshness misses automatically create buyer credits.
+                                    </p>
+                                </div>
+                                <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                                    {outcomeStatus.label}
+                                </span>
+                            </div>
+
+                            <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                                <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Free metadata preview</div>
+                                    <div className="mt-3 text-lg font-semibold text-white">Included</div>
+                                    <p className="mt-2 text-sm text-slate-300">
+                                        Buyers can inspect confidence, freshness, schema metadata, and AI summaries before entering paid evaluation.
+                                    </p>
+                                    <Link
+                                        to={`/datasets/${dataset.id}/quality-breakdown`}
+                                        className="mt-4 inline-flex rounded-lg border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
+                                    >
+                                        Open Metadata Preview
+                                    </Link>
+                                </div>
+
+                                <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Paid clean-room evaluation</div>
+                                    <div className="mt-3 text-lg font-semibold text-white">{formatUsd(evaluationFeeUsd)}</div>
+                                    <p className="mt-2 text-sm text-slate-300">
+                                        Evaluation happens inside the governed workspace before escrow release, even when the final delivery path is broader.
+                                    </p>
+                                    <div className="mt-3 text-xs text-slate-400">{outcomeStatus.detail}</div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Committed outcome</div>
+                                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                    <SummaryStat
+                                        label="Schema version"
+                                        value={checkoutRecord?.outcomeProtection.commitments.schemaVersion ?? duaPreview.checksum}
+                                    />
+                                    <SummaryStat
+                                        label="Expected fields"
+                                        value={String(checkoutRecord?.outcomeProtection.commitments.expectedFieldCount ?? dataset.preview.sampleSchema.length)}
+                                    />
+                                    <SummaryStat
+                                        label="Freshness commitment"
+                                        value={checkoutRecord?.outcomeProtection.commitments.freshnessCommitment ?? dataset.preview.freshnessLabel}
+                                    />
+                                    <SummaryStat
+                                        label="Confidence floor"
+                                        value={`${checkoutRecord?.outcomeProtection.commitments.confidenceFloor ?? Math.max(80, dataset.confidenceScore - 4)}%`}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">Buyer validation gate</div>
+                                        <div className="mt-1 text-xs text-slate-400">
+                                            Escrow cannot release until the buyer validates the contracted schema and freshness outcome.
+                                        </div>
+                                    </div>
+                                    <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                        outcomeValidation.status === 'confirmed'
+                                            ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                                            : outcomeValidation.status === 'issue_reported'
+                                                ? 'border-rose-500/35 bg-rose-500/10 text-rose-200'
+                                                : 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                                    }`}>
+                                        {outcomeValidation.status === 'confirmed'
+                                            ? 'Validated'
+                                            : outcomeValidation.status === 'issue_reported'
+                                                ? 'Issue reported'
+                                                : 'Awaiting buyer validation'}
+                                    </span>
+                                </div>
+
+                                {credentialsIssued ? (
+                                    <div className="mt-4 grid gap-3">
+                                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                            <button
+                                                type="button"
+                                                disabled={outcomeValidation.status !== 'pending'}
+                                                onClick={handleConfirmOutcome}
+                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                                    outcomeValidation.status !== 'pending'
+                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                        : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+                                                }`}
+                                            >
+                                                Confirm Commitments Met
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={outcomeValidation.status !== 'pending'}
+                                                onClick={() => handleIssueCredit(['schema_mismatch'])}
+                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                                    outcomeValidation.status !== 'pending'
+                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                        : 'border border-rose-400/45 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20'
+                                                }`}
+                                            >
+                                                Report Schema Mismatch
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={outcomeValidation.status !== 'pending'}
+                                                onClick={() => handleIssueCredit(['freshness_miss'])}
+                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                                    outcomeValidation.status !== 'pending'
+                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                        : 'border border-amber-400/45 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20'
+                                                }`}
+                                            >
+                                                Report Freshness Miss
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={outcomeValidation.status !== 'pending'}
+                                                onClick={() => handleIssueCredit(['schema_mismatch', 'freshness_miss'])}
+                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                                    outcomeValidation.status !== 'pending'
+                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                                        : 'border border-fuchsia-400/45 bg-fuchsia-500/10 text-fuchsia-100 hover:bg-fuchsia-500/20'
+                                                }`}
+                                            >
+                                                Report Both Misses
+                                            </button>
+                                        </div>
+
+                                        {outcomeValidation.note && (
+                                            <div className="rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                                {outcomeValidation.note}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                        Buyer validation controls unlock after the paid evaluation workspace is live.
+                                    </div>
+                                )}
+                            </div>
+
+                            {outcomeCredits.status === 'issued' && (
+                                <div className="mt-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
+                                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">Automatic credit issued</div>
+                                            <div className="mt-1 text-xs text-rose-100/85">{outcomeCredits.reason}</div>
+                                        </div>
+                                        <div className="text-lg font-semibold text-rose-100">{formatUsd(outcomeCredits.amountUsd)}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
                     </div>
 
                     <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
@@ -436,6 +655,7 @@ export default function EscrowCheckoutPage() {
                             <h2 className="mt-2 text-2xl font-semibold text-white">{formatUsd(selectedQuote.totalUsd)}</h2>
                             <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                 <SummaryStat label="Escrow hold" value={formatUsd(selectedQuote.escrowHoldUsd)} />
+                                <SummaryStat label="Evaluation fee" value={formatUsd(evaluationFeeUsd)} />
                                 <SummaryStat label="Review window" value={`${config.reviewWindowHours} hours`} />
                                 <SummaryStat label="Access mode" value={checkoutAccessModeMeta[config.accessMode].label} />
                                 <SummaryStat label="Payment rail" value={paymentMethodMeta[config.paymentMethod].label} />
@@ -467,6 +687,11 @@ export default function EscrowCheckoutPage() {
                                     label="Scoped credentials issued"
                                     complete={credentialsIssued}
                                     detail="Ephemeral credentials activate access with audit and TTL enforcement."
+                                />
+                                <StepRow
+                                    label="Outcome validated"
+                                    complete={outcomeValidation.status === 'confirmed'}
+                                    detail="Buyer confirms commitments before release or triggers automatic credits."
                                 />
                             </div>
 
@@ -508,6 +733,20 @@ export default function EscrowCheckoutPage() {
                                     }`}
                                 >
                                     {credentialsIssued ? 'Credentials Issued' : '3. Issue Scoped Credentials'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleReleaseEscrow}
+                                    disabled={!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        !checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'bg-white text-slate-950 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {checkoutRecord?.lifecycleState === 'RELEASED_TO_PROVIDER'
+                                        ? 'Escrow Released'
+                                        : '4. Release Escrow'}
                                 </button>
                             </div>
 
