@@ -424,7 +424,7 @@ export default function HomePage() {
     const datasetsCount = useCountUp(12400, 1600, statsRef.inView)
     const verifiedCount = useCountUp(98,    1100, statsRef.inView)
     const partnersCount = useCountUp(340,   1400, statsRef.inView)
-    const taglineTyped  = useTypingEffect('LAYERED DEFENSE FOR DATA CONFIDENCE', 32, heroVisible)
+    const taglineTyped  = 'Layered Defense for Data Confidence'
 
     const handleRequestPlatformAccess = () => { startOnboarding(); navigate('/onboarding') }
     const handleSignInFromLanding     = () => { signOut() }
@@ -516,68 +516,101 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     HERO
                 ════════════════════════════════════════ */}
-                <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,229,255,0.06)_0%,transparent_70%)]" />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.15)_0%,rgba(2,6,23,0.75)_100%)]" />
+                <section className="relative overflow-hidden pt-28 pb-16 md:pt-36 md:pb-24">
+                    <div className="absolute inset-0 bg-[#020814]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_14%,rgba(34,211,238,0.16)_0%,rgba(34,211,238,0.08)_18%,rgba(5,12,31,0)_56%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,20,0.35)_0%,rgba(2,8,20,0.72)_50%,rgba(2,6,23,0.96)_100%)]" />
+                    <div className="absolute left-1/2 top-20 h-72 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[140px]" />
+                    <div className="absolute left-[10%] top-[28%] h-36 w-36 rounded-full bg-blue-500/10 blur-[110px]" />
+                    <div className="absolute right-[12%] top-[22%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[120px]" />
+                    <div className="absolute inset-x-0 top-10 flex justify-center">
+                        <div className="h-[34rem] w-[34rem] rounded-full border border-cyan-400/10" />
+                    </div>
+                    <div className="absolute inset-x-0 top-16 flex justify-center">
+                        <div className="h-[28rem] w-[28rem] rounded-full border border-cyan-300/10" />
+                    </div>
+                    <div className="absolute inset-x-0 top-24 flex justify-center">
+                        <div className="h-[22rem] w-[22rem] rounded-full border border-cyan-200/10" />
+                    </div>
+                    <ParticleCanvas />
 
-                    <div className="max-w-6xl mx-auto px-6 relative z-10">
-                        <div className="grid md:grid-cols-2 gap-12 items-center">
-                            
-                            {/* Left: Content */}
-                            <div className="text-center md:text-left">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-medium mb-6">
-                                    <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-                                    Enterprise Data Trust Platform
-                                </div>
-                                
-                                <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-[#67E8F9] leading-tight mb-4">
-                                    REDOUBT
-                                </h1>
-
-                                <p className="h-5 text-[11px] sm:text-xs tracking-[0.18em] text-cyan-300/75 uppercase font-medium mb-4">
-                                    {taglineTyped}
-                                </p>
-                                
-                                <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto md:mx-0 mb-8">
-                                    Validate provenance, score quality, and enforce zero-trust controls across every access request.
-                                </p>
-
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                                    <button
-                                        onClick={handleRequestPlatformAccess}
-                                        className="px-6 py-3 bg-cyan-400 text-slate-950 font-semibold rounded-lg hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.25)]"
-                                    >
-                                        Request Access
-                                    </button>
-                                    <Link
-                                        to="/login"
-                                        onClick={handleSignInFromLanding}
-                                        className="px-6 py-3 border border-slate-600 bg-slate-900/60 text-slate-200 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-300 transition-all"
-                                    >
-                                        Sign In
-                                    </Link>
-                                </div>
-
-                                <div className="mt-8">
-                                    <div className="flex flex-wrap items-center gap-2.5 justify-center md:justify-start">
-                                        {['SOC 2 Type II certified', 'ISO 27001 certified', 'HIPAA eligible', 'GDPR compliant'].map((certification) => (
-                                            <span key={certification} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-100">
-                                                <svg className="w-3.5 h-3.5 text-emerald-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                                                <span>{certification}</span>
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <p className="mt-3 text-[10px] tracking-wide text-slate-500 text-center md:text-left">
-                                        Compliance inheritance via AWS shared responsibility model.
-                                    </p>
+                    <div className="relative z-10 mx-auto max-w-6xl px-6">
+                        <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-4xl flex-col items-center justify-center text-center">
+                            <div className="relative mb-8 sm:mb-10">
+                                <div className="absolute inset-0 rounded-full bg-cyan-400/12 blur-3xl" />
+                                <div className="absolute inset-4 rounded-full border border-cyan-300/10" />
+                                <div className="relative scale-[0.82] sm:scale-[0.92] md:scale-100">
+                                    <PermissionGateEmblem visible={heroVisible} />
                                 </div>
                             </div>
 
-                            {/* Right: Visual */}
-                            <div className="relative flex justify-center md:justify-end">
-                                <div className="scale-[0.76] sm:scale-[0.88] md:scale-100 -mb-10 md:mb-0">
-                                    <PermissionGateEmblem visible={heroVisible} />
-                                </div>
+                            <h1 className="redoubt-font text-[clamp(4rem,11vw,7.5rem)] font-extrabold leading-none tracking-[0.2em] text-transparent bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text [text-shadow:0_0_24px_rgba(103,232,249,0.55),0_0_90px_rgba(14,165,233,0.28)]">
+                                REDOUBT
+                            </h1>
+
+                            <p className="mt-5 redoubt-font text-xl font-semibold tracking-[0.08em] text-cyan-50 sm:text-2xl md:text-3xl">
+                                {taglineTyped}
+                            </p>
+
+                            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300/90 sm:text-base md:text-lg md:leading-8">
+                                Secure data access with verified provenance, AI-backed confidence scoring,
+                                and zero-trust controls &mdash; built exclusively for trusted participants.
+                            </p>
+
+                            <div className="mt-8 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
+                                {[
+                                    {
+                                        title: 'Verified Provenance',
+                                        detail: 'Chain every dataset to auditable origin and policy context.',
+                                    },
+                                    {
+                                        title: 'AI Confidence Scoring',
+                                        detail: 'Expose trust signals before a request ever reaches production.',
+                                    },
+                                    {
+                                        title: 'Zero-Trust Controls',
+                                        detail: 'Gate access by role, purpose, and continuously validated risk.',
+                                    },
+                                ].map((item) => (
+                                    <div
+                                        key={item.title}
+                                        className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left shadow-[0_0_30px_rgba(15,23,42,0.35)] backdrop-blur-md"
+                                    >
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
+                                            <p className="text-sm font-semibold text-cyan-50">{item.title}</p>
+                                        </div>
+                                        <p className="text-sm leading-6 text-slate-400">{item.detail}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-10 flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                                <Link
+                                    to="/login"
+                                    onClick={handleSignInFromLanding}
+                                    className="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-300/12 px-6 py-3.5 text-sm font-semibold text-cyan-50 shadow-[0_0_30px_rgba(34,211,238,0.18)] transition-all duration-300 hover:border-cyan-200/60 hover:bg-cyan-300/18 hover:shadow-[0_0_40px_rgba(34,211,238,0.28)]"
+                                >
+                                    Sign In →
+                                </Link>
+                                <button
+                                    onClick={handleRequestPlatformAccess}
+                                    className="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_0_36px_rgba(34,211,238,0.32)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_48px_rgba(34,211,238,0.4)]"
+                                >
+                                    Request Platform Access
+                                </button>
+                            </div>
+
+                            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                                {['SOC2', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
+                                    <span
+                                        key={item}
+                                        className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-medium tracking-[0.12em] text-emerald-100 uppercase"
+                                    >
+                                        <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.7)]" />
+                                        {item}
+                                    </span>
+                                ))}
                             </div>
                         </div>
                     </div>
