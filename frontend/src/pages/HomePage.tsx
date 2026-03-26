@@ -552,7 +552,7 @@ export default function HomePage() {
                                 {taglineTyped}
                             </p>
 
-                            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300/90 sm:text-base md:text-lg md:leading-8">
+                            <p className="mt-5 max-w-2xl text-xs leading-7 text-slate-300/90 sm:text-sm md:text-base md:leading-8">
                                 Secure data access with verified provenance, AI-backed confidence scoring,
                                 and zero-trust controls &mdash; built for trusted participants on an AWS shared-responsibility foundation.
                             </p>
