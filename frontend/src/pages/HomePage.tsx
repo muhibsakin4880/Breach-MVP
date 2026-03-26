@@ -544,7 +544,7 @@ export default function HomePage() {
                                 </div>
                             </div>
 
-                            <h1 className="redoubt-font text-[clamp(4rem,11vw,7.5rem)] font-extrabold leading-none tracking-[0.2em] text-transparent bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text [text-shadow:0_0_24px_rgba(103,232,249,0.55),0_0_90px_rgba(14,165,233,0.28)]">
+                            <h1 className="redoubt-font text-[clamp(3.2rem,8vw,5.75rem)] font-extrabold leading-none tracking-[0.16em] text-transparent bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
                                 REDOUBT
                             </h1>
 
