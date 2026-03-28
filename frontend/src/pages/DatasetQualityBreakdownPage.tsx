@@ -825,7 +825,13 @@ export default function DatasetQualityBreakdownPage() {
                       <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
                         {item.label}
                       </p>
-                      <p className="mt-4 text-base font-semibold leading-8 text-white">
+                      <p
+                        className={`mt-4 font-semibold text-white ${
+                          item.label === "Source network"
+                            ? "text-sm leading-7 break-words"
+                            : "text-base leading-8"
+                        }`}
+                      >
                         {item.value}
                       </p>
                       <p className="mt-4 text-sm leading-7 text-slate-400">
