@@ -1,6 +1,12 @@
 import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import LogoMark from '../components/LogoMark'
+import {
+    dealLifecycleStageMeta,
+    dealRiskMeta,
+    dealUrgencyMeta,
+    getDealLifecycleSummary
+} from '../domain/dealLifecycle'
 
 const menuItems = [
     { label: 'Dashboard Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', path: '/admin/dashboard' },
@@ -38,6 +44,8 @@ export default function AdminDashboard() {
     const { isAuthenticated, signOut } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
+    const dealLifecycleSummary = getDealLifecycleSummary()
+    const priorityDeals = dealLifecycleSummary.priorityQueue.slice(0, 3)
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -73,6 +81,21 @@ export default function AdminDashboard() {
                 return 'border-l-[3px] border-cyan-500/40 bg-slate-950/40 backdrop-blur-sm'
             default:
                 return ''
+        }
+    }
+
+    const getToneClasses = (tone: 'slate' | 'cyan' | 'amber' | 'emerald' | 'red') => {
+        switch (tone) {
+            case 'cyan':
+                return 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300'
+            case 'amber':
+                return 'border-amber-500/20 bg-amber-500/10 text-amber-300'
+            case 'emerald':
+                return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+            case 'red':
+                return 'border-red-500/20 bg-red-500/10 text-red-300'
+            default:
+                return 'border-slate-700/60 bg-slate-800/50 text-slate-300'
         }
     }
 
@@ -256,6 +279,131 @@ export default function AdminDashboard() {
                                 <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
                                     <div className="h-full bg-gradient-to-r from-emerald-500/60 to-emerald-500/30 rounded-full" style={{ width: '89%' }} />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-5 mb-6">
+                        <div className="col-span-7 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
+                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Deal Lifecycle Foundation</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">
+                                        Shared scoring model for passport, quote, checkout, validation, credit, and release.
+                                    </p>
+                                </div>
+                                <div className="px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-semibold text-cyan-300 tracking-[0.12em] uppercase">
+                                    {dealLifecycleSummary.blockedCount} blocked
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-6 gap-3 px-5 py-5 border-b border-slate-800/40">
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Active Passports</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.activePassportCount}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Quotes Ready</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.quotePreparedCount}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Funded Checkouts</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.fundedCheckoutCount}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Provisioning</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.workspacesProvisioningCount}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Release Backlog</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.releaseBacklogCount}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
+                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Engine Failures</div>
+                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.engineFailureCount}</div>
+                                </div>
+                            </div>
+
+                            <div className="px-5 py-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Stage Distribution</span>
+                                    <span className="text-[9px] text-slate-600 tracking-wider">
+                                        {dealLifecycleSummary.humanReviewCount} human review lane(s)
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        'passport_incomplete',
+                                        'quote_prepared',
+                                        'workspace_provisioning',
+                                        'evaluation_live',
+                                        'awaiting_validation',
+                                        'release_ready'
+                                    ].map((stageKey) => {
+                                        const stage = stageKey as keyof typeof dealLifecycleStageMeta
+                                        const meta = dealLifecycleStageMeta[stage]
+                                        return (
+                                            <div key={stage} className="rounded-lg border border-slate-800/60 bg-slate-950/40 p-3">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <span className="text-[10px] text-slate-300">{meta.label}</span>
+                                                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[9px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
+                                                        {dealLifecycleSummary.stageCounts[stage]}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-2 text-[9px] leading-relaxed text-slate-600">{meta.detail}</p>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
+                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Priority Deal Queue</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Highest urgency records scored from shared lifecycle, risk, and blocker signals.</p>
+                                </div>
+                                <div className="text-[9px] text-slate-600 tracking-wider">TOP 3</div>
+                            </div>
+                            <div className="divide-y divide-slate-800/30">
+                                {priorityDeals.map((deal) => {
+                                    const stageMeta = dealLifecycleStageMeta[deal.stage]
+                                    const riskMeta = dealRiskMeta[deal.risk]
+                                    const urgencyMeta = dealUrgencyMeta[deal.urgency]
+
+                                    return (
+                                        <div key={deal.id} className="px-5 py-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
+                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                        {deal.recommendedOwner} · {deal.queue.replace('_', ' ')}
+                                                    </div>
+                                                </div>
+                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(stageMeta.tone)}`}>
+                                                    {stageMeta.label}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(riskMeta.tone)}`}>
+                                                    {riskMeta.label}
+                                                </span>
+                                                <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(urgencyMeta.tone)}`}>
+                                                    {urgencyMeta.label} urgency
+                                                </span>
+                                                <span className="inline-flex items-center rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-1 text-[9px] font-semibold tracking-wider text-slate-300">
+                                                    {deal.approvalDisposition === 'auto_advance' ? 'Auto advance' : deal.approvalDisposition === 'human_review' ? 'Human review' : 'Blocked'}
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                                                {deal.blockers[0] ?? deal.nextAction}
+                                            </p>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>
