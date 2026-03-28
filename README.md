@@ -5,11 +5,18 @@ Regulated industries need access to high-quality, verified data — but today's 
 The Solution
 Redoubt introduces a trust-first model for data access:
 
-Verified, invite-only onboarding — providers are vetted before joining
+Verified, gated onboarding with no participant or dataset onboarding fee
 AI-powered Trust Scores — every dataset is scored for quality and reliability
 Provider anonymity — sensitive data shared without exposing identity
 Compliance-first workflows — audit trails and access controls built in
 Exclusive Access Alerts — buyers get notified of high-value datasets matching their needs
+
+Business Model
+
+- Metadata preview and quote creation are free
+- Buyers pay when they enter governed clean-room evaluation
+- Providers pay a settlement fee only on successful completed deals
+- API and pipeline access are sold separately as recurring subscriptions
 
 Target Markets
 

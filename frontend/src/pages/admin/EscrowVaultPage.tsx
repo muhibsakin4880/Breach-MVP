@@ -309,7 +309,7 @@ const reportingArtifacts: ReportArtifact[] = [
     {
         id: 'artifact-4',
         name: 'Monthly finance pack',
-        description: 'GMV, fees, refunds, and reconciliation summary for controller review.',
+        description: 'GMV, blended settlement fees, refunds, and reconciliation summary for controller review.',
         cadence: 'Monthly',
         lastRun: 'Next scheduled 2026-04-01 09:00 UTC',
         owner: 'finance_ops',
@@ -1306,7 +1306,7 @@ export default function EscrowVaultPage() {
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Financial Summary</p>
                                         <h2 className="mt-1 text-lg font-semibold text-slate-100">Escrow financial reporting</h2>
                                         <p className="mt-1 text-sm text-slate-400">
-                                            Monthly GMV, fees, payouts, and refunds prepared for finance and compliance review.
+                                            Monthly GMV, blended settlement fees, payouts, and refunds prepared for finance and compliance review.
                                         </p>
                                     </div>
                                     <button
@@ -1337,7 +1337,7 @@ export default function EscrowVaultPage() {
                                             <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
                                                 <th className="px-4 py-3 text-left">Month</th>
                                                 <th className="px-4 py-3 text-left">GMV</th>
-                                                <th className="px-4 py-3 text-left">Platform Fee</th>
+                                                <th className="px-4 py-3 text-left">Blended Fee</th>
                                                 <th className="px-4 py-3 text-left">Payouts</th>
                                                 <th className="px-4 py-3 text-left">Refunds</th>
                                                 <th className="px-4 py-3 text-left">Net</th>

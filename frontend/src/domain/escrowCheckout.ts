@@ -157,7 +157,7 @@ const workspaceNameFromAccessMode = (dataset: DatasetDetail, accessMode: EscrowC
 const buildSchemaVersion = (dataset: DatasetDetail) =>
     buildStableHash(dataset.preview.sampleSchema.map(field => `${field.field}:${field.type}`).join('|'))
 
-const buildEvaluationFee = (quote: RightsQuote) => roundToNearest25(Math.max(quote.totalUsd * 0.18, 250))
+const buildEvaluationFee = (quote: RightsQuote) => roundToNearest25(Math.max(quote.totalUsd * 0.1, 750))
 
 const expectedFieldCountFromQuote = (quote: RightsQuote, dataset: DatasetDetail) => {
     const totalFields = dataset.preview.sampleSchema.length

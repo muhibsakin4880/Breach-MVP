@@ -28,7 +28,7 @@ export default function SolutionsPage() {
                             </li>
                             <li className="flex items-start gap-2 text-slate-300">
                                 <span className="text-blue-400 mt-1">✓</span>
-                                <span>Academic pricing and grants support</span>
+                                <span>No onboarding fee before protected evaluation begins</span>
                             </li>
                             <li className="flex items-start gap-2 text-slate-300">
                                 <span className="text-blue-400 mt-1">✓</span>
@@ -118,7 +118,7 @@ export default function SolutionsPage() {
                             </li>
                             <li className="flex items-start gap-2 text-slate-300">
                                 <span className="text-blue-400 mt-1">✓</span>
-                                <span>Flexible licensing and delivery controls</span>
+                                <span>Free participant and dataset onboarding</span>
                             </li>
                             <li className="flex items-start gap-2 text-slate-300">
                                 <span className="text-blue-400 mt-1">✓</span>

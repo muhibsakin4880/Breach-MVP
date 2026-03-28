@@ -99,7 +99,7 @@ export default function ProviderOnboardingPage() {
                             </div>
                             <h1 className="text-3xl md:text-4xl font-semibold">Upload & Prepare a Secure Dataset</h1>
                             <p className="text-slate-300 max-w-3xl">
-                                Secure, privacy-preserving flow for any participant to contribute data. Identity remains protected until you opt in.
+                                Secure, privacy-preserving flow for any participant to contribute data. Identity remains protected until you opt in, and there is no participant or dataset onboarding fee.
                             </p>
                         </div>
                         <Link
@@ -428,7 +428,7 @@ export default function ProviderOnboardingPage() {
 
                         <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-4 text-sm text-slate-300">
                             <div className="font-semibold text-white mb-1">What happens next?</div>
-                            <p>Upon submission, the platform will run QA on schema consistency, attach the AI confidence summary, and route buyer requests without revealing your identity unless you chose otherwise.</p>
+                            <p>Upon submission, the platform will run QA on schema consistency, attach the AI confidence summary, and route buyer requests without revealing your identity unless you chose otherwise. No fee is charged for onboarding; monetization starts only when buyers enter protected evaluation and completed deals settle.</p>
                         </div>
                     </div>
                 )}

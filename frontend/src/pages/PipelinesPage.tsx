@@ -243,7 +243,8 @@ export default function PipelinesPage() {
                     </div>
 
                     <div>
-                        <h3 className="text-2xl font-bold text-white mb-6 border-t border-cyan-500/40 pt-4">Pipeline Access Pricing</h3>
+                        <h3 className="text-2xl font-bold text-white mb-6 border-t border-cyan-500/40 pt-4">Recurring API Pricing</h3>
+                        <p className="text-sm text-slate-400 mb-6">This subscription line is separate from governed deal pricing. Provider onboarding, dataset onboarding, metadata preview, and quote creation stay free.</p>
                         
                         <div className="flex items-center justify-center gap-4 mb-8">
                             <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-gray-400'}`}>Monthly</span>

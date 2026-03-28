@@ -93,9 +93,9 @@ const exclusivityMeta: Record<QuoteExclusivity, { label: string; multiplier: num
 }
 
 const supportMeta: Record<QuoteSupport, { label: string; multiplier: number; detail: string }> = {
-    standard: { label: 'Standard support', multiplier: 1, detail: 'Business-hours response and standard review queue.' },
-    priority: { label: 'Priority support', multiplier: 1.08, detail: 'Accelerated review and operational support.' },
-    mission_critical: { label: 'Mission critical', multiplier: 1.18, detail: 'Enhanced support with tighter response targets.' }
+    standard: { label: 'Standard support', multiplier: 1, detail: 'Included by default for quotes and governed evaluations.' },
+    priority: { label: 'Priority support', multiplier: 1.03, detail: 'Usually attached to annual buyer accounts that need faster operational response.' },
+    mission_critical: { label: 'Mission critical', multiplier: 1.08, detail: 'Reserved for enterprise agreements with heightened delivery and response expectations.' }
 }
 
 const seatBandMeta = {

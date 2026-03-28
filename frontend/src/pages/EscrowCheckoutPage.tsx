@@ -245,7 +245,7 @@ export default function EscrowCheckoutPage() {
                         </h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
                             This checkout turns the deal into a governed transaction: it funds escrow, generates the DUA,
-                            chooses access mode, sets the buyer review window, provisions the workspace, and issues scoped credentials.
+                            chooses access mode, sets the buyer review window, provisions the workspace, and issues scoped credentials. Metadata review and quote creation are free; this is the point where buyer-paid protected evaluation begins.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${passportStatus.classes}`}>
@@ -727,6 +727,10 @@ export default function EscrowCheckoutPage() {
                                 <SummaryStat label="Review window" value={`${config.reviewWindowHours} hours`} />
                                 <SummaryStat label="Access mode" value={checkoutAccessModeMeta[config.accessMode].label} />
                                 <SummaryStat label="Payment rail" value={paymentMethodMeta[config.paymentMethod].label} />
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
+                                Buyers are charged for protected evaluation here. Provider settlement fees are withheld only after a successful release and follow volume-based tiers.
                             </div>
 
                             {notice && (

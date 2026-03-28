@@ -260,7 +260,7 @@ export default function ContributionsPage() {
                             />
                             <span className="text-slate-400 text-sm">USD per access</span>
                         </div>
-                        <div className="text-slate-500 text-xs mt-1">Redoubt retains 20% platform fee. You receive 80% of each transaction.</div>
+                        <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Redoubt applies a provider settlement fee only after a successful deal: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
                     </div>
                 </div>
             )
@@ -987,6 +987,9 @@ type="button"
                             </div>
                         </div>
                     </div>
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-100">
+                        No participant onboarding fee and no dataset onboarding fee. Revenue starts only when a buyer enters protected evaluation and the deal later settles successfully.
+                    </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                         <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
                             <div className="text-slate-400 text-xs">Estimated confidence score</div>
@@ -1033,7 +1036,7 @@ type="button"
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold">Dataset Contribution & Validation</h1>
-                    <p className="text-slate-400">Upload participant datasets, monitor validation pipeline status, and review quality/compliance feedback.</p>
+                    <p className="text-slate-400">Onboard participants and datasets at no charge, monitor validation pipeline status, and review quality/compliance feedback before any buyer-paid evaluation begins.</p>
                 </div>
                 {isUploadViewOpen ? (
                     <button

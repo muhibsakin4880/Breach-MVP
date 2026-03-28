@@ -391,7 +391,7 @@ export default function DatasetDetailPage() {
                                                 </div>
                                                 <h3 className="mt-3 text-lg font-semibold text-white">Paid Clean-Room Evaluation</h3>
                                                 <p className="mt-2 text-sm text-slate-200/85">
-                                                    Enter escrow-native checkout, provision a governed workspace, and let the protection engine verify the contracted outcome before payout.
+                                                    Enter escrow-native checkout, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. Preview and quote generation stay free until this step.
                                                 </p>
                                             </div>
                                             <div className="text-right">
@@ -789,8 +789,8 @@ export default function DatasetDetailPage() {
                                                     className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400"
                                                 >
                                                     <option value="24 hours">24 hours</option>
-                                                    <option value="48 hours">48 hours (+10%)</option>
-                                                    <option value="72 hours">72 hours (+20%)</option>
+                                                    <option value="48 hours">48 hours (higher escrow hold)</option>
+                                                    <option value="72 hours">72 hours (largest escrow hold)</option>
                                                 </select>
                                             </div>
                                             <p className="text-xs text-slate-400">Full refund if unsatisfied</p>

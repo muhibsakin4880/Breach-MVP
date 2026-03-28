@@ -59,7 +59,7 @@ export default function UsageAnalyticsPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Usage Analytics</h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Dataset query patterns, participant activity, and chargeback-ready usage meters.
+                            Dataset query patterns, participant activity, and chargeback-ready usage meters for the recurring API product.
                         </p>
                     </div>
                     <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-100 shadow-[0_0_24px_rgba(59,130,246,0.25)]">
@@ -191,7 +191,7 @@ export default function UsageAnalyticsPage() {
                             <div>
                                 <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Chargeback Summary</p>
                                 <h3 className="mt-2 text-2xl font-semibold text-white">Billing ready for payout</h3>
-                                <p className="mt-1 text-sm text-slate-400">Mapped to provider share-out with platform fee.</p>
+                                <p className="mt-1 text-sm text-slate-400">Mapped to provider share-out with launch-tier settlement fees and separate recurring API billing.</p>
                             </div>
                             <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-500">
                                 Export Chargeback Report
@@ -203,12 +203,12 @@ export default function UsageAnalyticsPage() {
                                 <p className="mt-2 text-xl font-semibold text-white">$29,097</p>
                             </div>
                             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Platform fee (20%)</p>
-                                <p className="mt-2 text-xl font-semibold text-white">$5,819</p>
+                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Launch settlement fee (15%)</p>
+                                <p className="mt-2 text-xl font-semibold text-white">$4,365</p>
                             </div>
                             <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
                                 <p className="text-xs uppercase tracking-[0.12em] text-emerald-200">Provider payouts</p>
-                                <p className="mt-2 text-xl font-semibold text-emerald-100">$23,278</p>
+                                <p className="mt-2 text-xl font-semibold text-emerald-100">$24,732</p>
                             </div>
                         </div>
                     </article>

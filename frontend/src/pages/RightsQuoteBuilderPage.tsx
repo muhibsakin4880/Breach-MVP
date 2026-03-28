@@ -98,7 +98,7 @@ export default function RightsQuoteBuilderPage() {
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Configure Rights, Then Price The Deal</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
                             This quote builder prices the rights package instead of only the dataset: delivery mode, field access,
-                            usage rights, exclusivity, geography, term, and support are all commercial inputs.
+                            usage rights, exclusivity, geography, term, and support expectations are all commercial inputs. Creating and saving quotes is free; buyer charges begin only when protected evaluation starts.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${statusMeta.classes}`}>
@@ -193,7 +193,7 @@ export default function RightsQuoteBuilderPage() {
                                 />
                             </BuilderSection>
 
-                            <BuilderSection title="Support Tier" description="Support influences reviewer and delivery intensity.">
+                            <BuilderSection title="Support Tier" description="Standard support is included. Priority and mission-critical support are usually tied to annual or enterprise buyer agreements.">
                                 <OptionGrid
                                     compact
                                     options={supportOptions}
@@ -263,9 +263,14 @@ export default function RightsQuoteBuilderPage() {
 
                             <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                 <SummaryStat label="Escrow hold" value={formatUsd(quote.escrowHoldUsd)} />
+                                <SummaryStat label="Evaluation fee" value={formatUsd(Math.max(quote.totalUsd * 0.1, 750))} />
                                 <SummaryStat label="Quote expires" value={new Date(quote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                                 <SummaryStat label="Discount" value={quote.discountUsd > 0 ? formatUsd(quote.discountUsd) : 'None'} />
                                 <SummaryStat label="Passport applied" value={quote.passportApplied ? 'Yes' : 'No'} />
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                Quote generation is free. The buyer pays only when this package moves into protected evaluation, and provider settlement fees are applied only after a successful deal.
                             </div>
 
                             <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
@@ -305,7 +310,7 @@ export default function RightsQuoteBuilderPage() {
                                     onClick={handleSaveQuote}
                                     className="rounded-xl border border-cyan-400/50 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                 >
-                                    Save Quote
+                                    Save Free Quote
                                 </button>
                                 <button
                                     type="button"
@@ -321,7 +326,7 @@ export default function RightsQuoteBuilderPage() {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <h2 className="text-xl font-semibold text-white">Saved Quotes</h2>
-                                    <p className="mt-1 text-sm text-slate-400">Recent saved packages for this dataset.</p>
+                                    <p className="mt-1 text-sm text-slate-400">Recent saved packages for this dataset. Saving quotes does not start billing.</p>
                                 </div>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-300">
                                     {savedQuotes.length}
