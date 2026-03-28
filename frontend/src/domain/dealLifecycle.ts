@@ -40,6 +40,53 @@ export type DealTriageLane =
     | 'review_now'
     | 'watch'
     | 'auto_advance'
+export type RightsRiskLevel = 'routine' | 'elevated' | 'high' | 'restricted'
+export type ReleaseReadinessStatus =
+    | 'not_ready'
+    | 'safe_to_release'
+    | 'human_approval'
+    | 'blocked'
+    | 'released'
+export type PassportReminderSeverity = 'info' | 'warning' | 'critical'
+
+export type RightsRiskAssessment = {
+    level: RightsRiskLevel
+    score: number
+    summary: string
+    requiresReview: boolean
+    flags: string[]
+}
+
+export type ReleaseReadinessAssessment = {
+    status: ReleaseReadinessStatus
+    score: number
+    summary: string
+    checklist: Array<{
+        key:
+            | 'funding'
+            | 'dua'
+            | 'workspace'
+            | 'credentials'
+            | 'engine'
+            | 'validation'
+            | 'passport'
+            | 'settlement'
+        label: string
+        passed: boolean
+    }>
+    blockers: string[]
+    recommendedAction: string
+    canAutoRelease: boolean
+}
+
+export type PassportComplianceReminder = {
+    id: string
+    severity: PassportReminderSeverity
+    category: 'expiry' | 'diligence' | 'reuse' | 'review'
+    title: string
+    detail: string
+    dueLabel: string
+}
 
 export type SharedDealLifecycleRecord = {
     id: string
@@ -74,6 +121,8 @@ export type SharedDealLifecycleRecord = {
     triageScore: number
     triageReason: string
     triageSla: string
+    rightsRisk: RightsRiskAssessment
+    releaseReadiness: ReleaseReadinessAssessment
     source: {
         passport: CompliancePassport
         quote?: RightsQuote | null
@@ -105,6 +154,28 @@ export type DealTriageSummary = {
     automatedCount: number
     manualCount: number
     blockedCount: number
+}
+
+export type ReleaseReadinessSummary = {
+    statusCounts: Record<ReleaseReadinessStatus, number>
+    actionable: SharedDealLifecycleRecord[]
+    autoReleaseCount: number
+    humanApprovalCount: number
+    blockedCount: number
+}
+
+export type RightsRiskSummary = {
+    levelCounts: Record<RightsRiskLevel, number>
+    flagged: SharedDealLifecycleRecord[]
+    restrictedCount: number
+    highRiskCount: number
+}
+
+export type PassportReminderSummary = {
+    severityCounts: Record<PassportReminderSeverity, number>
+    reminders: PassportComplianceReminder[]
+    impactedDealCount: number
+    blockingReminderCount: number
 }
 
 type BuildSharedDealLifecycleInput = {
@@ -143,6 +214,27 @@ const emptyTriageLaneCounts = (): Record<DealTriageLane, number> => ({
     review_now: 0,
     watch: 0,
     auto_advance: 0
+})
+
+const emptyReleaseStatusCounts = (): Record<ReleaseReadinessStatus, number> => ({
+    not_ready: 0,
+    safe_to_release: 0,
+    human_approval: 0,
+    blocked: 0,
+    released: 0
+})
+
+const emptyRightsRiskCounts = (): Record<RightsRiskLevel, number> => ({
+    routine: 0,
+    elevated: 0,
+    high: 0,
+    restricted: 0
+})
+
+const emptyReminderSeverityCounts = (): Record<PassportReminderSeverity, number> => ({
+    info: 0,
+    warning: 0,
+    critical: 0
 })
 
 const stagePriority: Record<DealLifecycleStage, number> = {
@@ -269,6 +361,72 @@ export const dealTriageMeta: Record<
         detail: 'Signals are within policy thresholds and no manual action is currently required.',
         tone: 'emerald'
     }
+}
+
+export const rightsRiskMeta: Record<
+    RightsRiskLevel,
+    { label: string; detail: string; tone: 'slate' | 'amber' | 'red' }
+> = {
+    routine: {
+        label: 'Routine Rights',
+        detail: 'Rights package stays inside normal policy thresholds.',
+        tone: 'slate'
+    },
+    elevated: {
+        label: 'Elevated Rights',
+        detail: 'Commercial terms are broader and should remain visible to admins.',
+        tone: 'amber'
+    },
+    high: {
+        label: 'High-Risk Rights',
+        detail: 'Rights package contains unusual terms and should be manually reviewed.',
+        tone: 'red'
+    },
+    restricted: {
+        label: 'Restricted Rights',
+        detail: 'Rights package crosses multiple risk boundaries and should not auto-advance.',
+        tone: 'red'
+    }
+}
+
+export const releaseReadinessMeta: Record<
+    ReleaseReadinessStatus,
+    { label: string; detail: string; tone: 'slate' | 'cyan' | 'amber' | 'emerald' | 'red' }
+> = {
+    not_ready: {
+        label: 'Not Ready',
+        detail: 'Core release gates are still incomplete.',
+        tone: 'slate'
+    },
+    safe_to_release: {
+        label: 'Safe To Release',
+        detail: 'All required release checks passed and the deal can auto-release.',
+        tone: 'emerald'
+    },
+    human_approval: {
+        label: 'Needs Approval',
+        detail: 'The deal is operationally ready, but policy review still needs a human.',
+        tone: 'amber'
+    },
+    blocked: {
+        label: 'Release Blocked',
+        detail: 'Release must stay frozen until a blocker is resolved.',
+        tone: 'red'
+    },
+    released: {
+        label: 'Released',
+        detail: 'Release already completed.',
+        tone: 'emerald'
+    }
+}
+
+export const passportReminderMeta: Record<
+    PassportReminderSeverity,
+    { label: string; tone: 'slate' | 'amber' | 'red' }
+> = {
+    info: { label: 'Info', tone: 'slate' },
+    warning: { label: 'Warning', tone: 'amber' },
+    critical: { label: 'Critical', tone: 'red' }
 }
 
 const parseDateSafe = (value?: string | null) => {
@@ -491,7 +649,7 @@ const deriveUrgencyLevel = (score: number): DealUrgencyLevel => {
 const deriveApprovalDisposition = (
     stage: DealLifecycleStage,
     passport: CompliancePassport,
-    quote?: RightsQuote | null,
+    rightsRisk: RightsRiskAssessment,
     checkoutRecord?: EscrowCheckoutRecord | null
 ): DealApprovalDisposition => {
     if (
@@ -505,10 +663,7 @@ const deriveApprovalDisposition = (
 
     if (
         passport.status === 'review' ||
-        quote?.riskBand === 'strict' ||
-        quote?.input.exclusivity !== 'none' ||
-        quote?.input.usageRight === 'customer_facing' ||
-        quote?.input.geography === 'global'
+        rightsRisk.requiresReview
     ) {
         return 'human_review'
     }
@@ -684,6 +839,344 @@ const buildTriageSla = (lane: DealTriageLane, urgency: DealUrgencyLevel) => {
     return 'No manual SLA'
 }
 
+const deriveRightsRiskAssessment = (
+    passport: CompliancePassport,
+    quote?: RightsQuote | null,
+    checkoutRecord?: EscrowCheckoutRecord | null
+): RightsRiskAssessment => {
+    if (!quote) {
+        return {
+            level: 'routine',
+            score: 0,
+            summary: 'No rights package exists yet, so commercial rights risk is still minimal.',
+            requiresReview: false,
+            flags: []
+        }
+    }
+
+    let score = 0
+    const flags: string[] = []
+
+    if (quote.input.deliveryMode === 'encrypted_download') {
+        score += 22
+        flags.push('Encrypted download rights expand the egress surface.')
+    }
+    if (quote.input.fieldPack === 'sensitive_review') {
+        score += 18
+        flags.push('Sensitive field pack requires deeper governance review.')
+    }
+    if (quote.input.usageRight === 'customer_facing') {
+        score += 18
+        flags.push('Customer-facing usage rights broaden downstream exposure.')
+    }
+    if (quote.input.geography === 'global') {
+        score += 14
+        flags.push('Global geography rights create broader compliance scope.')
+    }
+    if (quote.input.duration === '24_months') {
+        score += 10
+        flags.push('Extended term increases long-tail commercial risk.')
+    }
+    if (quote.input.validationWindowHours === 24) {
+        score += 8
+        flags.push('Short validation window compresses buyer review time.')
+    }
+
+    if (quote.input.exclusivity === 'sector_vertical') {
+        score += 8
+        flags.push('Vertical exclusivity increases commercial sensitivity.')
+    }
+    if (quote.input.exclusivity === 'regional') {
+        score += 14
+        flags.push('Regional exclusivity narrows provider resale flexibility.')
+    }
+    if (quote.input.exclusivity === 'full') {
+        score += 22
+        flags.push('Full exclusivity creates a premium restricted rights pattern.')
+    }
+
+    if (quote.input.seatBand === 'enterprise') {
+        score += 6
+        flags.push('Enterprise seat scope expands the internal user footprint.')
+    }
+    if (passport.status === 'review') {
+        score += 4
+        flags.push('Passport is reusable but still has review follow-up.')
+    }
+    if (passport.status === 'incomplete') {
+        score += 8
+        flags.push('Passport is incomplete for the requested rights package.')
+    }
+
+    if (
+        quote.input.deliveryMode === 'encrypted_download' &&
+        quote.input.geography === 'global'
+    ) {
+        score += 12
+        flags.push('Unusual combination: encrypted download plus global rights.')
+    }
+    if (
+        quote.input.fieldPack === 'sensitive_review' &&
+        quote.input.usageRight === 'customer_facing'
+    ) {
+        score += 12
+        flags.push('Unusual combination: sensitive fields with customer-facing rights.')
+    }
+    if (
+        quote.input.exclusivity === 'full' &&
+        quote.input.duration === '24_months'
+    ) {
+        score += 10
+        flags.push('Unusual combination: full exclusivity across a long contract term.')
+    }
+
+    if (checkoutRecord?.configuration.accessMode === 'encrypted_download') {
+        score += 6
+    }
+
+    const normalizedScore = Math.min(score, 100)
+    const level: RightsRiskLevel =
+        normalizedScore >= 70 ? 'restricted' : normalizedScore >= 45 ? 'high' : normalizedScore >= 20 ? 'elevated' : 'routine'
+
+    return {
+        level,
+        score: normalizedScore,
+        summary:
+            level === 'restricted'
+                ? 'Rights package crosses multiple policy boundaries and should not auto-advance.'
+                : level === 'high'
+                    ? 'Rights package contains unusual commercial terms and should be reviewed.'
+                    : level === 'elevated'
+                        ? 'Rights package is still within policy, but it should stay visible to admins.'
+                        : 'Rights package remains within routine policy thresholds.',
+        requiresReview: level === 'high' || level === 'restricted',
+        flags
+    }
+}
+
+const deriveReleaseReadiness = (
+    passport: CompliancePassport,
+    rightsRisk: RightsRiskAssessment,
+    checkoutRecord?: EscrowCheckoutRecord | null
+): ReleaseReadinessAssessment => {
+    if (!checkoutRecord) {
+        return {
+            status: 'not_ready',
+            score: 0,
+            summary: 'Release cannot begin until escrow-native checkout has been created.',
+            checklist: [],
+            blockers: ['No funded checkout record exists yet.'],
+            recommendedAction: 'Start escrow-native checkout before running release readiness.',
+            canAutoRelease: false
+        }
+    }
+
+    const checklist: ReleaseReadinessAssessment['checklist'] = [
+        { key: 'funding', label: 'Escrow funded', passed: Boolean(checkoutRecord.funding.fundedAt) },
+        { key: 'dua', label: 'DUA accepted', passed: checkoutRecord.dua.accepted },
+        { key: 'workspace', label: 'Workspace ready', passed: checkoutRecord.workspace.status === 'ready' },
+        { key: 'credentials', label: 'Scoped credentials issued', passed: checkoutRecord.credentials.status === 'issued' },
+        { key: 'engine', label: 'Outcome engine passed', passed: checkoutRecord.outcomeProtection.engine.status === 'passed' || checkoutRecord.lifecycleState === 'RELEASED_TO_PROVIDER' },
+        {
+            key: 'validation',
+            label: 'Buyer validated outcome',
+            passed:
+                checkoutRecord.outcomeProtection.validation.status === 'confirmed' ||
+                checkoutRecord.lifecycleState === 'RELEASE_PENDING' ||
+                checkoutRecord.lifecycleState === 'RELEASED_TO_PROVIDER'
+        },
+        { key: 'passport', label: 'Passport reusable', passed: passport.status !== 'incomplete' },
+        {
+            key: 'settlement',
+            label: 'No credit or dispute freeze',
+            passed:
+                checkoutRecord.outcomeProtection.credits.status === 'none' &&
+                checkoutRecord.lifecycleState !== 'DISPUTE_OPEN'
+        }
+    ]
+
+    const blockers: string[] = []
+
+    if (!checkoutRecord.dua.accepted) blockers.push('DUA must be accepted before settlement.')
+    if (checkoutRecord.outcomeProtection.engine.status === 'failed') blockers.push('Outcome engine failed the protected evaluation.')
+    if (checkoutRecord.outcomeProtection.credits.status === 'issued') blockers.push('Automatic credits were issued, so provider payout remains frozen.')
+    if (checkoutRecord.lifecycleState === 'DISPUTE_OPEN') blockers.push('An active dispute keeps release frozen.')
+    if (passport.status === 'incomplete') blockers.push('Passport cannot support release while still incomplete.')
+
+    const passedChecks = checklist.filter(item => item.passed).length
+    const score = Math.round((passedChecks / checklist.length) * 100)
+
+    if (checkoutRecord.lifecycleState === 'RELEASED_TO_PROVIDER') {
+        return {
+            status: 'released',
+            score: 100,
+            summary: 'Provider payout already completed.',
+            checklist,
+            blockers: [],
+            recommendedAction: 'No action required. Deal is already released.',
+            canAutoRelease: false
+        }
+    }
+
+    if (blockers.length > 0) {
+        return {
+            status: 'blocked',
+            score,
+            summary: blockers[0],
+            checklist,
+            blockers,
+            recommendedAction: 'Resolve the active release blocker before settlement can continue.',
+            canAutoRelease: false
+        }
+    }
+
+    const waitingOnEngine = checkoutRecord.outcomeProtection.engine.status !== 'passed'
+    const waitingOnValidation =
+        checkoutRecord.outcomeProtection.validation.status !== 'confirmed' &&
+        checkoutRecord.lifecycleState !== 'RELEASE_PENDING'
+
+    if (waitingOnEngine || waitingOnValidation) {
+        return {
+            status: 'not_ready',
+            score,
+            summary:
+                waitingOnEngine
+                    ? 'Outcome engine has not passed yet, so release remains pre-check.'
+                    : 'Buyer validation still needs to complete before release.',
+            checklist,
+            blockers: [],
+            recommendedAction:
+                waitingOnEngine
+                    ? 'Wait for the outcome engine to pass before advancing release.'
+                    : 'Collect buyer validation before release is considered ready.',
+            canAutoRelease: false
+        }
+    }
+
+    if (rightsRisk.requiresReview || passport.status === 'review') {
+        return {
+            status: 'human_approval',
+            score,
+            summary:
+                rightsRisk.requiresReview
+                    ? 'Commercial rights risk still requires manual approval before auto-release.'
+                    : 'Passport review follow-up still requires manual settlement approval.',
+            checklist,
+            blockers: [],
+            recommendedAction: 'Route this deal to settlement review before releasing escrow.',
+            canAutoRelease: false
+        }
+    }
+
+    return {
+        status: 'safe_to_release',
+        score,
+        summary: 'All release checks passed and the deal is eligible for automatic provider payout.',
+        checklist,
+        blockers: [],
+        recommendedAction: 'Deal can auto-release or remain in a very short approval buffer.',
+        canAutoRelease: true
+    }
+}
+
+const buildPassportComplianceReminders = (
+    passport: CompliancePassport,
+    records: SharedDealLifecycleRecord[]
+): PassportComplianceReminder[] => {
+    const reminders: PassportComplianceReminder[] = []
+    const incompleteSections = passport.sections.filter(section => !section.complete)
+    const hoursUntilExpiry = hoursUntil(passport.validUntil)
+    const activeDealCount = records.filter(record => record.stage !== 'released').length
+
+    if (passport.status === 'incomplete') {
+        reminders.push({
+            id: 'passport-incomplete',
+            severity: 'critical',
+            category: 'diligence',
+            title: 'Passport completion is blocking reuse',
+            detail: `Complete ${incompleteSections.length} remaining diligence section(s) before active deals can reuse the passport cleanly.`,
+            dueLabel: 'Before next deal step'
+        })
+    } else if (passport.status === 'review') {
+        reminders.push({
+            id: 'passport-review',
+            severity: 'warning',
+            category: 'review',
+            title: 'Passport still needs reviewer follow-up',
+            detail: 'The passport is reusable, but one or more diligence sections still need a manual review pass.',
+            dueLabel: 'Review this week'
+        })
+    }
+
+    if (incompleteSections.some(section => section.key === 'verification')) {
+        reminders.push({
+            id: 'verification-gap',
+            severity: 'critical',
+            category: 'diligence',
+            title: 'Verification evidence is incomplete',
+            detail: 'Affiliation or authorization evidence still needs to be completed before the strongest release path is available.',
+            dueLabel: 'Before approval'
+        })
+    }
+
+    if (incompleteSections.some(section => section.key === 'legal')) {
+        reminders.push({
+            id: 'legal-gap',
+            severity: 'critical',
+            category: 'diligence',
+            title: 'Legal acknowledgment is incomplete',
+            detail: 'Representative authority and governance acknowledgments must be complete before deeper reuse.',
+            dueLabel: 'Before checkout'
+        })
+    }
+
+    if (!Number.isNaN(Date.parse(passport.validUntil)) && hoursUntilExpiry <= 24 * 45) {
+        reminders.push({
+            id: 'passport-expiry',
+            severity: hoursUntilExpiry <= 24 * 14 ? 'critical' : 'warning',
+            category: 'expiry',
+            title: 'Passport validity window is approaching expiry',
+            detail: `Passport ${passport.passportId} expires on ${passport.validUntil}, so future deal reuse should be refreshed soon.`,
+            dueLabel: hoursUntilExpiry <= 24 * 14 ? 'Renew immediately' : 'Renew this month'
+        })
+    }
+
+    if (activeDealCount > 0 && passport.status !== 'active') {
+        reminders.push({
+            id: 'active-deal-slowdown',
+            severity: passport.status === 'incomplete' ? 'critical' : 'warning',
+            category: 'reuse',
+            title: 'Active deals are slowed by passport readiness',
+            detail: `${activeDealCount} active deal(s) are attached to a passport that is not fully active yet.`,
+            dueLabel: 'Today'
+        })
+    }
+
+    if (!passport.fastTrackEligible && activeDealCount > 0) {
+        reminders.push({
+            id: 'fast-track-gap',
+            severity: 'info',
+            category: 'reuse',
+            title: 'Fast-track benefits are not fully unlocked',
+            detail: 'Completing one more diligence section would unlock stronger quote and checkout reuse benefits.',
+            dueLabel: 'When convenient'
+        })
+    }
+
+    if (reminders.length === 0) {
+        reminders.push({
+            id: 'passport-healthy',
+            severity: 'info',
+            category: 'reuse',
+            title: 'Passport is healthy',
+            detail: 'No active compliance reminders are slowing current deals.',
+            dueLabel: 'No action required'
+        })
+    }
+
+    return reminders
+}
+
 const buildRecordId = (
     passport: CompliancePassport,
     quote?: RightsQuote | null,
@@ -696,15 +1189,17 @@ export const buildSharedDealLifecycleRecord = ({
     checkoutRecord
 }: BuildSharedDealLifecycleInput): SharedDealLifecycleRecord => {
     const stage = deriveDealLifecycleStage(passport, quote, checkoutRecord)
+    const rightsRisk = deriveRightsRiskAssessment(passport, quote, checkoutRecord)
     const riskScore = deriveRiskScore(passport, quote, checkoutRecord)
     const risk = deriveRiskLevel(riskScore)
     const urgencyScore = deriveUrgencyScore(stage, quote, checkoutRecord)
     const urgency = deriveUrgencyLevel(urgencyScore)
-    const approvalDisposition = deriveApprovalDisposition(stage, passport, quote, checkoutRecord)
+    const approvalDisposition = deriveApprovalDisposition(stage, passport, rightsRisk, checkoutRecord)
     const blockers = buildBlockers(stage, passport, quote, checkoutRecord)
     const queue = deriveQueue(stage, approvalDisposition)
     const triageScore = deriveTriageScore(stage, riskScore, urgencyScore, approvalDisposition, blockers)
     const triageLane = deriveTriageLane(stage, risk, urgency, approvalDisposition)
+    const releaseReadiness = deriveReleaseReadiness(passport, rightsRisk, checkoutRecord)
 
     return {
         id: buildRecordId(passport, quote, checkoutRecord),
@@ -739,6 +1234,8 @@ export const buildSharedDealLifecycleRecord = ({
         triageScore,
         triageReason: buildTriageReason(triageLane, stage, blockers, quote, checkoutRecord),
         triageSla: buildTriageSla(triageLane, urgency),
+        rightsRisk,
+        releaseReadiness,
         source: {
             passport,
             quote,
@@ -860,8 +1357,96 @@ export const buildDealTriageSummary = (
     }
 }
 
+export const buildReleaseReadinessSummary = (
+    records: SharedDealLifecycleRecord[]
+): ReleaseReadinessSummary => {
+    const statusCounts = emptyReleaseStatusCounts()
+
+    records.forEach(record => {
+        statusCounts[record.releaseReadiness.status] += 1
+    })
+
+    const actionable = [...records]
+        .filter(record =>
+            record.releaseReadiness.status === 'safe_to_release' ||
+            record.releaseReadiness.status === 'human_approval' ||
+            record.releaseReadiness.status === 'blocked'
+        )
+        .sort((left, right) => {
+            if (right.releaseReadiness.score !== left.releaseReadiness.score) {
+                return right.releaseReadiness.score - left.releaseReadiness.score
+            }
+            if (right.urgencyScore !== left.urgencyScore) return right.urgencyScore - left.urgencyScore
+            return parseDateSafe(right.updatedAt) - parseDateSafe(left.updatedAt)
+        })
+
+    return {
+        statusCounts,
+        actionable,
+        autoReleaseCount: statusCounts.safe_to_release,
+        humanApprovalCount: statusCounts.human_approval,
+        blockedCount: statusCounts.blocked
+    }
+}
+
+export const buildRightsRiskSummary = (
+    records: SharedDealLifecycleRecord[]
+): RightsRiskSummary => {
+    const levelCounts = emptyRightsRiskCounts()
+
+    records.forEach(record => {
+        levelCounts[record.rightsRisk.level] += 1
+    })
+
+    return {
+        levelCounts,
+        flagged: [...records]
+            .filter(record => record.rightsRisk.level === 'high' || record.rightsRisk.level === 'restricted')
+            .sort((left, right) => {
+                if (right.rightsRisk.score !== left.rightsRisk.score) {
+                    return right.rightsRisk.score - left.rightsRisk.score
+                }
+                return parseDateSafe(right.updatedAt) - parseDateSafe(left.updatedAt)
+            }),
+        restrictedCount: levelCounts.restricted,
+        highRiskCount: levelCounts.high
+    }
+}
+
+export const buildPassportReminderSummary = (
+    records: SharedDealLifecycleRecord[]
+): PassportReminderSummary => {
+    const fallbackPassport = buildCompliancePassport()
+    const passport = records[0]?.source.passport ?? fallbackPassport
+    const reminders = buildPassportComplianceReminders(passport, records)
+    const severityCounts = emptyReminderSeverityCounts()
+
+    reminders.forEach(reminder => {
+        severityCounts[reminder.severity] += 1
+    })
+
+    return {
+        severityCounts,
+        reminders,
+        impactedDealCount:
+            passport.status === 'active'
+                ? 0
+                : records.filter(record => record.stage !== 'released').length,
+        blockingReminderCount: severityCounts.critical
+    }
+}
+
 export const getDealLifecycleSummary = () =>
     buildDealLifecycleSummary(loadSharedDealLifecycleRecords())
 
 export const getDealTriageSummary = () =>
     buildDealTriageSummary(loadSharedDealLifecycleRecords())
+
+export const getReleaseReadinessSummary = () =>
+    buildReleaseReadinessSummary(loadSharedDealLifecycleRecords())
+
+export const getRightsRiskSummary = () =>
+    buildRightsRiskSummary(loadSharedDealLifecycleRecords())
+
+export const getPassportReminderSummary = () =>
+    buildPassportReminderSummary(loadSharedDealLifecycleRecords())

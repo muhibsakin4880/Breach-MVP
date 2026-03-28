@@ -3,11 +3,17 @@ import { useAuth } from '../contexts/AuthContext'
 import LogoMark from '../components/LogoMark'
 import {
     buildDealLifecycleSummary,
+    buildPassportReminderSummary,
     buildDealTriageSummary,
+    buildReleaseReadinessSummary,
+    buildRightsRiskSummary,
     dealLifecycleStageMeta,
     dealRiskMeta,
     dealTriageMeta,
     dealUrgencyMeta,
+    passportReminderMeta,
+    releaseReadinessMeta,
+    rightsRiskMeta,
     loadSharedDealLifecycleRecords
 } from '../domain/dealLifecycle'
 
@@ -50,7 +56,12 @@ export default function AdminDashboard() {
     const dealRecords = loadSharedDealLifecycleRecords()
     const dealLifecycleSummary = buildDealLifecycleSummary(dealRecords)
     const dealTriageSummary = buildDealTriageSummary(dealRecords)
+    const releaseReadinessSummary = buildReleaseReadinessSummary(dealRecords)
+    const passportReminderSummary = buildPassportReminderSummary(dealRecords)
+    const rightsRiskSummary = buildRightsRiskSummary(dealRecords)
     const triageActionQueue = dealTriageSummary.actionableQueue.slice(0, 4)
+    const releaseActionQueue = releaseReadinessSummary.actionable.slice(0, 3)
+    const rightsFlagQueue = rightsRiskSummary.flagged.slice(0, 3)
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -439,6 +450,170 @@ export default function AdminDashboard() {
                                 {triageActionQueue.length === 0 && (
                                     <div className="px-5 py-5 text-[10px] text-slate-500">
                                         No manual triage items are active. Current deals can continue in watch or auto-advance lanes.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-5 mb-6">
+                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
+                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Release Readiness</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Automated checks decide what can release, what needs approval, and what stays frozen.</p>
+                                </div>
+                                <div className="text-[9px] text-slate-600 tracking-wider">
+                                    {releaseReadinessSummary.autoReleaseCount} safe
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
+                                {(['safe_to_release', 'human_approval', 'blocked'] as const).map((status) => {
+                                    const meta = releaseReadinessMeta[status]
+                                    return (
+                                        <div key={status} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
+                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
+                                                {meta.label}
+                                            </div>
+                                            <div className="mt-2 text-xl font-semibold text-slate-100">
+                                                {releaseReadinessSummary.statusCounts[status]}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="divide-y divide-slate-800/30">
+                                {releaseActionQueue.map((deal) => {
+                                    const readinessMeta = releaseReadinessMeta[deal.releaseReadiness.status]
+                                    return (
+                                        <div key={deal.id} className="px-5 py-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
+                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                        {deal.recommendedOwner} · readiness {deal.releaseReadiness.score}%
+                                                    </div>
+                                                </div>
+                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(readinessMeta.tone)}`}>
+                                                    {readinessMeta.label}
+                                                </div>
+                                            </div>
+                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                                                {deal.releaseReadiness.summary}
+                                            </p>
+                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
+                                                Next: {deal.releaseReadiness.recommendedAction}
+                                            </p>
+                                        </div>
+                                    )
+                                })}
+                                {releaseActionQueue.length === 0 && (
+                                    <div className="px-5 py-5 text-[10px] text-slate-500">
+                                        No release candidates are active yet.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
+                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Passport Reminders</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Expiry, diligence gaps, and reuse blockers are grouped into a single reminder queue.</p>
+                                </div>
+                                <div className="text-[9px] text-slate-600 tracking-wider">
+                                    {passportReminderSummary.impactedDealCount} impacted
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
+                                {(['critical', 'warning', 'info'] as const).map((severity) => {
+                                    const meta = passportReminderMeta[severity]
+                                    return (
+                                        <div key={severity} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
+                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
+                                                {meta.label}
+                                            </div>
+                                            <div className="mt-2 text-xl font-semibold text-slate-100">
+                                                {passportReminderSummary.severityCounts[severity]}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="divide-y divide-slate-800/30">
+                                {passportReminderSummary.reminders.map((reminder) => {
+                                    const meta = passportReminderMeta[reminder.severity]
+                                    return (
+                                        <div key={reminder.id} className="px-5 py-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="text-[11px] font-semibold text-slate-200">{reminder.title}</div>
+                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
+                                                    {meta.label}
+                                                </div>
+                                            </div>
+                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{reminder.detail}</p>
+                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
+                                                Due: {reminder.dueLabel}
+                                            </p>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
+                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Rights Risk Scoring</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Only unusual or high-risk rights packages are pulled into the admin review lane.</p>
+                                </div>
+                                <div className="text-[9px] text-slate-600 tracking-wider">
+                                    {rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} flagged
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
+                                {(['elevated', 'high', 'restricted'] as const).map((level) => {
+                                    const meta = rightsRiskMeta[level]
+                                    return (
+                                        <div key={level} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
+                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
+                                                {meta.label}
+                                            </div>
+                                            <div className="mt-2 text-xl font-semibold text-slate-100">
+                                                {rightsRiskSummary.levelCounts[level]}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="divide-y divide-slate-800/30">
+                                {rightsFlagQueue.map((deal) => {
+                                    const meta = rightsRiskMeta[deal.rightsRisk.level]
+                                    return (
+                                        <div key={deal.id} className="px-5 py-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
+                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                        rights risk {deal.rightsRisk.score} · {deal.queue.replace('_', ' ')}
+                                                    </div>
+                                                </div>
+                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
+                                                    {meta.label}
+                                                </div>
+                                            </div>
+                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                                                {deal.rightsRisk.flags[0] ?? deal.rightsRisk.summary}
+                                            </p>
+                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
+                                                {deal.rightsRisk.summary}
+                                            </p>
+                                        </div>
+                                    )
+                                })}
+                                {rightsFlagQueue.length === 0 && (
+                                    <div className="px-5 py-5 text-[10px] text-slate-500">
+                                        No high-risk rights packages are active right now.
                                     </div>
                                 )}
                             </div>
