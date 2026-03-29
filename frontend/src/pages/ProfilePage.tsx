@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { participantApiCredential } from '../data/pipelineOpsData'
 
 type DomainOption = 'Climate' | 'Finance' | 'Healthcare' | 'Mobility'
 type AccessPreference = 'Metadata & summaries only' | 'Aggregated / anonymized data' | 'Full raw dataset access'
@@ -246,16 +247,16 @@ export default function ProfilePage() {
 
                         <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
-                                <div className="font-mono text-sm text-slate-300">br_live_••••••••••••••••••••••</div>
+                                <div className="font-mono text-sm text-slate-300">{participantApiCredential.maskedKey}</div>
                                 <div className="flex gap-2">
                                     <button className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">Generate New Key</button>
                                     <button className="px-3 py-1.5 rounded-lg border border-rose-500/50 text-rose-400 text-sm font-medium hover:bg-rose-500/10 transition-colors">Revoke</button>
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-4 text-xs text-slate-400 mb-2">
-                                <span>1,247 calls</span>
-                                <span>8 datasets</span>
-                                <span>2h ago</span>
+                                {participantApiCredential.metrics.map(metric => (
+                                    <span key={metric}>{metric}</span>
+                                ))}
                             </div>
                             <p className="text-xs text-slate-500">Your key is private. Never share it.</p>
                         </div>

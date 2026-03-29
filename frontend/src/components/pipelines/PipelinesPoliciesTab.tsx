@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { policyRows, policyStats, preflightRows } from './pipelinesContent'
 import { SurfaceCard } from './PipelinesShared'
+import { policyEvents } from '../../data/pipelineOpsData'
 
 export default function PipelinesPoliciesTab() {
     return (
@@ -128,6 +129,37 @@ export default function PipelinesPoliciesTab() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </SurfaceCard>
+
+            <SurfaceCard>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                        <h3 className="text-xl font-semibold text-white">Recent policy events</h3>
+                        <p className="text-sm text-slate-400">Shared guardrail events tied to the same workspace state shown elsewhere</p>
+                    </div>
+                    <Link to="/deployment-model" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                        Review deployment controls
+                    </Link>
+                </div>
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    {policyEvents.map(event => (
+                        <article key={event.id} className="rounded-2xl border border-cyan-500/15 bg-black/40 p-4">
+                            <div
+                                className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                                    event.tone === 'success'
+                                        ? 'bg-emerald-500/15 text-emerald-200'
+                                        : event.tone === 'warn'
+                                        ? 'bg-amber-500/15 text-amber-200'
+                                        : 'bg-cyan-500/15 text-cyan-200'
+                                }`}
+                            >
+                                {event.timestamp}
+                            </div>
+                            <div className="mt-3 text-sm font-semibold text-white">{event.title}</div>
+                            <p className="mt-2 text-sm leading-relaxed text-slate-400">{event.detail}</p>
+                        </article>
+                    ))}
                 </div>
             </SurfaceCard>
         </section>

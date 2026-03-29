@@ -1,3 +1,6 @@
+import { approvedDatasets, datasetRequests } from '../../data/workspaceData'
+import { participantApiCredential } from '../../data/pipelineOpsData'
+
 export type PipelinesTab = 'overview' | 'api' | 'resources' | 'policies'
 
 export type Endpoint = {
@@ -42,7 +45,7 @@ export const tabs: Array<{ id: PipelinesTab; label: string }> = [
 export const summaryCards: SummaryCard[] = [
     {
         label: 'Credential Status',
-        value: '1 active production key',
+        value: participantApiCredential.statusLabel,
         hint: 'Managed in Profile & Settings',
         to: '/profile',
         action: 'Open credentials'
@@ -56,15 +59,15 @@ export const summaryCards: SummaryCard[] = [
     },
     {
         label: 'Access Workflows',
-        value: '3 requests in flight',
-        hint: 'Track approvals and scope changes',
+        value: `${datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS').length} in review`,
+        hint: `${datasetRequests.filter(request => request.status === 'REQUEST_APPROVED').length} approved requests already provisioned`,
         to: '/access-requests',
         action: 'Open requests'
     },
     {
         label: 'Contribution Pipeline',
-        value: 'Managed separately',
-        hint: 'Uploads and validation live in Contributions',
+        value: `${approvedDatasets.length} active dataset routes`,
+        hint: 'Uploads and validation still live in Contributions',
         to: '/contributions',
         action: 'Go to contributions'
     }
@@ -240,11 +243,11 @@ export const resourceLinks: ResourceLink[] = [
     }
 ]
 
-export const credentialStats = [
-    '1,247 calls on the current key',
-    '8 datasets touched this month',
-    'Last used 2 hours ago'
-]
+export const credentialStats = participantApiCredential.metrics.map(metric => {
+    if (metric.includes('calls')) return `${metric} on the current key`
+    if (metric.includes('datasets')) return `${metric} touched this month`
+    return metric
+})
 
 export const policyStats = [
     { label: 'Active Policies', value: '12' },

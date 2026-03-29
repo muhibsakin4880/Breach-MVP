@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom'
 import { credentialStats } from './pipelinesContent'
 import { CopyButton, SurfaceCard, type CopyHandler } from './PipelinesShared'
+import {
+    approvedDatasets,
+    confidenceColor,
+    datasetRequests,
+    participantActivity,
+    participantActivityStyles,
+    requestStatusLabel,
+    statusStyles
+} from '../../data/workspaceData'
+import { credentialHistory, participantApiCredential, recentApiActivity } from '../../data/pipelineOpsData'
 
 export default function PipelinesOverviewTab({
     copiedItem,
@@ -75,13 +85,17 @@ export default function PipelinesOverviewTab({
                     <div className="mt-5 rounded-2xl border border-slate-700 bg-slate-900/70 p-5">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div>
-                                <div className="font-mono text-sm text-slate-200">br_live_••••••••••••••••••••••</div>
+                                <div className="font-mono text-sm text-slate-200">{participantApiCredential.maskedKey}</div>
+                                <div className="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">
+                                    {participantApiCredential.environment}
+                                </div>
                                 <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
                                     {credentialStats.map(stat => (
                                         <span key={stat}>{stat}</span>
                                     ))}
                                 </div>
                                 <p className="mt-3 text-xs text-slate-500">Your key is private. Never share it.</p>
+                                <p className="mt-1 text-xs text-slate-500">{participantApiCredential.residencyNote}</p>
                             </div>
                             <div className="flex flex-wrap gap-3">
                                 <Link
@@ -118,6 +132,49 @@ export default function PipelinesOverviewTab({
                                 Cross-check request updates, key usage, and policy enforcement from the participant side.
                             </p>
                         </Link>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 md:grid-cols-[2fr_3fr]">
+                        <div className="rounded-2xl border border-cyan-500/20 bg-black/40 p-4">
+                            <div className="text-sm font-semibold text-white">Credential history</div>
+                            <div className="mt-3 space-y-3">
+                                {credentialHistory.map(event => (
+                                    <div key={event.label} className="rounded-xl border border-cyan-500/10 bg-black/30 px-3 py-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-sm text-slate-200">{event.label}</div>
+                                            <span
+                                                className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                                                    event.status === 'current'
+                                                        ? 'bg-emerald-500/15 text-emerald-200'
+                                                        : event.status === 'success'
+                                                        ? 'bg-cyan-500/15 text-cyan-200'
+                                                        : 'bg-slate-700/80 text-slate-200'
+                                                }`}
+                                            >
+                                                {event.status}
+                                            </span>
+                                        </div>
+                                        <div className="mt-1 text-xs text-slate-500">{event.timestamp}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="rounded-2xl border border-cyan-500/20 bg-black/40 p-4">
+                            <div className="text-sm font-semibold text-white">Current key scopes</div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {participantApiCredential.scopes.map(scope => (
+                                    <span
+                                        key={scope}
+                                        className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200"
+                                    >
+                                        {scope}
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="mt-4 rounded-xl border border-cyan-500/10 bg-black/30 px-3 py-3 text-sm text-slate-400">
+                                Last rotated on {participantApiCredential.lastRotated}. Rotate or revoke from Profile when your environment or downstream systems change.
+                            </div>
+                        </div>
                     </div>
                 </SurfaceCard>
 
@@ -196,7 +253,141 @@ export default function PipelinesOverviewTab({
                             ))}
                         </div>
                     </SurfaceCard>
+
+                    <SurfaceCard>
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Recent API activity</h3>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    Shared mock activity connected to the same recurring API and workspace request story.
+                                </p>
+                            </div>
+                            <Link to="/audit-trail" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                                Open audit evidence
+                            </Link>
+                        </div>
+                        <div className="mt-4 space-y-3">
+                            {recentApiActivity.map(activity => (
+                                <div key={activity.id} className="rounded-2xl border border-cyan-500/15 bg-black/40 px-4 py-3">
+                                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">{activity.route}</div>
+                                            <div className="mt-1 text-sm text-slate-400">{activity.dataset}</div>
+                                        </div>
+                                        <span
+                                            className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                                                activity.tone === 'success'
+                                                    ? 'bg-emerald-500/15 text-emerald-200'
+                                                    : activity.tone === 'pending'
+                                                    ? 'bg-amber-500/15 text-amber-200'
+                                                    : 'bg-cyan-500/15 text-cyan-200'
+                                            }`}
+                                        >
+                                            {activity.timestamp}
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 text-sm text-slate-300">{activity.result}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </SurfaceCard>
                 </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+                <SurfaceCard>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <h3 className="text-xl font-bold text-white">Approved API-enabled datasets</h3>
+                            <p className="mt-2 text-sm text-slate-400">
+                                These routes are derived from the participant workspace’s approved dataset access state.
+                            </p>
+                        </div>
+                        <Link to="/datasets" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                            View all datasets
+                        </Link>
+                    </div>
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                        {approvedDatasets.map(dataset => (
+                            <article
+                                key={dataset.id}
+                                className="rounded-2xl border border-cyan-500/20 bg-black/40 p-5"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-base font-semibold text-white">{dataset.name}</div>
+                                        <div className={`mt-2 text-sm font-semibold ${confidenceColor(dataset.confidence)}`}>
+                                            Confidence {dataset.confidence}
+                                        </div>
+                                    </div>
+                                    <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
+                                        {dataset.accessRoute}
+                                    </span>
+                                </div>
+                                <p className="mt-3 text-sm leading-relaxed text-slate-400">{dataset.instructions}</p>
+                                <div className="mt-4 text-xs text-slate-500">{dataset.limits}</div>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {dataset.usageScope.map(scope => (
+                                        <span
+                                            key={scope}
+                                            className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-[11px] text-slate-300"
+                                        >
+                                            {scope}
+                                        </span>
+                                    ))}
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </SurfaceCard>
+
+                <SurfaceCard>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                            <h3 className="text-xl font-bold text-white">Request timeline</h3>
+                            <p className="mt-2 text-sm text-slate-400">
+                                Access-request history is now pulled from shared workspace data.
+                            </p>
+                        </div>
+                        <Link to="/access-requests" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                            Open requests
+                        </Link>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                        {datasetRequests.slice(0, 4).map(request => (
+                            <div key={request.id} className="rounded-2xl border border-cyan-500/15 bg-black/40 px-4 py-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">{request.name}</div>
+                                        <div className="mt-1 text-xs text-slate-500">{request.requestNumber}</div>
+                                    </div>
+                                    <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold ${statusStyles[request.status]}`}>
+                                        {requestStatusLabel(request.status)}
+                                    </span>
+                                </div>
+                                <div className="mt-2 text-sm text-slate-400">{request.delivery}</div>
+                                <div className="mt-2 text-xs text-slate-500">Updated {request.lastUpdated}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-5 rounded-2xl border border-cyan-500/15 bg-black/40 p-4">
+                        <div className="text-sm font-semibold text-white">Workspace activity feed</div>
+                        <div className="mt-3 space-y-3">
+                            {participantActivity.slice(0, 3).map(item => {
+                                const style = participantActivityStyles[item.type]
+                                return (
+                                    <div key={item.label} className="flex items-start gap-3">
+                                        <span className={`mt-1 h-2.5 w-2.5 rounded-full ${style.dot}`} />
+                                        <div>
+                                            <div className="text-sm text-slate-200">{item.label}</div>
+                                            <div className="text-xs text-slate-500">{item.ts}</div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </SurfaceCard>
             </div>
         </section>
     )

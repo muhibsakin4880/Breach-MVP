@@ -1,37 +1,13 @@
 import React from 'react'
+import {
+    chargebackSummary,
+    usageAnomalies as anomalies,
+    usageDatasetRows as datasetRows,
+    usageSummaryStats as summaryStats,
+    usageTrendData as trendData
+} from '../data/pipelineOpsData'
 
 type AnomalyTone = 'alert' | 'warn' | 'resolved'
-
-const summaryStats = [
-    { label: 'Total API Calls This Month', value: '48,291', hint: 'Month-to-date' },
-    { label: 'Active Participants', value: '89', hint: 'Signed-in uniques' },
-    { label: 'Datasets Queried', value: '24', hint: 'Distinct datasets' },
-    { label: 'Anomalous Queries Flagged', value: '3', hint: 'Requires review' }
-]
-
-const datasetRows = [
-    { dataset: 'Global Climate 2020-2024', queries: '12,847', participants: 34, confidence: '96%', revenue: '$9,847' },
-    { dataset: 'Financial Tick Data', queries: '9,234', participants: 21, confidence: '94%', revenue: '$7,234' },
-    { dataset: 'Consumer Behavior Analytics', queries: '7,891', participants: 18, confidence: '89%', revenue: '$5,891' },
-    { dataset: 'Clinical Outcomes Delta', queries: '4,234', participants: 9, confidence: '92%', revenue: '$3,234' },
-    { dataset: 'Genomics Research Dataset', queries: '2,891', participants: 7, confidence: '91%', revenue: '$2,891' }
-]
-
-const trendData = [
-    { label: 'Mon', value: 6200 },
-    { label: 'Tue', value: 7100 },
-    { label: 'Wed', value: 6800 },
-    { label: 'Thu', value: 7400 },
-    { label: 'Fri', value: 8200 },
-    { label: 'Sat', value: 5900 },
-    { label: 'Sun', value: 6691 }
-]
-
-const anomalies = [
-    { id: 'part_anon_031', detail: '847 calls in 10 minutes', action: 'Rate limit triggered', status: 'Flagged', tone: 'alert' as AnomalyTone },
-    { id: 'part_anon_067', detail: 'Unusual geographic access pattern', action: 'Under review', status: 'Under review', tone: 'warn' as AnomalyTone },
-    { id: 'part_anon_012', detail: 'Repeated failed auth attempts', action: 'Resolved', status: 'Resolved', tone: 'resolved' as AnomalyTone }
-]
 
 const toneStyles: Record<AnomalyTone, string> = {
     alert: 'border-rose-500/40 bg-rose-500/10 shadow-[0_10px_40px_rgba(244,63,94,0.25)]',
@@ -197,22 +173,22 @@ export default function UsageAnalyticsPage() {
                                 Export Chargeback Report
                             </button>
                         </div>
-                        <div className="relative mt-6 grid gap-4 sm:grid-cols-3">
-                            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total billable usage</p>
-                                <p className="mt-2 text-xl font-semibold text-white">$29,097</p>
+                            <div className="relative mt-6 grid gap-4 sm:grid-cols-3">
+                                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                                    <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total billable usage</p>
+                                    <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.totalBillableUsage}</p>
+                                </div>
+                                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                                    <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Launch settlement fee (15%)</p>
+                                    <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.settlementFee}</p>
+                                </div>
+                                <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
+                                    <p className="text-xs uppercase tracking-[0.12em] text-emerald-200">Provider payouts</p>
+                                    <p className="mt-2 text-xl font-semibold text-emerald-100">{chargebackSummary.providerPayouts}</p>
+                                </div>
                             </div>
-                            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Launch settlement fee (15%)</p>
-                                <p className="mt-2 text-xl font-semibold text-white">$4,365</p>
-                            </div>
-                            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
-                                <p className="text-xs uppercase tracking-[0.12em] text-emerald-200">Provider payouts</p>
-                                <p className="mt-2 text-xl font-semibold text-emerald-100">$24,732</p>
-                            </div>
-                        </div>
-                    </article>
-                </section>
+                        </article>
+                    </section>
             </div>
         </div>
     )
