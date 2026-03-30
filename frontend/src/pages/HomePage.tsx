@@ -736,7 +736,7 @@ const joinSegments = [
                         <nav className="hidden md:flex items-center gap-8 text-sm">
                             <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
                             <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
-                            <a href="#solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</a>
+                            <Link to="/solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</Link>
                             <a href="#join" className="text-slate-300 hover:text-white transition-colors">Join</a>
                         </nav>
                         <div className="flex items-center gap-3">
@@ -1009,9 +1009,9 @@ const joinSegments = [
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
 
                 {/* ════════════════════════════════════════
-                    SOLUTIONS
+                    CONFIDENCE LAYERS
                 ════════════════════════════════════════ */}
-                <section id="solutions" className="py-32 bg-slate-950 relative">
+                <section id="confidence-layer" className="py-32 bg-slate-950 relative">
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,182,212,0.03)_0%,transparent_100%)]" />
                     <div ref={solutionsRef.ref} className="max-w-6xl mx-auto px-6 relative">
                         <MotionReveal inView={solutionsRef.inView} reducedMotion={prefersReducedMotion}>
@@ -1047,12 +1047,12 @@ const joinSegments = [
                                             </div>
                                             <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-cyan-300 transition-colors">{item.title}</h3>
                                             <p className="text-slate-400 text-sm leading-6 mb-4">{item.desc}</p>
-                                            <a href="#" className="inline-flex items-center gap-2 text-cyan-400 text-sm transition-colors hover:text-cyan-300">
-                                                Explore layer
+                                            <Link to="/solutions" className="inline-flex items-center gap-2 text-cyan-400 text-sm transition-colors hover:text-cyan-300">
+                                                Open solutions
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                                 </svg>
-                                            </a>
+                                            </Link>
                                         </div>
                                     </TiltCard>
                                 </MotionReveal>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 type Persona = {
     id: string
@@ -29,13 +29,15 @@ const personas: Persona[] = [
     }
 ]
 
-const guidedSteps: GuidedStep[] = [
+const joinPath = (prefix: string, path: string) => `${prefix}${path}`
+
+const buildGuidedSteps = (prefix: string): GuidedStep[] => [
     {
         id: 1,
         title: 'Review Dataset Trust',
         description: 'Browse verified datasets and check confidence scores before requesting access',
         buttonLabel: 'Go to Datasets →',
-        to: '/datasets',
+        to: joinPath(prefix, '/datasets'),
         highlight: 'Recommended first step'
     },
     {
@@ -43,59 +45,59 @@ const guidedSteps: GuidedStep[] = [
         title: 'Submit Access Request',
         description: 'Submit a purpose-driven request. Risk score will be auto-calculated.',
         buttonLabel: 'Go to Access Requests →',
-        to: '/access-requests'
+        to: joinPath(prefix, '/access-requests')
     },
     {
         id: 3,
         title: 'Set Consent Terms',
         description: 'Define legal basis, purpose, and expiration for each access',
         buttonLabel: 'Go to Consent →',
-        to: '/consent-tracker'
+        to: joinPath(prefix, '/consent-tracker')
     },
     {
         id: 4,
         title: 'Monitor via Escrow',
         description: 'Track payment, access window, and release or dispute',
         buttonLabel: 'Go to Escrow Center →',
-        to: '/escrow-center'
+        to: joinPath(prefix, '/escrow-center')
     },
     {
         id: 5,
         title: 'Review Audit Trail',
         description: 'Verify all access events are logged and hash-verified',
         buttonLabel: 'Go to Audit Trail →',
-        to: '/audit-trail'
+        to: joinPath(prefix, '/audit-trail')
     },
     {
         id: 6,
         title: 'Verify Your Trust Standing',
         description: "Review your trust standing and confirm your profile is audit-ready",
         buttonLabel: 'Go to Trust Profile →',
-        to: '/trust-profile'
+        to: joinPath(prefix, '/trust-profile')
     }
 ]
 
-const providerSteps: GuidedStep[] = [
+const buildProviderSteps = (prefix: string): GuidedStep[] => [
     {
         id: 1,
         title: 'Publish Your Dataset',
         description: 'Upload and tag your dataset with confidence score and classification labels',
         buttonLabel: 'Go to Datasets →',
-        to: '/datasets'
+        to: joinPath(prefix, '/datasets')
     },
     {
         id: 2,
         title: 'Define Access Policy',
         description: 'Set who can request access, under what purpose, and for how long',
         buttonLabel: 'Go to Access Requests →',
-        to: '/access-requests'
+        to: joinPath(prefix, '/access-requests')
     },
     {
         id: 3,
         title: 'Review Incoming Requests',
         description: 'Approve or reject purpose-driven access requests from verified buyers',
         buttonLabel: 'Go to Access Requests →',
-        to: '/access-requests',
+        to: joinPath(prefix, '/access-requests'),
         highlight: 'Action required'
     },
     {
@@ -103,27 +105,29 @@ const providerSteps: GuidedStep[] = [
         title: 'Confirm Escrow Release',
         description: 'Verify payment is secured before granting access window',
         buttonLabel: 'Go to Escrow Center →',
-        to: '/escrow-center'
+        to: joinPath(prefix, '/escrow-center')
     },
     {
         id: 5,
         title: 'Monitor Access Activity',
         description: 'Track all access events via immutable audit trail',
         buttonLabel: 'Go to Audit Trail →',
-        to: '/audit-trail'
+        to: joinPath(prefix, '/audit-trail')
     },
     {
         id: 6,
         title: 'Verify Your Trust Standing',
         description: 'Review your provider trust score and ensure your profile is audit-ready',
         buttonLabel: 'Go to Trust Profile →',
-        to: '/trust-profile'
+        to: joinPath(prefix, '/trust-profile')
     }
 ]
 
 export default function GuidedTourPage() {
+    const location = useLocation()
     const [selectedPersona, setSelectedPersona] = useState('consumer')
     const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set())
+    const routePrefix = location.pathname.startsWith('/demo') ? '/demo' : ''
 
     const handleStepClick = (stepId: number) => {
         setVisitedSteps(prev => new Set(prev).add(stepId))
@@ -133,7 +137,7 @@ export default function GuidedTourPage() {
     const trustScore = Math.min(50 + (visitedSteps.size * 5), 80)
     const pendingConsents = visitedSteps.has(3) ? 0 : 1
 
-    const currentSteps = selectedPersona === 'provider' ? providerSteps : guidedSteps
+    const currentSteps = selectedPersona === 'provider' ? buildProviderSteps(routePrefix) : buildGuidedSteps(routePrefix)
 
     return (
         <div className="relative min-h-screen bg-[#050b15] text-white">
@@ -254,7 +258,7 @@ export default function GuidedTourPage() {
                             Need help? Visit the Trust Glossary for plain-language explanations
                         </div>
                         <Link
-                            to="/trust-glossary"
+                            to={joinPath(routePrefix, '/trust-glossary')}
                             className="inline-flex items-center justify-center rounded-lg border border-blue-500/50 px-4 py-2 text-sm font-semibold text-blue-200 hover:bg-blue-500/10"
                         >
                             Open Glossary

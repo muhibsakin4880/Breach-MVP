@@ -49,6 +49,8 @@ import DataLineagePage from './pages/DataLineagePage'
 import CompliancePassportPage from './pages/CompliancePassportPage'
 import RightsQuoteBuilderPage from './pages/RightsQuoteBuilderPage'
 import EscrowCheckoutPage from './pages/EscrowCheckoutPage'
+import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
+import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -180,6 +182,29 @@ function App() {
                     <Route index element={<HomePage />} />
                     <Route path="about" element={<AboutPage />} />
                     <Route path="solutions" element={<SolutionsPage />} />
+                    <Route path="pilot-walkthrough" element={<PilotWalkthroughPage />} />
+                    <Route path="protected-evaluation" element={<ProtectedEvaluationPage />} />
+                    <Route path="demo" element={<GuidedTourPage />} />
+                    <Route path="demo/guided-tour" element={<GuidedTourPage />} />
+                    <Route path="demo/datasets" element={<DatasetsPage />} />
+                    <Route path="demo/datasets/:id" element={<DatasetDetailPage />} />
+                    <Route path="demo/datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />
+                    <Route path="demo/datasets/:id/escrow-checkout" element={<EscrowCheckoutPage />} />
+                    <Route path="demo/datasets/:id/quality-breakdown" element={<DatasetQualityBreakdownPage />} />
+                    <Route path="demo/access-requests" element={<AccessRequestsPage />} />
+                    <Route path="demo/access-requests/:requestId" element={<AccessRequestDetailPage />} />
+                    <Route path="demo/requests" element={<Navigate to="/demo/access-requests" replace />} />
+                    <Route path="demo/escrow-center" element={<EscrowCenterPage />} />
+                    <Route path="demo/trust-profile" element={<TrustProfilePage />} />
+                    <Route path="demo/compliance-passport" element={<CompliancePassportPage />} />
+                    <Route path="demo/audit-trail" element={<AuditTrailPage />} />
+                    <Route path="demo/consent-tracker" element={<ConsentTrackerPage />} />
+                    <Route path="demo/trust-glossary" element={<TrustGlossaryPage />} />
+                    <Route path="demo/secure-enclave" element={<SecureEnclavePage />} />
+                    <Route path="demo/deployment-model" element={<DeploymentModelPage />} />
+                    <Route path="demo/security-ops" element={<SecurityOperationsPage />} />
+                    <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
+                    <Route path="demo/data-classification" element={<DataClassificationPage />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path="onboarding" element={RequireOnboardingAccess(<OnboardingPage />)} />
