@@ -1,739 +1,502 @@
-import { Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import AdminLayout from '../components/admin/AdminLayout'
 import { useAuth } from '../contexts/AuthContext'
-import LogoMark from '../components/LogoMark'
+import {
+    adminVisibilityBoundaries,
+    approvalBlockers,
+    deploymentSurfaces,
+    evidenceEvents,
+    evidencePacks,
+    incidentEvidenceRecords
+} from '../data/adminEvidenceData'
 import {
     buildDealLifecycleSummary,
-    buildPassportReminderSummary,
-    buildDealTriageSummary,
-    buildReleaseReadinessSummary,
     buildRightsRiskSummary,
-    dealLifecycleStageMeta,
-    dealRiskMeta,
-    dealTriageMeta,
-    dealUrgencyMeta,
-    passportReminderMeta,
-    releaseReadinessMeta,
-    rightsRiskMeta,
     loadSharedDealLifecycleRecords
 } from '../domain/dealLifecycle'
 
-const menuItems = [
-    { label: 'Dashboard Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', path: '/admin/dashboard' },
-    { label: 'User Management', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', path: '/admin/user-management' },
-    { label: 'Provider & Dataset', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4', path: '/admin/provider-dataset' },
-    { label: 'Security & Compliance', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', path: '/admin/security-compliance' },
-    { label: 'Operations', icon: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01', path: '/admin/operations' },
-    { label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', path: '/admin/notifications' },
-    { label: 'Onboarding Queue', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', path: '/admin/onboarding-queue' },
-    { label: 'AI Interrogation Logs', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', path: '/admin/ai-interrogation-logs' },
-    { label: 'Escrow Vault', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', path: '/admin/escrow-vault' },
-    { label: 'Active Ephemeral Tokens', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z', path: '/admin/ephemeral-tokens' },
-    { label: 'Audit Trail', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', path: '/admin/audit-trail' },
-    { label: 'Incident Response', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', path: '/admin/incident-response' },
-]
+type SummaryTone = 'cyan' | 'amber' | 'emerald' | 'red'
 
-const interrogationData = [
-    { timestamp: '2026-03-22 14:32:07', vendorId: 'VND-7821', dataset: 'Financial_Records_Q4_2025', status: 'Quarantined', action: 'Block' },
-    { timestamp: '2026-03-22 14:31:54', vendorId: 'VND-3390', dataset: 'Customer_PII_Index', status: 'Scanning', action: 'Review' },
-    { timestamp: '2026-03-22 14:31:42', vendorId: 'VND-1156', dataset: 'Healthcare_Compliance_Set', status: 'Clean', action: 'Review' },
-    { timestamp: '2026-03-22 14:31:29', vendorId: 'VND-8847', dataset: 'E-Commerce_Transactions', status: 'Clean', action: 'Review' },
-    { timestamp: '2026-03-22 14:31:15', vendorId: 'VND-2293', dataset: 'Social_Media_Metrics_DB', status: 'Quarantined', action: 'Block' },
-    { timestamp: '2026-03-22 14:30:58', vendorId: 'VND-5501', dataset: 'IoT_Sensor_Raw_Data', status: 'Scanning', action: 'Review' },
-]
+type SectionHeaderProps = {
+    title: string
+    detail: string
+    actionLabel?: string
+    actionTo?: string
+}
 
-const alertsData = [
-    { type: 'critical', message: 'PII detected in Dataset #492' },
-    { type: 'warning', message: 'Failed API token attempt from 192.168.1.44' },
-    { type: 'critical', message: 'Unusual bulk access pattern detected' },
-    { type: 'warning', message: 'Token expiration surge: 847 tokens/hour' },
-    { type: 'info', message: 'Scheduled audit backup completed' },
-]
+const severityOrder = {
+    High: 0,
+    Medium: 1,
+    Low: 2
+} as const
 
-export default function AdminDashboard() {
-    const { isAuthenticated, signOut } = useAuth()
-    const navigate = useNavigate()
-    const location = useLocation()
+const toneClasses: Record<SummaryTone, string> = {
+    cyan: 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300',
+    amber: 'border-amber-500/20 bg-amber-500/10 text-amber-300',
+    emerald: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
+    red: 'border-red-500/20 bg-red-500/10 text-red-300'
+}
+
+const badgeClasses = {
+    Critical: 'border-red-500/25 bg-red-500/10 text-red-300',
+    High: 'border-red-500/25 bg-red-500/10 text-red-300',
+    Medium: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+    Low: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    Ready: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    'In Review': 'border-cyan-500/25 bg-cyan-500/10 text-cyan-300',
+    Blocked: 'border-red-500/25 bg-red-500/10 text-red-300',
+    Verified: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    Review: 'border-cyan-500/25 bg-cyan-500/10 text-cyan-300',
+    Exception: 'border-red-500/25 bg-red-500/10 text-red-300',
+    Contained: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    Investigating: 'border-amber-500/25 bg-amber-500/10 text-amber-300'
+} as const
+
+const summaryIcons = {
+    protectedEvaluations:
+        'M12 11c0-1.657 1.343-3 3-3h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8a2 2 0 012-2h2c1.657 0 3 1.343 3 3zm0 0V7a4 4 0 118 0v4',
+    approvalsPending:
+        'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+    policyExceptions:
+        'M12 9v2m0 4h.01m-7.938 4h15.876c1.313 0 2.233-1.267 1.843-2.521L13.843 4.52c-.39-1.254-2.296-1.254-2.686 0L2.219 16.479C1.829 17.733 2.749 19 4.062 19z',
+    evidenceReady:
+        'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+}
+
+const panelClass = 'overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 shadow-2xl shadow-black/20'
+const subpanelClass = 'rounded-lg border border-slate-800/70 bg-slate-950/45'
+const actionLinkClass =
+    'rounded-md border border-slate-700/70 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-300 transition-all duration-200 hover:bg-slate-800/60'
+
+const sortBlockers = [...approvalBlockers].sort((left, right) => {
+    const severityDelta = severityOrder[left.severity] - severityOrder[right.severity]
+    if (severityDelta !== 0) return severityDelta
+    return new Date(left.deadline).getTime() - new Date(right.deadline).getTime()
+})
+
+const prioritizedEvidencePacks = [...evidencePacks].sort((left, right) => {
+    const priority = { Blocked: 0, 'In Review': 1, Ready: 2 } as const
+    return priority[left.status] - priority[right.status]
+})
+
+const prioritizedIncidents = [...incidentEvidenceRecords].sort((left, right) => {
+    const priority = { Critical: 0, High: 1, Medium: 2 } as const
+    return priority[left.severity] - priority[right.severity]
+})
+
+function SectionHeader({ title, detail, actionLabel, actionTo }: SectionHeaderProps) {
+    return (
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800/60 px-5 py-4">
+            <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">{title}</h2>
+                <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{detail}</p>
+            </div>
+            {actionLabel && actionTo ? (
+                <Link to={actionTo} className={actionLinkClass}>
+                    {actionLabel}
+                </Link>
+            ) : null}
+        </div>
+    )
+}
+
+export default function AdminDashboardPage() {
+    const { isAuthenticated } = useAuth()
+
+    if (!isAuthenticated) {
+        return <Navigate to="/admin/login" replace />
+    }
+
     const dealRecords = loadSharedDealLifecycleRecords()
-    const dealLifecycleSummary = buildDealLifecycleSummary(dealRecords)
-    const dealTriageSummary = buildDealTriageSummary(dealRecords)
-    const releaseReadinessSummary = buildReleaseReadinessSummary(dealRecords)
-    const passportReminderSummary = buildPassportReminderSummary(dealRecords)
+    const lifecycleSummary = buildDealLifecycleSummary(dealRecords)
     const rightsRiskSummary = buildRightsRiskSummary(dealRecords)
-    const triageActionQueue = dealTriageSummary.actionableQueue.slice(0, 4)
-    const releaseActionQueue = releaseReadinessSummary.actionable.slice(0, 3)
-    const rightsFlagQueue = rightsRiskSummary.flagged.slice(0, 3)
+    const protectedEvaluationCount =
+        lifecycleSummary.evaluationLiveCount + lifecycleSummary.workspacesProvisioningCount
+    const approvalsPendingCount = approvalBlockers.length
+    const investigatingIncidentCount = incidentEvidenceRecords.filter((record) => record.status === 'Investigating').length
+    const policyExceptionCount =
+        rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount + investigatingIncidentCount
+    const evidenceReadyCount = evidencePacks.filter((pack) => pack.status === 'Ready').length
 
-    if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+    const highPriorityCount = sortBlockers.filter((blocker) => blocker.severity === 'High').length
+    const mediumPriorityCount = sortBlockers.filter((blocker) => blocker.severity === 'Medium').length
+    const lowPriorityCount = sortBlockers.filter((blocker) => blocker.severity === 'Low').length
 
-    const handleLogout = () => {
-        signOut()
-        navigate('/admin/login')
-    }
+    const readyPackCount = evidencePacks.filter((pack) => pack.status === 'Ready').length
+    const inReviewPackCount = evidencePacks.filter((pack) => pack.status === 'In Review').length
+    const blockedPackCount = evidencePacks.filter((pack) => pack.status === 'Blocked').length
 
-    const getActiveMenu = (path: string) => {
-        return location.pathname === path
-    }
+    const verifiedEventCount = evidenceEvents.filter((event) => event.status === 'Verified').length
+    const reviewEventCount = evidenceEvents.filter((event) => event.status === 'Review').length
+    const exceptionEventCount = evidenceEvents.filter((event) => event.status === 'Exception').length
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'Clean':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">Clean</span>
-            case 'Quarantined':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-red-500/10 text-red-400/80 border border-red-500/20">Quarantined</span>
-            case 'Scanning':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-amber-500/10 text-amber-400/80 border border-amber-500/20 animate-pulse">Scanning</span>
-            default:
-                return null
+    const nearSignoffSurfaceCount = deploymentSurfaces.filter((surface) =>
+        surface.evaluationStatus.toLowerCase().includes('ready')
+    ).length
+    const blockedSurfaceCount = deploymentSurfaces.filter((surface) =>
+        surface.evidenceStatus.toLowerCase().includes('blocked')
+    ).length
+
+    const summaryCards = [
+        {
+            label: 'Protected evaluations',
+            value: protectedEvaluationCount,
+            detail: `${lifecycleSummary.evaluationLiveCount} active workspaces · ${lifecycleSummary.workspacesProvisioningCount} preparing`,
+            tone: 'cyan' as SummaryTone,
+            icon: summaryIcons.protectedEvaluations
+        },
+        {
+            label: 'Approvals pending',
+            value: approvalsPendingCount,
+            detail: `${highPriorityCount} high-priority decisions open`,
+            tone: 'amber' as SummaryTone,
+            icon: summaryIcons.approvalsPending
+        },
+        {
+            label: 'Policy exceptions',
+            value: policyExceptionCount,
+            detail: `${rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} rights signals · ${investigatingIncidentCount} active investigations`,
+            tone: 'red' as SummaryTone,
+            icon: summaryIcons.policyExceptions
+        },
+        {
+            label: 'Evidence packs ready',
+            value: evidenceReadyCount,
+            detail: `${inReviewPackCount} still in review · ${blockedPackCount} blocked`,
+            tone: 'emerald' as SummaryTone,
+            icon: summaryIcons.evidenceReady
         }
-    }
+    ]
 
-    const getAlertStyle = (type: string) => {
-        switch (type) {
-            case 'critical':
-                return 'border-l-[3px] border-rose-500/60 bg-slate-950/60 backdrop-blur-sm'
-            case 'warning':
-                return 'border-l-[3px] border-amber-500/50 bg-slate-950/40 backdrop-blur-sm'
-            case 'info':
-                return 'border-l-[3px] border-cyan-500/40 bg-slate-950/40 backdrop-blur-sm'
-            default:
-                return ''
+    const postureCards = [
+        {
+            title: 'Review posture',
+            value: `${approvalsPendingCount} open`,
+            detail: `${highPriorityCount} high · ${mediumPriorityCount} medium · ${lowPriorityCount} low`
+        },
+        {
+            title: 'Visibility posture',
+            value: `${adminVisibilityBoundaries.length} boundaries`,
+            detail: 'Metadata-first admin visibility with protected evaluation surfaces kept outside default view.'
+        },
+        {
+            title: 'Deployment posture',
+            value: `${nearSignoffSurfaceCount} near approval`,
+            detail: `${blockedSurfaceCount} environments remain held by evidence or residency conditions`
         }
-    }
-
-    const getToneClasses = (tone: 'slate' | 'cyan' | 'amber' | 'emerald' | 'red') => {
-        switch (tone) {
-            case 'cyan':
-                return 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300'
-            case 'amber':
-                return 'border-amber-500/20 bg-amber-500/10 text-amber-300'
-            case 'emerald':
-                return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
-            case 'red':
-                return 'border-red-500/20 bg-red-500/10 text-red-300'
-            default:
-                return 'border-slate-700/60 bg-slate-800/50 text-slate-300'
-        }
-    }
+    ]
 
     return (
-        <div className="min-h-screen bg-slate-950 flex">
-            <aside className="w-56 bg-gradient-to-b from-slate-950/95 to-slate-950 border-r border-slate-800/50 flex flex-col backdrop-blur-xl overflow-hidden">
-                <div className="p-5 border-b border-slate-800/60">
-                    <div className="flex items-center gap-3">
-                        <LogoMark className="w-9 h-9" />
-                        <div className="flex flex-col">
-                            <span className="text-[11px] font-semibold text-slate-300 tracking-[0.15em]">REDOUBT</span>
-                            <span className="text-[9px] text-slate-600 tracking-[0.2em] mt-0.5">ADMIN CONSOLE</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="px-3 pt-4">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/50 border border-slate-800/50 rounded-lg mb-4">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        <span className="text-[10px] font-medium text-slate-400 tracking-wider">SYSTEM SECURE</span>
-                    </div>
-                </div>
-
-                <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.label}
-                            onClick={() => item.path && navigate(item.path)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-[11px] font-medium tracking-wide transition-all duration-200 rounded-lg ${
-                                getActiveMenu(item.path || '')
-                                    ? 'bg-slate-800/80 text-slate-200 shadow-lg shadow-black/20'
-                                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900/60'
-                            }`}
+        <AdminLayout title="CONTROL DASHBOARD" subtitle="GOVERNANCE, EVIDENCE & EXCEPTIONS">
+            <div className="space-y-6">
+                <section className="grid grid-cols-12 gap-4">
+                    {summaryCards.map((card) => (
+                        <div
+                            key={card.label}
+                            className="col-span-3 rounded-xl border border-slate-800/60 bg-slate-900/65 p-5 shadow-2xl shadow-black/20"
                         >
-                            <svg className="w-4 h-4 flex-shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                            </svg>
-                            <span>{item.label}</span>
-                        </button>
-                    ))}
-                </nav>
-
-                <div className="p-3 border-t border-slate-800/60 mt-auto">
-                    <button
-                        onClick={() => navigate('/admin/settings')}
-                        className={`w-full flex items-center gap-2.5 px-2 py-2 text-[10px] font-medium tracking-wider rounded-md border transition-all duration-200 mb-3 ${
-                            getActiveMenu('/admin/settings')
-                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                : 'border-slate-800/60 text-slate-500 hover:text-slate-300 hover:border-slate-700/80 hover:bg-slate-900/60'
-                        }`}
-                    >
-                        <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.427 1.756 2.925 0 3.352a1.724 1.724 0 00-1.066 2.572c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.427 1.756-2.925 1.756-3.352 0a1.724 1.724 0 00-2.572-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.427-1.756-2.925 0-3.352a1.724 1.724 0 001.066-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75A3.75 3.75 0 1012 8.25a3.75 3.75 0 000 7.5z" />
-                        </svg>
-                        <span>SETTINGS</span>
-                    </button>
-
-                    <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-900/40 rounded-md border border-slate-800/30">
-                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        <span className="text-[9px] text-slate-600 font-medium tracking-wider">ENCRYPTED SESSION</span>
-                    </div>
-                </div>
-            </aside>
-
-            <main className="flex-1 flex flex-col">
-                <header className="h-14 border-b border-slate-800/60 flex items-center justify-between px-6 bg-slate-950/50 backdrop-blur-xl">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-[13px] font-semibold text-slate-200 tracking-[0.08em]">{menuItems.find(m => m.path === location.pathname)?.label.toUpperCase() || 'DASHBOARD'}</h1>
-                        <div className="w-px h-4 bg-slate-800" />
-                        <span className="text-[10px] text-slate-600 font-medium tracking-wider">ADMINISTRATOR ACCESS</span>
-                    </div>
-                    <div className="flex items-center gap-5">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-emerald-500/80 rounded-full shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
-                            <span className="text-[10px] font-medium text-slate-400 tracking-wider">OPERATIONAL</span>
-                        </div>
-                        <span className="text-[10px] font-mono text-slate-600">{new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC</span>
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-medium tracking-wider text-slate-500 hover:text-slate-300 border border-slate-800/60 hover:border-slate-700/80 rounded-md transition-all duration-200"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            SIGN OUT
-                        </button>
-                    </div>
-                </header>
-
-                <div className="flex-1 p-6 overflow-auto">
-                    <div className="grid grid-cols-12 gap-5 mb-6">
-                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-amber-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Pending Clearances</span>
-                                </div>
-                            </div>
-                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">127</span>
-                            <div className="mt-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">QUEUE UTILIZATION</span>
-                                    <span className="text-[9px] text-slate-500 font-medium">34%</span>
-                                </div>
-                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-amber-500/60 to-amber-500/30 rounded-full" style={{ width: '34%' }} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-cyan-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Active Data Tokens</span>
-                                </div>
-                            </div>
-                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">8,472</span>
-                            <div className="mt-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">TOKEN UTILIZATION</span>
-                                    <span className="text-[9px] text-slate-500 font-medium">72%</span>
-                                </div>
-                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-cyan-500/60 to-cyan-500/30 rounded-full" style={{ width: '72%' }} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-red-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Quarantined</span>
-                                </div>
-                            </div>
-                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">23</span>
-                            <div className="mt-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">SECURITY THREATS</span>
-                                    <span className="text-[9px] text-slate-500 font-medium">12%</span>
-                                </div>
-                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-red-500/60 to-red-500/30 rounded-full" style={{ width: '12%' }} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-emerald-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Escrow Volume</span>
-                                </div>
-                            </div>
-                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">$2.4M</span>
-                            <div className="mt-4">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">FUND ALLOCATION</span>
-                                    <span className="text-[9px] text-slate-500 font-medium">89%</span>
-                                </div>
-                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-emerald-500/60 to-emerald-500/30 rounded-full" style={{ width: '89%' }} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-12 gap-5 mb-6">
-                        <div className="col-span-7 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+                            <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Deal Lifecycle Foundation</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">
-                                        Shared scoring model for passport, quote, checkout, validation, credit, and release.
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                        {card.label}
+                                    </p>
+                                    <p className="mt-3 text-4xl font-semibold tracking-tight text-slate-100">
+                                        {card.value}
                                     </p>
                                 </div>
-                                <div className="px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-semibold text-cyan-300 tracking-[0.12em] uppercase">
-                                    {dealLifecycleSummary.blockedCount} blocked
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-6 gap-3 px-5 py-5 border-b border-slate-800/40">
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Active Passports</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.activePassportCount}</div>
-                                </div>
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Quotes Ready</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.quotePreparedCount}</div>
-                                </div>
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Funded Checkouts</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.fundedCheckoutCount}</div>
-                                </div>
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Provisioning</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.workspacesProvisioningCount}</div>
-                                </div>
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Release Backlog</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.releaseBacklogCount}</div>
-                                </div>
-                                <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
-                                    <div className="text-[9px] text-slate-600 tracking-[0.12em] uppercase">Engine Failures</div>
-                                    <div className="mt-2 text-2xl font-semibold text-slate-100">{dealLifecycleSummary.engineFailureCount}</div>
-                                </div>
-                            </div>
-
-                            <div className="px-5 py-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Stage Distribution</span>
-                                    <span className="text-[9px] text-slate-600 tracking-wider">
-                                        {dealLifecycleSummary.humanReviewCount} human review lane(s)
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {[
-                                        'passport_incomplete',
-                                        'quote_prepared',
-                                        'workspace_provisioning',
-                                        'evaluation_live',
-                                        'awaiting_validation',
-                                        'release_ready'
-                                    ].map((stageKey) => {
-                                        const stage = stageKey as keyof typeof dealLifecycleStageMeta
-                                        const meta = dealLifecycleStageMeta[stage]
-                                        return (
-                                            <div key={stage} className="rounded-lg border border-slate-800/60 bg-slate-950/40 p-3">
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="text-[10px] text-slate-300">{meta.label}</span>
-                                                    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[9px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
-                                                        {dealLifecycleSummary.stageCounts[stage]}
-                                                    </span>
-                                                </div>
-                                                <p className="mt-2 text-[9px] leading-relaxed text-slate-600">{meta.detail}</p>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Automated Deal Triage</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Deals are now routed automatically by stage, risk, urgency, and approval policy.</p>
-                                </div>
-                                <div className="text-[9px] text-slate-600 tracking-wider">
-                                    {dealTriageSummary.manualCount} manual
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-5 gap-2 px-5 py-4 border-b border-slate-800/40">
-                                {(['blocked', 'human_approval', 'review_now', 'watch', 'auto_advance'] as const).map((lane) => {
-                                    const meta = dealTriageMeta[lane]
-                                    return (
-                                        <div key={lane} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
-                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
-                                                {meta.label}
-                                            </div>
-                                            <div className="mt-2 text-xl font-semibold text-slate-100">
-                                                {dealTriageSummary.laneCounts[lane]}
-                                            </div>
-                                            <p className="mt-1 text-[8px] leading-relaxed text-slate-600">{meta.detail}</p>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            <div className="divide-y divide-slate-800/30">
-                                {triageActionQueue.map((deal) => {
-                                    const stageMeta = dealLifecycleStageMeta[deal.stage]
-                                    const riskMeta = dealRiskMeta[deal.risk]
-                                    const urgencyMeta = dealUrgencyMeta[deal.urgency]
-                                    const triageMeta = dealTriageMeta[deal.triageLane]
-
-                                    return (
-                                        <div key={deal.id} className="px-5 py-4">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
-                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                        {deal.recommendedOwner} · {deal.queue.replace('_', ' ')} · SLA {deal.triageSla}
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(triageMeta.tone)}`}>
-                                                        {triageMeta.label}
-                                                    </div>
-                                                    <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(stageMeta.tone)}`}>
-                                                        {stageMeta.label}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(riskMeta.tone)}`}>
-                                                    {riskMeta.label}
-                                                </span>
-                                                <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(urgencyMeta.tone)}`}>
-                                                    {urgencyMeta.label} urgency
-                                                </span>
-                                                <span className="inline-flex items-center rounded-md border border-slate-700/60 bg-slate-800/50 px-2 py-1 text-[9px] font-semibold tracking-wider text-slate-300">
-                                                    {deal.approvalDisposition === 'auto_advance' ? 'Auto advance' : deal.approvalDisposition === 'human_review' ? 'Human review' : 'Blocked'}
-                                                </span>
-                                            </div>
-
-                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {deal.triageReason}
-                                            </p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                Next: {deal.nextAction}
-                                            </p>
-                                        </div>
-                                    )
-                                })}
-                                {triageActionQueue.length === 0 && (
-                                    <div className="px-5 py-5 text-[10px] text-slate-500">
-                                        No manual triage items are active. Current deals can continue in watch or auto-advance lanes.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-12 gap-5 mb-6">
-                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Release Readiness</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Automated checks decide what can release, what needs approval, and what stays frozen.</p>
-                                </div>
-                                <div className="text-[9px] text-slate-600 tracking-wider">
-                                    {releaseReadinessSummary.autoReleaseCount} safe
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
-                                {(['safe_to_release', 'human_approval', 'blocked'] as const).map((status) => {
-                                    const meta = releaseReadinessMeta[status]
-                                    return (
-                                        <div key={status} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
-                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
-                                                {meta.label}
-                                            </div>
-                                            <div className="mt-2 text-xl font-semibold text-slate-100">
-                                                {releaseReadinessSummary.statusCounts[status]}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            <div className="divide-y divide-slate-800/30">
-                                {releaseActionQueue.map((deal) => {
-                                    const readinessMeta = releaseReadinessMeta[deal.releaseReadiness.status]
-                                    return (
-                                        <div key={deal.id} className="px-5 py-4">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
-                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                        {deal.recommendedOwner} · readiness {deal.releaseReadiness.score}%
-                                                    </div>
-                                                </div>
-                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(readinessMeta.tone)}`}>
-                                                    {readinessMeta.label}
-                                                </div>
-                                            </div>
-                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {deal.releaseReadiness.summary}
-                                            </p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                Next: {deal.releaseReadiness.recommendedAction}
-                                            </p>
-                                        </div>
-                                    )
-                                })}
-                                {releaseActionQueue.length === 0 && (
-                                    <div className="px-5 py-5 text-[10px] text-slate-500">
-                                        No release candidates are active yet.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Passport Reminders</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Expiry, diligence gaps, and reuse blockers are grouped into a single reminder queue.</p>
-                                </div>
-                                <div className="text-[9px] text-slate-600 tracking-wider">
-                                    {passportReminderSummary.impactedDealCount} impacted
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
-                                {(['critical', 'warning', 'info'] as const).map((severity) => {
-                                    const meta = passportReminderMeta[severity]
-                                    return (
-                                        <div key={severity} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
-                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
-                                                {meta.label}
-                                            </div>
-                                            <div className="mt-2 text-xl font-semibold text-slate-100">
-                                                {passportReminderSummary.severityCounts[severity]}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            <div className="divide-y divide-slate-800/30">
-                                {passportReminderSummary.reminders.map((reminder) => {
-                                    const meta = passportReminderMeta[reminder.severity]
-                                    return (
-                                        <div key={reminder.id} className="px-5 py-4">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="text-[11px] font-semibold text-slate-200">{reminder.title}</div>
-                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
-                                                    {meta.label}
-                                                </div>
-                                            </div>
-                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{reminder.detail}</p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                Due: {reminder.dueLabel}
-                                            </p>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Rights Risk Scoring</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Only unusual or high-risk rights packages are pulled into the admin review lane.</p>
-                                </div>
-                                <div className="text-[9px] text-slate-600 tracking-wider">
-                                    {rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} flagged
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 px-5 py-4 border-b border-slate-800/40">
-                                {(['elevated', 'high', 'restricted'] as const).map((level) => {
-                                    const meta = rightsRiskMeta[level]
-                                    return (
-                                        <div key={level} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
-                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
-                                                {meta.label}
-                                            </div>
-                                            <div className="mt-2 text-xl font-semibold text-slate-100">
-                                                {rightsRiskSummary.levelCounts[level]}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            <div className="divide-y divide-slate-800/30">
-                                {rightsFlagQueue.map((deal) => {
-                                    const meta = rightsRiskMeta[deal.rightsRisk.level]
-                                    return (
-                                        <div key={deal.id} className="px-5 py-4">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
-                                                    <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                        rights risk {deal.rightsRisk.score} · {deal.queue.replace('_', ' ')}
-                                                    </div>
-                                                </div>
-                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
-                                                    {meta.label}
-                                                </div>
-                                            </div>
-                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {deal.rightsRisk.flags[0] ?? deal.rightsRisk.summary}
-                                            </p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                {deal.rightsRisk.summary}
-                                            </p>
-                                        </div>
-                                    )
-                                })}
-                                {rightsFlagQueue.length === 0 && (
-                                    <div className="px-5 py-5 text-[10px] text-slate-500">
-                                        No high-risk rights packages are active right now.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-12 gap-5">
-                        <div className="col-span-8 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Live Interrogation Feed</h2>
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-800/60 rounded-full">
-                                        <div className="w-1.5 h-1.5 bg-cyan-500/80 rounded-full animate-pulse shadow-[0_0_6px_rgba(6,185,185,0.5)]" />
-                                        <span className="text-[9px] font-semibold text-slate-500 tracking-wider">LIVE</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-[9px] text-slate-600 font-medium tracking-wider">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                    AI GUARDIAN ACTIVE
-                                </div>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-slate-950/40">
-                                        <tr className="text-[9px] font-semibold text-slate-600 tracking-[0.12em] uppercase">
-                                            <th className="text-left px-5 py-3 font-medium">Timestamp</th>
-                                            <th className="text-left px-5 py-3 font-medium">Vendor ID</th>
-                                            <th className="text-left px-5 py-3 font-medium">Dataset Name</th>
-                                            <th className="text-left px-5 py-3 font-medium">AI Status</th>
-                                            <th className="text-left px-5 py-3 font-medium">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-800/30">
-                                        {interrogationData.map((row, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-800/20 transition-colors duration-150">
-                                                <td className="px-5 py-4 text-[10px] font-mono text-slate-500">{row.timestamp}</td>
-                                                <td className="px-5 py-4 text-[10px] font-mono text-cyan-400/80">{row.vendorId}</td>
-                                                <td className="px-5 py-4 text-[10px] font-mono text-slate-300">{row.dataset}</td>
-                                                <td className="px-5 py-4">{getStatusBadge(row.status)}</td>
-                                                <td className="px-5 py-4">
-                                                    <button className={`text-[9px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-md transition-all duration-200 ${
-                                                        row.action === 'Block'
-                                                            ? 'border border-red-500/30 text-red-400/80 hover:bg-red-500/10 hover:border-red-500/50'
-                                                            : 'border border-slate-700/50 text-slate-400/80 hover:bg-slate-800/50 hover:border-slate-600/50'
-                                                    }`}>
-                                                        {row.action}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
-                            <div className="px-5 py-4 border-b border-slate-800/60">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Security Alerts</h2>
-                                    <span className="text-[9px] font-medium text-slate-600 tracking-wider">LAST 24H</span>
-                                </div>
-                            </div>
-                            <div className="divide-y divide-slate-800/30">
-                                {alertsData.map((alert, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`px-5 py-3.5 ${getAlertStyle(alert.type)}`}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            {alert.type === 'critical' && (
-                                                <div className="w-5 h-5 rounded-md bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-3 h-3 text-red-400/80" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                            {alert.type === 'warning' && (
-                                                <div className="w-5 h-5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-3 h-3 text-amber-400/80" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                            {alert.type === 'info' && (
-                                                <div className="w-5 h-5 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-3 h-3 text-cyan-400/80" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                            <span className="text-[11px] text-slate-400 leading-relaxed">{alert.message}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 bg-slate-900/40 backdrop-blur-xl border border-slate-800/40 rounded-xl p-4 shadow-2xl shadow-black/20">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-red-950/40 border border-red-900/30 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-red-500/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${toneClasses[card.tone]}`}>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
                                     </svg>
                                 </div>
-                                <div>
-                                    <h3 className="text-[11px] font-semibold text-slate-400 tracking-[0.08em] uppercase">Emergency Controls</h3>
-                                    <p className="text-[9px] text-slate-600 mt-0.5 tracking-wider">Requires dual authentication • Immediate effect</p>
-                                </div>
                             </div>
-                            <button className="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-red-400/80 border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 hover:border-red-800/60 rounded-lg transition-all duration-200">
-                                Global Kill-Switch
-                            </button>
+                            <p className="mt-4 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
+                        </div>
+                    ))}
+                </section>
+
+                <section className="grid grid-cols-12 gap-4">
+                    {postureCards.map((card) => (
+                        <div key={card.title} className={`col-span-4 ${subpanelClass} px-5 py-4`}>
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">{card.title}</p>
+                            <p className="mt-2 text-xl font-semibold text-slate-100">{card.value}</p>
+                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
+                        </div>
+                    ))}
+                </section>
+
+                <section className="grid grid-cols-12 gap-5">
+                    <div className={`col-span-8 ${panelClass}`}>
+                        <SectionHeader
+                            title="Governance Review Status"
+                            detail="The main queue stays focused on approval blockers, ownership, and the next control decision."
+                            actionLabel="Open review queue"
+                            actionTo="/admin/onboarding-queue"
+                        />
+                        <div className="grid grid-cols-12 gap-4 border-b border-slate-800/50 px-5 py-4">
+                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">High priority</p>
+                                <p className="mt-2 text-2xl font-semibold text-slate-100">{highPriorityCount}</p>
+                                <p className="mt-1 text-[10px] text-slate-500">Immediate legal, residency, or evidence decisions</p>
+                            </div>
+                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked packs</p>
+                                <p className="mt-2 text-2xl font-semibold text-slate-100">{blockedPackCount}</p>
+                                <p className="mt-1 text-[10px] text-slate-500">Signoff is held until evidence gaps are resolved</p>
+                            </div>
+                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Active incidents</p>
+                                <p className="mt-2 text-2xl font-semibold text-slate-100">{investigatingIncidentCount}</p>
+                                <p className="mt-1 text-[10px] text-slate-500">Containment remains tied to review IDs and evidence packs</p>
+                            </div>
+                        </div>
+                        <div className="divide-y divide-slate-800/35">
+                            {sortBlockers.map((blocker) => (
+                                <div key={blocker.id} className="px-5 py-4">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-[11px] font-semibold text-slate-200">{blocker.organization}</p>
+                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                    {blocker.reviewId}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{blocker.blocker}</p>
+                                            <div className="mt-2 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                <span>Owner {blocker.owner}</span>
+                                                <span>Due {blocker.deadline}</span>
+                                            </div>
+                                        </div>
+                                        <span
+                                            className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[blocker.severity]}`}
+                                        >
+                                            {blocker.severity}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
-            </main>
-        </div>
+
+                    <div className={`col-span-4 ${panelClass}`}>
+                        <SectionHeader
+                            title="Review Priorities"
+                            detail="A smaller side rail for what should move next."
+                            actionLabel="Security matrix"
+                            actionTo="/admin/security-compliance"
+                        />
+                        <div className="space-y-3 px-5 py-4">
+                            {prioritizedEvidencePacks.slice(0, 3).map((pack) => (
+                                <article key={pack.id} className={`${subpanelClass} p-4`}>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</p>
+                                            <h3 className="mt-1 text-[12px] font-semibold text-slate-100">{pack.organization}</h3>
+                                        </div>
+                                        <span
+                                            className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[pack.status]}`}
+                                        >
+                                            {pack.status}
+                                        </span>
+                                    </div>
+                                    <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{pack.blocker ?? pack.scope}</p>
+                                    <p className="mt-2 text-[9px] text-slate-600">{pack.owner}</p>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="grid grid-cols-12 gap-5">
+                    <div className={`col-span-7 ${panelClass}`}>
+                        <SectionHeader
+                            title="Environment & Residency"
+                            detail="Region posture and evaluation boundaries stay visible without exposing raw workspace content."
+                            actionLabel="Operations"
+                            actionTo="/admin/operations"
+                        />
+                        <div className="space-y-3 px-5 py-4">
+                            {deploymentSurfaces.map((surface) => (
+                                <article key={surface.id} className={`${subpanelClass} p-4`}>
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-[11px] font-semibold text-slate-200">{surface.organization}</p>
+                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                    {surface.cloud}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-[10px] text-slate-300">{surface.deploymentMode}</p>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                                                {surface.residencyPosture}
+                                            </p>
+                                            <div className="mt-3 grid grid-cols-2 gap-3 text-[10px]">
+                                                <div>
+                                                    <p className="uppercase tracking-[0.12em] text-slate-600">Evaluation</p>
+                                                    <p className="mt-1 text-slate-300">{surface.evaluationStatus}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="uppercase tracking-[0.12em] text-slate-600">Evidence</p>
+                                                    <p className="mt-1 text-slate-300">{surface.evidenceStatus}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="w-44 rounded-lg border border-slate-800/60 bg-slate-900/60 p-3">
+                                            <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Current blocker</p>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{surface.blocker}</p>
+                                            <p className="mt-3 text-[9px] text-slate-600">{surface.owner}</p>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className={`col-span-5 ${panelClass}`}>
+                        <SectionHeader
+                            title="Audit & Evidence"
+                            detail="Verification, review, and exception activity is summarized here before teams drill into the full trail."
+                            actionLabel="Audit trail"
+                            actionTo="/admin/audit-trail"
+                        />
+                        <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Verified</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{verifiedEventCount}</p>
+                            </div>
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Review</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{reviewEventCount}</p>
+                            </div>
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Exceptions</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{exceptionEventCount}</p>
+                            </div>
+                        </div>
+                        <div className="divide-y divide-slate-800/35">
+                            {evidenceEvents.slice(0, 4).map((event) => (
+                                <div key={event.id} className="px-5 py-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-[11px] font-semibold text-slate-200">{event.organization}</p>
+                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{event.reviewId}</span>
+                                            </div>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{event.event}</p>
+                                            <p className="mt-2 text-[9px] text-slate-600">
+                                                {event.surface} · {event.visibility}
+                                            </p>
+                                        </div>
+                                        <div className="flex min-w-[7rem] flex-col items-end gap-2">
+                                            <span className="text-[9px] font-mono text-slate-600">{event.evidencePackId}</span>
+                                            <span
+                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[event.status]}`}
+                                            >
+                                                {event.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="grid grid-cols-12 gap-5">
+                    <div className={`col-span-7 ${panelClass}`}>
+                        <SectionHeader
+                            title="Evidence Pack Readiness"
+                            detail="Review-ready packets stay readable here before teams move into the deeper audit and compliance surfaces."
+                            actionLabel="Open controls"
+                            actionTo="/admin/security-compliance"
+                        />
+                        <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Ready</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{readyPackCount}</p>
+                            </div>
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">In review</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{inReviewPackCount}</p>
+                            </div>
+                            <div className={`${subpanelClass} px-3 py-3`}>
+                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{blockedPackCount}</p>
+                            </div>
+                        </div>
+                        <div className="divide-y divide-slate-800/35">
+                            {prioritizedEvidencePacks.map((pack) => (
+                                <div key={pack.id} className="px-5 py-4">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-[11px] font-semibold text-slate-200">{pack.name}</p>
+                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</span>
+                                            </div>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{pack.scope}</p>
+                                            <p className="mt-2 text-[9px] text-slate-600">
+                                                {pack.organization} · {pack.owner} · {pack.updatedAt}
+                                            </p>
+                                            {pack.blocker ? (
+                                                <p className="mt-2 text-[9px] leading-relaxed text-amber-300/90">Blocker: {pack.blocker}</p>
+                                            ) : null}
+                                        </div>
+                                        <span
+                                            className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[pack.status]}`}
+                                        >
+                                            {pack.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className={`col-span-5 ${panelClass}`}>
+                        <SectionHeader
+                            title="Incident Readiness"
+                            detail="Incidents remain visible as review-safe operational summaries rather than raw-content investigations."
+                            actionLabel="Incident response"
+                            actionTo="/admin/incident-response"
+                        />
+                        <div className="space-y-3 px-5 py-4">
+                            {prioritizedIncidents.map((incident) => (
+                                <article key={incident.id} className={`${subpanelClass} p-4`}>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[11px] font-semibold text-slate-200">{incident.title}</p>
+                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{incident.environment}</p>
+                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-500">
+                                                {incident.residencyImpact}
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                <span>{incident.reviewId}</span>
+                                                <span>{incident.evidencePackId}</span>
+                                                <span>SLA {incident.slaWindow}</span>
+                                            </div>
+                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                                                Next: {incident.nextAction}
+                                            </p>
+                                        </div>
+                                        <div className="flex min-w-[7rem] flex-col items-end gap-2">
+                                            <span
+                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.status]}`}
+                                            >
+                                                {incident.status}
+                                            </span>
+                                            <span
+                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.severity]}`}
+                                            >
+                                                {incident.severity}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </AdminLayout>
     )
 }
