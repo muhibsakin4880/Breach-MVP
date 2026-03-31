@@ -22,12 +22,6 @@ const certs = [
         description: 'Enterprise cloud infrastructure is HIPAA eligible. Redoubt applies HIPAA controls at application layer.',
         badge: 'Inherited',
         badgeType: 'inherited'
-    },
-    {
-        title: 'GDPR Aligned',
-        description: 'Data residency in cloud provider regions. GDPR compliance inherited and extended by Redoubt.',
-        badge: 'Active',
-        badgeType: 'active'
     }
 ]
 

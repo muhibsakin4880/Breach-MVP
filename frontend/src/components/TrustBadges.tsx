@@ -3,7 +3,6 @@ import { useState } from 'react'
 const certifications = [
     { id: 'soc2', name: 'SOC 2 Type II', color: 'bg-emerald-500' },
     { id: 'hipaa', name: 'HIPAA', color: 'bg-blue-500' },
-    { id: 'gdpr', name: 'GDPR', color: 'bg-purple-500' },
     { id: 'iso27001', name: 'ISO 27001', color: 'bg-orange-500' },
 ]
 
@@ -24,15 +23,6 @@ const complianceMappings: Record<string, { title: string; controls: string[] }> 
             'Purpose-limited data access (164.502(d))',
             'Audit controls (164.312(b))',
             'Transmission security (164.312(e)(2))',
-        ],
-    },
-    gdpr: {
-        title: 'GDPR',
-        controls: [
-            'Purpose limitation enforcement (Art. 5)',
-            'Data minimization controls (Art. 5)',
-            'Lawful basis documentation (Art. 6)',
-            'Right to erasure workflow (Art. 17)',
         ],
     },
     iso27001: {
