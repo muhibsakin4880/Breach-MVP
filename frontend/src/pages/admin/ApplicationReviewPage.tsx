@@ -1,42 +1,56 @@
-import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
+import {
+    getDocumentChecklistCounts,
+    getOrganizationReviewRecord,
+    type ApprovalStageStatus,
+    type DecisionStatus,
+    type LoiStatus,
+    type OrganizationReviewStatus,
+    type ReviewDocumentStatus,
+    type ReviewTone
+} from '../../data/adminPilotOpsData'
 import { useAuth } from '../../contexts/AuthContext'
 
-type Tone = 'green' | 'amber' | 'red' | 'blue'
-type ParticipantRole = 'dataProvider' | 'dataConsumer' | 'complianceAuditor'
-
-type OverviewItem = {
-    label: string
-    value: string
-}
-
-type StepField = {
-    label: string
-    value: string
-    preview?: boolean
-}
-
-type SubmissionStep = {
-    id: number
-    title: string
-    status: string
-    tone: Tone
-    fields: StepField[]
-}
-
-type RiskFactor = {
-    factor: string
-    score: string
-    status: string
-    tone: Tone
-}
-
-const toneBadgeClasses: Record<Tone, string> = {
+const toneBadgeClasses: Record<ReviewTone, string> = {
     green: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
     amber: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
     red: 'border-red-500/40 bg-red-500/10 text-red-200',
     blue: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+}
+
+const reviewStatusClasses: Record<OrganizationReviewStatus, string> = {
+    Pending: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    Reviewing: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
+    Escalated: 'border-red-500/40 bg-red-500/10 text-red-200'
+}
+
+const decisionClasses: Record<DecisionStatus, string> = {
+    'Awaiting first pass': 'border-slate-700/80 bg-slate-800/60 text-slate-200',
+    'Secondary review': 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    'Ready for signoff': 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+    'Pilot approved': 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+}
+
+const loiClasses: Record<LoiStatus, string> = {
+    'Packet in preparation': 'border-slate-700/80 bg-slate-800/60 text-slate-200',
+    'Draft LOI shared': 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
+    'LOI under review': 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    'Pilot scope agreed': 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+    'Pilot approved': 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200'
+}
+
+const documentClasses: Record<ReviewDocumentStatus, string> = {
+    ready: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+    review: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+    missing: 'border-red-500/30 bg-red-500/10 text-red-200'
+}
+
+const approvalStageClasses: Record<ApprovalStageStatus, string> = {
+    complete: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+    active: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+    blocked: 'border-red-500/30 bg-red-500/10 text-red-200',
+    pending: 'border-slate-700/80 bg-slate-800/60 text-slate-200'
 }
 
 const decisionButtonClasses: Record<'approve' | 'flag' | 'reject', string> = {
@@ -45,314 +59,267 @@ const decisionButtonClasses: Record<'approve' | 'flag' | 'reject', string> = {
     reject: 'border-red-500/50 bg-red-500/12 text-red-200 hover:bg-red-500/18'
 }
 
-const roleLabelByType: Record<ParticipantRole, string> = {
-    dataProvider: 'Data Provider (Contribute & Monetize)',
-    dataConsumer: 'Data Consumer (Ingest & Analyze)',
-    complianceAuditor: 'Compliance / Legal Auditor'
-}
-
-const participationFieldsByRole: Record<ParticipantRole, StepField[]> = {
-    dataProvider: [
-        { label: 'Role', value: 'Data Provider (Contribute & Monetize)' },
-        { label: 'Datasets planned for contribution', value: 'Synthetic transaction records, anonymized risk benchmark datasets' },
-        { label: 'Pricing intent', value: 'Declared (tiered subscription + volume-based licensing)' },
-        { label: 'Source description', value: 'First-party financial analytics feeds from internal enterprise systems' }
-    ],
-    dataConsumer: [
-        { label: 'Role', value: 'Data Consumer (Ingest & Analyze)' },
-        { label: 'Intended use', value: 'Declared for internal risk analysis and forecasting workflows' },
-        { label: 'Target dataset categories', value: 'Market signals, financial events, compliance indicators' },
-        { label: 'Purpose declaration', value: 'Non-resale analytical use under approved governance controls' }
-    ],
-    complianceAuditor: [
-        { label: 'Role', value: 'Compliance / Legal Auditor' },
-        { label: 'Audit scope', value: 'Declared (PDPL compliance validation, access-control and retention checks)' },
-        { label: 'Legal mandate', value: 'Provided and verified by authorized legal/compliance representative' }
-    ]
-}
-
-const applicantRoleById: Record<string, ParticipantRole> = {
-    'APP-3390': 'dataProvider',
-    'APP-7821': 'dataConsumer',
-    'APP-1156': 'dataConsumer',
-    'APP-8847': 'dataProvider',
-    'APP-2293': 'complianceAuditor',
-    'APP-5501': 'dataProvider',
-    'APP-6624': 'dataConsumer',
-    'APP-4471': 'dataProvider'
-}
-
 export default function ApplicationReviewPage() {
     const { isAuthenticated } = useAuth()
     const navigate = useNavigate()
     const { appId } = useParams<{ appId: string }>()
-    const applicantId = appId ?? 'APP-3390'
-    const selectedRole = applicantRoleById[applicantId] ?? 'dataProvider'
-
-    const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({
-        1: true,
-        2: false,
-        3: false,
-        4: false,
-        5: false
-    })
-
-    const overviewItems: OverviewItem[] = [
-        { label: 'Organization', value: 'Meridian Systems' },
-        { label: 'Applicant ID', value: applicantId },
-        { label: 'Access Type', value: roleLabelByType[selectedRole] },
-        { label: 'Applied', value: '2026-03-23 09:38:02' },
-        { label: 'Industry', value: 'Financial Analytics' },
-        { label: 'Country', value: 'UAE' }
-    ]
-
-    const submissionSteps: SubmissionStep[] = [
-        {
-            id: 1,
-            title: 'Organization & Identity',
-            status: 'Verified ✅',
-            tone: 'green',
-            fields: [
-                { label: 'Organization name', value: 'Meridian Systems' },
-                { label: 'Work email', value: 'admin@meridiansystems.ae' },
-                { label: 'Invite code', value: 'REDO-2026' },
-                { label: 'Role', value: 'Chief Data Officer' },
-                { label: 'Industry', value: 'Financial Analytics' },
-                { label: 'Country', value: 'UAE' }
-            ]
-        },
-        {
-            id: 2,
-            title: 'Intended Platform Usage',
-            status: 'High Compliance Tier ⚠️',
-            tone: 'amber',
-            fields: [
-                { label: 'Selected category', value: 'Financial & Quantitative Modeling' },
-                { label: 'Sub-options', value: 'Risk Modeling, Predictive Analytics' },
-                { label: 'Jurisdiction', value: 'UAE (PDPL)' },
-                { label: 'TTL', value: '90 days' },
-                { label: 'External APIs/LLMs', value: 'No' },
-                { label: 'Compliance tier triggered', value: 'High Compliance (Stricter Audit)' }
-            ]
-        },
-        {
-            id: 3,
-            title: 'Participation Intent',
-            status: 'Signed ✅',
-            tone: 'green',
-            fields: participationFieldsByRole[selectedRole]
-        },
-        {
-            id: 4,
-            title: 'Verification & Credentials',
-            status: 'Pending Review 🟡',
-            tone: 'amber',
-            fields: [
-                { label: 'Corporate Domain', value: 'meridiansystems.ae — Verified ✅' },
-                { label: 'Corporate Registry Document', value: 'meridian_trade_license.pdf', preview: true },
-                { label: 'Signed DPO/Legal Mandate', value: 'meridian_dpa_signed.pdf', preview: true }
-            ]
-        },
-        {
-            id: 5,
-            title: 'Zero-Trust Pipeline Agreement',
-            status: 'Acknowledged ✅',
-            tone: 'green',
-            fields: [
-                { label: 'All 3 checkboxes', value: 'Acknowledged ✅' },
-                { label: 'Submitted', value: '2026-03-23 09:37:58' },
-                { label: 'IP logged', value: '185.58.142.44' },
-                { label: 'Device fingerprint', value: 'Cryptographically recorded' }
-            ]
-        }
-    ]
-
-    const riskFactors: RiskFactor[] = [
-        { factor: 'Domain Verification', score: '95/100', status: 'Passed ✅', tone: 'green' },
-        { factor: 'Document Authenticity', score: '60/100', status: 'Pending Review 🟡', tone: 'amber' },
-        { factor: 'Jurisdiction Risk', score: '55/100', status: 'Medium Risk 🟡', tone: 'amber' },
-        { factor: 'Usage Intent', score: '82/100', status: 'Low Risk ✅', tone: 'green' },
-        { factor: 'Compliance Tier', score: '45/100', status: 'High Compliance ⚠️', tone: 'amber' }
-    ]
-
-    const summaryText = [
-        'Financial data provider from UAE. High compliance tier triggered by jurisdiction.',
-        'Document authenticity pending manual verification.',
-        'Recommend secondary review before approval.'
-    ].join('\n')
-
-    const toggleStep = (stepId: number) => {
-        setOpenSteps(prev => ({
-            ...prev,
-            [stepId]: !prev[stepId]
-        }))
-    }
+    const reviewId = appId ?? 'APP-3390'
+    const record = getOrganizationReviewRecord(reviewId)
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+    if (!record) return <Navigate to="/admin/onboarding-queue" replace />
+
+    const checklistCounts = getDocumentChecklistCounts(record)
+    const overviewItems = [
+        { label: 'Organization', value: record.organizationName },
+        { label: 'Review ID', value: record.id },
+        { label: 'Review Scope', value: record.reviewScope },
+        { label: 'Industry', value: record.industry },
+        { label: 'Primary contact', value: `${record.contactRole} · ${record.workEmail}` },
+        { label: 'Jurisdiction', value: record.jurisdiction },
+        { label: 'Deployment preference', value: record.deploymentPreference },
+        { label: 'Residency requirement', value: record.residencyRequirement },
+        { label: 'Pilot scope', value: record.pilotScope },
+        { label: 'Owner', value: record.owner },
+        { label: 'Review deadline', value: record.reviewDeadlineLabel },
+        { label: 'Next action', value: record.nextAction }
+    ]
 
     return (
-        <AdminLayout title="APPLICATION REVIEW" subtitle="ONBOARDING COMPLIANCE REVIEW">
+        <AdminLayout title="ORGANIZATION REVIEW" subtitle="PILOT READINESS, APPROVAL CHAIN & CONTROL CHECKS">
             <div className="space-y-6">
                 <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
                         <button
                             onClick={() => navigate('/admin/onboarding-queue')}
-                            className="inline-flex items-center gap-2 rounded-md border border-slate-700/80 bg-slate-900/60 px-3 py-2 text-[11px] font-semibold text-slate-200 hover:bg-slate-800/70 transition-colors"
+                            className="inline-flex items-center gap-2 rounded-md border border-slate-700/80 bg-slate-900/60 px-3 py-2 text-[11px] font-semibold text-slate-200 transition-colors hover:bg-slate-800/70"
                         >
-                            ← Back to Onboarding Queue
+                            ← Back to Organization Review Queue
                         </button>
 
                         <div>
-                            <h1 className="text-3xl font-semibold text-slate-100 tracking-tight">Application Review</h1>
-                            <p className="mt-1 text-sm text-slate-400">{applicantId} | Meridian Systems</p>
+                            <h1 className="text-3xl font-semibold tracking-tight text-slate-100">{record.organizationName}</h1>
+                            <p className="mt-1 text-sm text-slate-400">{record.id} · {record.reviewScope}</p>
+                            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">{record.overview}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${toneBadgeClasses.amber}`}>
-                            Risk Score: 67
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${reviewStatusClasses[record.reviewStatus]}`}>
+                            {record.reviewStatus}
                         </span>
-                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${toneBadgeClasses.amber}`}>
-                            Flagged
+                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${decisionClasses[record.decisionStatus]}`}>
+                            {record.decisionStatus}
+                        </span>
+                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${loiClasses[record.loiStatus]}`}>
+                            {record.loiStatus}
+                        </span>
+                        <span className={`inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold tracking-wide ${record.riskScore >= 70 ? toneBadgeClasses.red : record.riskScore >= 40 ? toneBadgeClasses.amber : toneBadgeClasses.green}`}>
+                            Risk Score: {record.riskScore}
                         </span>
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
-                    <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Applicant Overview</h2>
-                    <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                        {overviewItems.map(item => (
+                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                    <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Organization Profile</h2>
+                    <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+                        {overviewItems.map((item) => (
                             <div key={item.label} className="rounded-md border border-slate-800/80 bg-slate-950/40 px-3 py-2.5">
                                 <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
-                                <p className="mt-1 text-[12px] font-medium text-slate-200">{item.value}</p>
+                                <p className="mt-1 text-[12px] font-medium leading-relaxed text-slate-200">{item.value}</p>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
-                    <div className="space-y-1">
-                        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Submission Review</h2>
-                        <p className="text-sm text-slate-200">Step-by-Step Submission</p>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                        {submissionSteps.map(step => {
-                            const isOpen = Boolean(openSteps[step.id])
-                            return (
-                                <article key={step.id} className="overflow-hidden rounded-lg border border-slate-800/80 bg-slate-950/35">
-                                    <button
-                                        onClick={() => toggleStep(step.id)}
-                                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-800/30 transition-colors"
-                                    >
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Step {step.id}</p>
-                                            <p className="text-[13px] font-semibold text-slate-100">{step.title}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${toneBadgeClasses[step.tone]}`}>
-                                                {step.status}
-                                            </span>
-                                            <span className="text-slate-500 text-xs">{isOpen ? '▲' : '▼'}</span>
-                                        </div>
-                                    </button>
-
-                                    {isOpen && (
-                                        <div className="grid grid-cols-1 gap-2 border-t border-slate-800/70 p-4 lg:grid-cols-2">
-                                            {step.fields.map(field => (
-                                                <div key={`${step.id}-${field.label}`} className="rounded-md border border-slate-800/80 bg-slate-950/45 px-3 py-2">
-                                                    <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{field.label}</p>
-                                                    <div className="mt-1.5 flex items-center justify-between gap-3">
-                                                        <p className="text-[12px] font-medium text-slate-200 leading-relaxed">{field.value}</p>
-                                                        {field.preview && (
-                                                            <button className={`shrink-0 rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors ${toneBadgeClasses.blue} hover:bg-cyan-500/20`}>
-                                                                Preview
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </article>
-                            )
-                        })}
-                    </div>
-                </section>
-
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="grid grid-cols-12 gap-5">
+                    <section className="col-span-7 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
                         <div className="space-y-1">
-                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">AI Risk Assessment</h2>
-                            <p className="text-sm text-slate-200">Automated Risk Analysis</p>
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Pilot Review Context</h2>
+                            <p className="text-sm text-slate-200">Use case, deployment posture, and current review intent.</p>
                         </div>
-                        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-                            <p className="text-[10px] uppercase tracking-[0.13em] text-amber-200/80">Overall Score</p>
-                            <p className="mt-1 text-3xl font-semibold text-amber-200">67/100</p>
-                        </div>
-                    </div>
 
-                    <div className="mt-4 overflow-hidden rounded-lg border border-slate-800/80 bg-slate-950/35">
-                        <div className="grid grid-cols-12 border-b border-slate-800/80 bg-slate-950/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                            <span className="col-span-6">Factor</span>
-                            <span className="col-span-2">Score</span>
-                            <span className="col-span-4">Status</span>
-                        </div>
-                        {riskFactors.map(row => (
-                            <div key={row.factor} className="grid grid-cols-12 items-center border-b border-slate-800/60 px-3 py-2.5 text-[11px] last:border-b-0">
-                                <span className="col-span-6 text-slate-200">{row.factor}</span>
-                                <span className="col-span-2 font-mono text-slate-300">{row.score}</span>
-                                <span className="col-span-4">
-                                    <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-semibold tracking-wide ${toneBadgeClasses[row.tone]}`}>
-                                        {row.status}
-                                    </span>
-                                </span>
+                        <div className="mt-4 grid grid-cols-1 gap-3">
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Use case</p>
+                                <p className="mt-2 text-[12px] leading-relaxed text-slate-200">{record.useCase}</p>
                             </div>
-                        ))}
-                    </div>
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Protected evaluation and deployment posture</p>
+                                <p className="mt-2 text-[12px] leading-relaxed text-slate-200">{record.deploymentPreference}</p>
+                                <p className="mt-3 text-[11px] leading-relaxed text-slate-500">{record.residencyRequirement}</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Pilot scope and next action</p>
+                                <p className="mt-2 text-[12px] leading-relaxed text-slate-200">{record.pilotScope}</p>
+                                <p className="mt-3 text-[11px] leading-relaxed text-slate-500">Next: {record.nextAction}</p>
+                            </div>
+                        </div>
+                    </section>
 
-                    <div className="mt-4 rounded-lg border border-slate-800/80 bg-slate-950/45 p-3">
-                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">AI Summary</p>
-                        <pre className="mt-2 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-slate-200">{summaryText}</pre>
-                    </div>
-                </section>
+                    <section className="col-span-5 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                        <div className="space-y-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Review Packet Summary</h2>
+                            <p className="text-sm text-slate-200">Current packet completeness and engagement posture.</p>
+                        </div>
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Checklist ready</p>
+                                <p className="mt-2 text-3xl font-semibold text-slate-100">{checklistCounts.ready}</p>
+                                <p className="mt-2 text-[10px] text-slate-500">{checklistCounts.review} in review · {checklistCounts.missing} missing</p>
+                            </div>
+                            <div className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Letter status</p>
+                                <p className="mt-2 text-lg font-semibold text-slate-100">{record.loiStatus}</p>
+                                <p className="mt-2 text-[10px] text-slate-500">{record.reviewDeadlineLabel}</p>
+                            </div>
+                            <div className="col-span-2 rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Review summary</p>
+                                <div className="mt-3 space-y-2">
+                                    {record.summary.map((line) => (
+                                        <p key={line} className="text-[11px] leading-relaxed text-slate-300">{line}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div className="grid grid-cols-12 gap-5">
+                    <section className="col-span-7 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                        <div className="space-y-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Document Checklist</h2>
+                            <p className="text-sm text-slate-200">Evidence items required before protected evaluation or pilot signoff.</p>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                            {record.documents.map((document) => (
+                                <div key={document.id} className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-[12px] font-semibold text-slate-100">{document.label}</p>
+                                            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">{document.detail}</p>
+                                        </div>
+                                        <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${documentClasses[document.status]}`}>
+                                            {document.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="col-span-5 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                        <div className="space-y-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Approval Chain</h2>
+                            <p className="text-sm text-slate-200">Internal owners, review stages, and current blockers.</p>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                            {record.approvalChain.map((stage) => (
+                                <div key={stage.id} className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-[12px] font-semibold text-slate-100">{stage.stage}</p>
+                                            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">{stage.owner}</p>
+                                            <p className="mt-3 text-[11px] leading-relaxed text-slate-400">{stage.note}</p>
+                                        </div>
+                                        <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${approvalStageClasses[stage.status]}`}>
+                                            {stage.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+
+                <div className="grid grid-cols-12 gap-5">
+                    <section className="col-span-7 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="space-y-1">
+                                <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Automated Risk Assessment</h2>
+                                <p className="text-sm text-slate-200">Policy and control analysis across the current organization packet.</p>
+                            </div>
+                            <div className={`rounded-lg border px-4 py-3 ${record.riskScore >= 70 ? toneBadgeClasses.red : record.riskScore >= 40 ? toneBadgeClasses.amber : toneBadgeClasses.green}`}>
+                                <p className="text-[10px] uppercase tracking-[0.13em]">Overall Score</p>
+                                <p className="mt-1 text-3xl font-semibold">{record.riskScore}/100</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 overflow-hidden rounded-lg border border-slate-800/80 bg-slate-950/35">
+                            <div className="grid grid-cols-12 border-b border-slate-800/80 bg-slate-950/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                <span className="col-span-6">Factor</span>
+                                <span className="col-span-2">Score</span>
+                                <span className="col-span-4">Status</span>
+                            </div>
+                            {record.riskFactors.map((row) => (
+                                <div key={row.factor} className="grid grid-cols-12 items-center border-b border-slate-800/60 px-3 py-2.5 text-[11px] last:border-b-0">
+                                    <span className="col-span-6 text-slate-200">{row.factor}</span>
+                                    <span className="col-span-2 font-mono text-slate-300">{row.score}</span>
+                                    <span className="col-span-4">
+                                        <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-semibold tracking-wide ${toneBadgeClasses[row.tone]}`}>
+                                            {row.status}
+                                        </span>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="col-span-5 rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                        <div className="space-y-1">
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Internal Notes</h2>
+                            <p className="text-sm text-slate-200">Working notes that shape the current approval path.</p>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                            {record.internalNotes.map((note) => (
+                                <div key={note} className="rounded-lg border border-slate-800/80 bg-slate-950/40 p-4">
+                                    <p className="text-[11px] leading-relaxed text-slate-300">{note}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+
+                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
                     <div className="space-y-1">
-                        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Admin Decision</h2>
-                        <p className="text-sm text-slate-200">Review Decision</p>
+                        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Review Decision</h2>
+                        <p className="text-sm text-slate-200">Capture the current decision path and stage the next approval outcome.</p>
                     </div>
 
                     <div className="mt-4">
                         <label htmlFor="internal-note" className="text-[11px] font-medium text-slate-300">
-                            Internal Note (optional)
+                            Internal note (optional)
                         </label>
                         <textarea
                             id="internal-note"
-                            placeholder="Add review notes for audit trail..."
-                            className="mt-2 h-28 w-full resize-y rounded-lg border border-slate-700/80 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/70"
+                            placeholder="Add a decision note for audit visibility..."
+                            className="mt-2 h-28 w-full resize-y rounded-lg border border-slate-700/80 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/70 focus:outline-none"
                         />
                     </div>
 
                     <div className="mt-4 space-y-3">
                         <button className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${decisionButtonClasses.approve}`}>
-                            <p className="text-[12px] font-semibold">Approve Application</p>
-                            <p className="mt-1 text-[11px] text-emerald-100/80">Grant access and notify applicant</p>
+                            <p className="text-[12px] font-semibold">Advance to Pilot Approval</p>
+                            <p className="mt-1 text-[11px] text-emerald-100/80">Mark the review packet as signoff-ready and notify the internal owner.</p>
                         </button>
 
                         <button className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${decisionButtonClasses.flag}`}>
-                            <p className="text-[12px] font-semibold">Flag for Secondary Review</p>
-                            <p className="mt-1 text-[11px] text-amber-100/80">Escalate to compliance team</p>
+                            <p className="text-[12px] font-semibold">Hold for Secondary Review</p>
+                            <p className="mt-1 text-[11px] text-amber-100/80">Route the packet back through legal, privacy, or policy review.</p>
                         </button>
 
                         <button className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${decisionButtonClasses.reject}`}>
-                            <p className="text-[12px] font-semibold">Reject Application</p>
-                            <p className="mt-1 text-[11px] text-red-100/80">Deny access and notify applicant</p>
+                            <p className="text-[12px] font-semibold">Close Current Review</p>
+                            <p className="mt-1 text-[11px] text-red-100/80">Stop the current approval path and return the packet for material changes.</p>
                         </button>
                     </div>
 
                     <p className="mt-4 text-[11px] text-slate-500">
-                        All decisions are cryptographically logged and cannot be modified.
+                        All review decisions are cryptographically logged and tied to the active approval chain.
                     </p>
                 </section>
             </div>

@@ -70,18 +70,18 @@ type SchemaFieldRow = {
 }
 
 const summaryStats = [
-    { label: 'Datasets Scanned Today', value: '847' },
-    { label: 'Access Decisions Made', value: '312' },
-    { label: 'Anomalies Detected', value: '7' },
-    { label: 'Quarantined', value: '3' }
+    { label: 'Datasets Reviewed Today', value: '847' },
+    { label: 'Automated Decisions Issued', value: '312' },
+    { label: 'Policy Exceptions Detected', value: '7' },
+    { label: 'Contained Review Holds', value: '3' }
 ]
 
 const tabs: Array<{ key: TabKey; label: string }> = [
-    { key: 'all', label: 'All Logs' },
-    { key: 'dataset', label: 'Dataset Scanning' },
-    { key: 'access', label: 'Access Decisions' },
-    { key: 'anomaly', label: 'Anomaly Detection' },
-    { key: 'quarantine', label: 'Quarantine Events' }
+    { key: 'all', label: 'All Decisions' },
+    { key: 'dataset', label: 'Dataset Reviews' },
+    { key: 'access', label: 'Access Reviews' },
+    { key: 'anomaly', label: 'Anomaly Signals' },
+    { key: 'quarantine', label: 'Containment Events' }
 ]
 
 export const logRows: LogRow[] = [
@@ -117,7 +117,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'QUARANTINED', tone: 'red' },
-                { label: 'Provider notified', value: 'Yes', tone: 'neutral' },
+                { label: 'Organization notified', value: 'Yes', tone: 'neutral' },
                 { label: 'Escrow', value: 'Held pending review', tone: 'neutral' }
             ]
         }
@@ -152,7 +152,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'SCANNING', tone: 'amber' },
-                { label: 'Provider notified', value: 'No', tone: 'neutral' },
+                { label: 'Organization notified', value: 'No', tone: 'neutral' },
                 { label: 'Escrow', value: 'Monitoring only', tone: 'neutral' }
             ]
         }
@@ -187,7 +187,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'CLEAN', tone: 'green' },
-                { label: 'Provider notified', value: 'No', tone: 'neutral' },
+                { label: 'Organization notified', value: 'No', tone: 'neutral' },
                 { label: 'Escrow', value: 'Released', tone: 'neutral' }
             ]
         }
@@ -222,7 +222,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'APPROVED', tone: 'green' },
-                { label: 'Provider notified', value: 'Not required', tone: 'neutral' },
+                { label: 'Organization notified', value: 'Not required', tone: 'neutral' },
                 { label: 'Escrow', value: 'Normal release path', tone: 'neutral' }
             ]
         }
@@ -257,7 +257,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'FLAGGED', tone: 'red' },
-                { label: 'Provider notified', value: 'Yes', tone: 'neutral' },
+                { label: 'Organization notified', value: 'Yes', tone: 'neutral' },
                 { label: 'Escrow', value: 'Access frozen', tone: 'neutral' }
             ]
         }
@@ -292,7 +292,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'SCANNING', tone: 'amber' },
-                { label: 'Provider notified', value: 'No', tone: 'neutral' },
+                { label: 'Organization notified', value: 'No', tone: 'neutral' },
                 { label: 'Escrow', value: 'Pending scan result', tone: 'neutral' }
             ]
         }
@@ -327,7 +327,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'BLOCKED', tone: 'red' },
-                { label: 'Provider notified', value: 'No', tone: 'neutral' },
+                { label: 'Organization notified', value: 'No', tone: 'neutral' },
                 { label: 'Escrow', value: 'No release', tone: 'neutral' }
             ]
         }
@@ -340,7 +340,7 @@ export const logRows: LogRow[] = [
         decision: 'QUARANTINED',
         decisionTone: 'red',
         confidence: '18/100',
-        reason: 'PII density exceeds threshold, provider notified',
+        reason: 'PII density exceeds threshold, organization notified',
         action: 'BLOCK',
         actionTone: 'red',
         report: {
@@ -362,7 +362,7 @@ export const logRows: LogRow[] = [
             ],
             actionsTaken: [
                 { label: 'Dataset', value: 'QUARANTINED', tone: 'red' },
-                { label: 'Provider notified', value: 'Yes', tone: 'neutral' },
+                { label: 'Organization notified', value: 'Yes', tone: 'neutral' },
                 { label: 'Escrow', value: 'Held pending review', tone: 'neutral' }
             ]
         }
@@ -637,12 +637,12 @@ export default function AIInterrogationLogsPage() {
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
     return (
-        <AdminLayout title="AI INTERROGATION LOGS" subtitle="REAL-TIME DECISION INTELLIGENCE">
+        <AdminLayout title="AUTOMATED REVIEW DECISIONS" subtitle="POLICY SIGNALS & CONTROL ACTIONS">
             <div className="space-y-6">
                 <section className="space-y-2">
-                    <h1 className="text-3xl font-semibold text-slate-100 tracking-tight">AI Interrogation Logs</h1>
+                    <h1 className="text-3xl font-semibold text-slate-100 tracking-tight">Automated Review Decisions</h1>
                     <p className="text-sm text-slate-400 max-w-4xl">
-                        Real-time AI decision trail - dataset scanning, access decisions, anomaly detection, and quarantine events
+                        Continuous policy decision trail for dataset review, access approvals, anomaly detection, and containment events
                     </p>
                 </section>
 
@@ -651,7 +651,7 @@ export default function AIInterrogationLogsPage() {
                         <div className="flex items-center gap-3">
                             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
                             <div>
-                                <p className="text-sm font-semibold text-emerald-100">AI Engine Online - Continuous scanning active</p>
+                                <p className="text-sm font-semibold text-emerald-100">Policy engine online - continuous screening active</p>
                                 <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-emerald-100/80">
                                     <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2 py-0.5 font-medium uppercase tracking-wider text-emerald-100">
                                         Green
@@ -694,7 +694,7 @@ export default function AIInterrogationLogsPage() {
                 <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
                     <article className="xl:col-span-8 rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/30">
                         <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between gap-3">
-                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-200">Live Interrogation Feed</h2>
+                            <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-200">Decision Feed</h2>
                             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                 Live
@@ -707,8 +707,8 @@ export default function AIInterrogationLogsPage() {
                                     <tr className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                                         <th className="px-4 py-3 text-left">Timestamp</th>
                                         <th className="px-4 py-3 text-left">Log Type</th>
-                                        <th className="px-4 py-3 text-left">Dataset/Participant</th>
-                                        <th className="px-4 py-3 text-left">AI Decision</th>
+                                        <th className="px-4 py-3 text-left">Subject</th>
+                                        <th className="px-4 py-3 text-left">Decision</th>
                                         <th className="px-4 py-3 text-left">Confidence</th>
                                         <th className="px-4 py-3 text-left">Reason</th>
                                         <th className="px-4 py-3 text-left">Action</th>
@@ -754,7 +754,7 @@ export default function AIInterrogationLogsPage() {
                         <div className="space-y-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-1">
-                                    <h3 className="text-[12px] uppercase tracking-[0.12em] text-slate-300 font-semibold">AI Summary</h3>
+                                    <h3 className="text-[12px] uppercase tracking-[0.12em] text-slate-300 font-semibold">Decision Summary</h3>
                                     <p className="text-sm text-slate-100 font-medium">{selectedLog.report.subjectTitle}</p>
                                 </div>
                                 <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-semibold tracking-wider ${toneBadgeClasses[selectedLog.decisionTone]}`}>
@@ -794,7 +794,7 @@ export default function AIInterrogationLogsPage() {
                                     Approve
                                 </button>
                                 <button className="rounded-md border border-amber-500/50 bg-amber-500/10 px-2 py-1.5 text-[10px] font-semibold text-amber-200 hover:bg-amber-500/15 transition-colors">
-                                    DPO Review
+                                    Policy Review
                                 </button>
                             </div>
 
@@ -802,14 +802,14 @@ export default function AIInterrogationLogsPage() {
                                 onClick={() => navigate(`/admin/ai-report/${selectedLog.id}`)}
                                 className="w-full rounded-md border border-cyan-500/50 bg-transparent px-3 py-2 text-[11px] font-semibold text-cyan-200 hover:bg-cyan-500/10 transition-colors"
                             >
-                                View Full Report →
+                                View Decision Report →
                             </button>
                         </div>
                     </aside>
                 </section>
 
                 <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl p-5 shadow-2xl shadow-black/30">
-                    <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-200">Critical Alerts</h3>
+                    <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-200">Control Alerts</h3>
                     <div className="mt-4 grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
                         {criticalAlerts.map((alert, index) => (
                             <div key={`${alert.message}-${index}`} className={`rounded-md border px-3 py-2 text-[11px] font-medium ${alertClasses[alert.tone]}`}>
