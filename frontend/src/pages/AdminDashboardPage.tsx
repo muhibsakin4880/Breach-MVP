@@ -1,7 +1,6 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import AdminLayout from '../components/admin/AdminLayout'
-import { getDocumentChecklistCounts, organizationReviewRecords } from '../data/adminPilotOpsData'
+import LogoMark from '../components/LogoMark'
 import {
     buildDealLifecycleSummary,
     buildPassportReminderSummary,
@@ -18,38 +17,43 @@ import {
     loadSharedDealLifecycleRecords
 } from '../domain/dealLifecycle'
 
+const menuItems = [
+    { label: 'Dashboard Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', path: '/admin/dashboard' },
+    { label: 'User Management', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', path: '/admin/user-management' },
+    { label: 'Provider & Dataset', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4', path: '/admin/provider-dataset' },
+    { label: 'Security & Compliance', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', path: '/admin/security-compliance' },
+    { label: 'Operations', icon: 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01', path: '/admin/operations' },
+    { label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', path: '/admin/notifications' },
+    { label: 'Onboarding Queue', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', path: '/admin/onboarding-queue' },
+    { label: 'AI Interrogation Logs', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', path: '/admin/ai-interrogation-logs' },
+    { label: 'Escrow Vault', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', path: '/admin/escrow-vault' },
+    { label: 'Active Ephemeral Tokens', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z', path: '/admin/ephemeral-tokens' },
+    { label: 'Audit Trail', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', path: '/admin/audit-trail' },
+    { label: 'Incident Response', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', path: '/admin/incident-response' },
+]
+
 const interrogationData = [
-    { timestamp: '2026-03-22 14:32:07', vendorId: 'ORG-7821', dataset: 'Financial_Records_Q4_2025', status: 'Quarantined', action: 'Contain' },
-    { timestamp: '2026-03-22 14:31:54', vendorId: 'ORG-3390', dataset: 'Customer_PII_Index', status: 'Scanning', action: 'Inspect' },
-    { timestamp: '2026-03-22 14:31:42', vendorId: 'ORG-1156', dataset: 'Healthcare_Compliance_Set', status: 'Clean', action: 'Inspect' },
-    { timestamp: '2026-03-22 14:31:29', vendorId: 'ORG-8847', dataset: 'E-Commerce_Transactions', status: 'Clean', action: 'Inspect' },
-    { timestamp: '2026-03-22 14:31:15', vendorId: 'ORG-2293', dataset: 'Social_Media_Metrics_DB', status: 'Quarantined', action: 'Contain' },
-    { timestamp: '2026-03-22 14:30:58', vendorId: 'ORG-5501', dataset: 'IoT_Sensor_Raw_Data', status: 'Scanning', action: 'Inspect' },
+    { timestamp: '2026-03-22 14:32:07', vendorId: 'VND-7821', dataset: 'Financial_Records_Q4_2025', status: 'Quarantined', action: 'Block' },
+    { timestamp: '2026-03-22 14:31:54', vendorId: 'VND-3390', dataset: 'Customer_PII_Index', status: 'Scanning', action: 'Review' },
+    { timestamp: '2026-03-22 14:31:42', vendorId: 'VND-1156', dataset: 'Healthcare_Compliance_Set', status: 'Clean', action: 'Review' },
+    { timestamp: '2026-03-22 14:31:29', vendorId: 'VND-8847', dataset: 'E-Commerce_Transactions', status: 'Clean', action: 'Review' },
+    { timestamp: '2026-03-22 14:31:15', vendorId: 'VND-2293', dataset: 'Social_Media_Metrics_DB', status: 'Quarantined', action: 'Block' },
+    { timestamp: '2026-03-22 14:30:58', vendorId: 'VND-5501', dataset: 'IoT_Sensor_Raw_Data', status: 'Scanning', action: 'Review' },
 ]
 
 const alertsData = [
-    { type: 'critical', message: 'Sensitive field pattern detected in Dataset #492' },
-    { type: 'warning', message: 'Repeated credential validation failure from 192.168.1.44' },
+    { type: 'critical', message: 'PII detected in Dataset #492' },
+    { type: 'warning', message: 'Failed API token attempt from 192.168.1.44' },
     { type: 'critical', message: 'Unusual bulk access pattern detected' },
-    { type: 'warning', message: 'Short-lived token expiration surge: 847 tokens/hour' },
+    { type: 'warning', message: 'Token expiration surge: 847 tokens/hour' },
     { type: 'info', message: 'Scheduled audit backup completed' },
 ]
 
-const normalizeAdminCopy = (value: string) =>
-    value
-        .replace(/\bBuyer\b/g, 'Requesting organization')
-        .replace(/\bbuyer\b/g, 'requesting organization')
-        .replace(/\bProvider\b/g, 'Contributing institution')
-        .replace(/\bprovider\b/g, 'contributing institution')
-        .replace(/\bpayout\b/g, 'release')
-
 export default function AdminDashboard() {
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, signOut } = useAuth()
+    const navigate = useNavigate()
+    const location = useLocation()
     const dealRecords = loadSharedDealLifecycleRecords()
-    const pilotReviewQueue = [...organizationReviewRecords].sort(
-        (left, right) => new Date(left.reviewDeadline).getTime() - new Date(right.reviewDeadline).getTime()
-    )
-    const upcomingPilotReviews = pilotReviewQueue.slice(0, 4)
     const dealLifecycleSummary = buildDealLifecycleSummary(dealRecords)
     const dealTriageSummary = buildDealTriageSummary(dealRecords)
     const releaseReadinessSummary = buildReleaseReadinessSummary(dealRecords)
@@ -58,67 +62,24 @@ export default function AdminDashboard() {
     const triageActionQueue = dealTriageSummary.actionableQueue.slice(0, 4)
     const releaseActionQueue = releaseReadinessSummary.actionable.slice(0, 3)
     const rightsFlagQueue = rightsRiskSummary.flagged.slice(0, 3)
-    const totalRecords = Math.max(dealRecords.length, 1)
-    const activeReviewCount = dealTriageSummary.manualCount + dealTriageSummary.blockedCount
-    const protectedEvaluationCount =
-        dealLifecycleSummary.evaluationLiveCount + dealLifecycleSummary.workspacesProvisioningCount
-    const policyExceptionCount =
-        rightsRiskSummary.highRiskCount +
-        rightsRiskSummary.restrictedCount +
-        passportReminderSummary.blockingReminderCount
-    const evidenceReadyCount =
-        releaseReadinessSummary.autoReleaseCount + releaseReadinessSummary.humanApprovalCount
-    const draftLetterCount = organizationReviewRecords.filter((record) => record.loiStatus === 'Draft LOI shared').length
-    const underReviewLetterCount = organizationReviewRecords.filter((record) => record.loiStatus === 'LOI under review').length
-    const scopeAgreedCount = organizationReviewRecords.filter((record) => record.loiStatus === 'Pilot scope agreed').length
-    const signoffReadyCount = organizationReviewRecords.filter((record) => record.decisionStatus === 'Ready for signoff').length
-    const summaryCards = [
-        {
-            label: 'Active Organization Reviews',
-            value: activeReviewCount.toString(),
-            detailLabel: 'REVIEW MIX',
-            detailValue: `${dealTriageSummary.manualCount} manual · ${dealTriageSummary.blockedCount} blocked`,
-            progress: Math.round((activeReviewCount / totalRecords) * 100),
-            tone: 'amber' as const,
-            icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-        },
-        {
-            label: 'Protected Evaluations',
-            value: protectedEvaluationCount.toString(),
-            detailLabel: 'ACTIVE WORKSPACES',
-            detailValue: `${dealLifecycleSummary.evaluationLiveCount} live · ${dealLifecycleSummary.workspacesProvisioningCount} provisioning`,
-            progress: Math.round((protectedEvaluationCount / totalRecords) * 100),
-            tone: 'cyan' as const,
-            icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
-        },
-        {
-            label: 'Policy Exceptions',
-            value: policyExceptionCount.toString(),
-            detailLabel: 'FLAGGED SIGNALS',
-            detailValue: `${rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} rights alerts · ${passportReminderSummary.blockingReminderCount} critical reminders`,
-            progress: Math.round((policyExceptionCount / totalRecords) * 100),
-            tone: 'red' as const,
-            icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
-        },
-        {
-            label: 'Evidence Packs Ready',
-            value: evidenceReadyCount.toString(),
-            detailLabel: 'SIGNOFF PATH',
-            detailValue: `${releaseReadinessSummary.autoReleaseCount} release-ready · ${releaseReadinessSummary.humanApprovalCount} awaiting signoff`,
-            progress: Math.round((evidenceReadyCount / totalRecords) * 100),
-            tone: 'emerald' as const,
-            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
-        }
-    ]
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+
+    const handleLogout = () => {
+        signOut()
+        navigate('/admin/login')
+    }
+
+    const getActiveMenu = (path: string) => {
+        return location.pathname === path
+    }
 
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'Clean':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">Cleared</span>
+                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">Clean</span>
             case 'Quarantined':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-red-500/10 text-red-400/80 border border-red-500/20">Contained</span>
+                return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-red-500/10 text-red-400/80 border border-red-500/20">Quarantined</span>
             case 'Scanning':
                 return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium tracking-wider rounded-md bg-amber-500/10 text-amber-400/80 border border-amber-500/20 animate-pulse">Scanning</span>
             default:
@@ -154,179 +115,197 @@ export default function AdminDashboard() {
         }
     }
 
-    const getPilotReviewToneClasses = (status: string) => {
-        switch (status) {
-            case 'Pending':
-            case 'Awaiting first pass':
-            case 'Packet in preparation':
-                return getToneClasses('slate')
-            case 'Reviewing':
-            case 'Draft LOI shared':
-                return getToneClasses('cyan')
-            case 'Escalated':
-            case 'Secondary review':
-            case 'LOI under review':
-                return getToneClasses('amber')
-            case 'Ready for signoff':
-            case 'Pilot scope agreed':
-            case 'Pilot approved':
-                return getToneClasses('emerald')
-            default:
-                return getToneClasses('slate')
-        }
-    }
-
     return (
-        <AdminLayout title="PILOT REVIEW DASHBOARD" subtitle="ORGANIZATION READINESS & CONTROL SIGNALS">
-            <div className="space-y-6">
-                <div className="grid grid-cols-12 gap-5">
-                    {summaryCards.map((card) => (
-                        <div key={card.label} className="col-span-3 rounded-xl border border-slate-800/50 bg-slate-900/60 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                            <div className="mb-4 flex items-start justify-between">
+        <div className="min-h-screen bg-slate-950 flex">
+            <aside className="w-56 bg-gradient-to-b from-slate-950/95 to-slate-950 border-r border-slate-800/50 flex flex-col backdrop-blur-xl overflow-hidden">
+                <div className="p-5 border-b border-slate-800/60">
+                    <div className="flex items-center gap-3">
+                        <LogoMark className="w-9 h-9" />
+                        <div className="flex flex-col">
+                            <span className="text-[11px] font-semibold text-slate-300 tracking-[0.15em]">REDOUBT</span>
+                            <span className="text-[9px] text-slate-600 tracking-[0.2em] mt-0.5">ADMIN CONSOLE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-3 pt-4">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/50 border border-slate-800/50 rounded-lg mb-4">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <span className="text-[10px] font-medium text-slate-400 tracking-wider">SYSTEM SECURE</span>
+                    </div>
+                </div>
+
+                <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+                    {menuItems.map((item) => (
+                        <button
+                            key={item.label}
+                            onClick={() => item.path && navigate(item.path)}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-[11px] font-medium tracking-wide transition-all duration-200 rounded-lg ${
+                                getActiveMenu(item.path || '')
+                                    ? 'bg-slate-800/80 text-slate-200 shadow-lg shadow-black/20'
+                                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900/60'
+                            }`}
+                        >
+                            <svg className="w-4 h-4 flex-shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                            </svg>
+                            <span>{item.label}</span>
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="p-3 border-t border-slate-800/60 mt-auto">
+                    <button
+                        onClick={() => navigate('/admin/settings')}
+                        className={`w-full flex items-center gap-2.5 px-2 py-2 text-[10px] font-medium tracking-wider rounded-md border transition-all duration-200 mb-3 ${
+                            getActiveMenu('/admin/settings')
+                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                : 'border-slate-800/60 text-slate-500 hover:text-slate-300 hover:border-slate-700/80 hover:bg-slate-900/60'
+                        }`}
+                    >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.427 1.756 2.925 0 3.352a1.724 1.724 0 00-1.066 2.572c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.427 1.756-2.925 1.756-3.352 0a1.724 1.724 0 00-2.572-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.427-1.756-2.925 0-3.352a1.724 1.724 0 001.066-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75A3.75 3.75 0 1012 8.25a3.75 3.75 0 000 7.5z" />
+                        </svg>
+                        <span>SETTINGS</span>
+                    </button>
+
+                    <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-900/40 rounded-md border border-slate-800/30">
+                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span className="text-[9px] text-slate-600 font-medium tracking-wider">ENCRYPTED SESSION</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main className="flex-1 flex flex-col">
+                <header className="h-14 border-b border-slate-800/60 flex items-center justify-between px-6 bg-slate-950/50 backdrop-blur-xl">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-[13px] font-semibold text-slate-200 tracking-[0.08em]">{menuItems.find(m => m.path === location.pathname)?.label.toUpperCase() || 'DASHBOARD'}</h1>
+                        <div className="w-px h-4 bg-slate-800" />
+                        <span className="text-[10px] text-slate-600 font-medium tracking-wider">ADMINISTRATOR ACCESS</span>
+                    </div>
+                    <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-emerald-500/80 rounded-full shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+                            <span className="text-[10px] font-medium text-slate-400 tracking-wider">OPERATIONAL</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-600">{new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC</span>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-medium tracking-wider text-slate-500 hover:text-slate-300 border border-slate-800/60 hover:border-slate-700/80 rounded-md transition-all duration-200"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            SIGN OUT
+                        </button>
+                    </div>
+                </header>
+
+                <div className="flex-1 p-6 overflow-auto">
+                    <div className="grid grid-cols-12 gap-5 mb-6">
+                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
+                            <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${getToneClasses(card.tone)}`}>
-                                        <svg className="h-4 w-4 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
+                                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-amber-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{card.label}</span>
+                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Pending Clearances</span>
                                 </div>
                             </div>
-                            <span className="text-4xl font-semibold tracking-tight text-slate-100">{card.value}</span>
+                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">127</span>
                             <div className="mt-4">
-                                <div className="mb-1.5 flex items-center justify-between">
-                                    <span className="text-[9px] font-medium tracking-wider text-slate-600">{card.detailLabel}</span>
-                                    <span className="text-[9px] font-medium text-slate-500">{card.progress}%</span>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">QUEUE UTILIZATION</span>
+                                    <span className="text-[9px] text-slate-500 font-medium">34%</span>
                                 </div>
-                                <div className="h-1 overflow-hidden rounded-full bg-slate-800/60">
-                                    <div
-                                        className={`h-full rounded-full ${
-                                            card.tone === 'amber'
-                                                ? 'bg-gradient-to-r from-amber-500/60 to-amber-500/30'
-                                                : card.tone === 'cyan'
-                                                    ? 'bg-gradient-to-r from-cyan-500/60 to-cyan-500/30'
-                                                    : card.tone === 'red'
-                                                        ? 'bg-gradient-to-r from-red-500/60 to-red-500/30'
-                                                        : 'bg-gradient-to-r from-emerald-500/60 to-emerald-500/30'
-                                        }`}
-                                        style={{ width: `${card.progress}%` }}
-                                    />
+                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-amber-500/60 to-amber-500/30 rounded-full" style={{ width: '34%' }} />
                                 </div>
-                                <p className="mt-2 text-[9px] tracking-wide text-slate-500">{card.detailValue}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-12 gap-5">
-                    <div className="col-span-8 overflow-hidden rounded-xl border border-slate-800/50 bg-slate-900/60 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                        <div className="flex items-center justify-between border-b border-slate-800/60 px-5 py-4">
-                            <div>
-                                <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-300">Pilot Review Ops</h2>
-                                <p className="mt-1 text-[10px] text-slate-500">
-                                    Live organization packets with letter status, next action, owner, and review deadline.
-                                </p>
-                            </div>
-                            <div className="rounded-lg border border-slate-800/70 bg-slate-950/45 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                                {organizationReviewRecords.length} active packets
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-3 border-b border-slate-800/40 px-5 py-4">
-                            <div className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-3">
-                                <div className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Draft LOIs</div>
-                                <div className="mt-2 text-2xl font-semibold text-slate-100">{draftLetterCount}</div>
-                            </div>
-                            <div className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-3">
-                                <div className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Under Review</div>
-                                <div className="mt-2 text-2xl font-semibold text-slate-100">{underReviewLetterCount}</div>
-                            </div>
-                            <div className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-3">
-                                <div className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Scope Agreed</div>
-                                <div className="mt-2 text-2xl font-semibold text-slate-100">{scopeAgreedCount}</div>
-                            </div>
-                            <div className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-3">
-                                <div className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Ready for Signoff</div>
-                                <div className="mt-2 text-2xl font-semibold text-slate-100">{signoffReadyCount}</div>
-                            </div>
-                        </div>
-
-                        <div className="divide-y divide-slate-800/30">
-                            {pilotReviewQueue.map((record) => (
-                                <div key={record.id} className="px-5 py-4">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <div className="text-[11px] font-semibold text-slate-200">{record.organizationName}</div>
-                                                <div className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{record.industry}</div>
-                                            </div>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-300">{record.pilotScope}</p>
-                                            <p className="mt-2 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                {record.owner} · deadline {record.reviewDeadlineLabel}
-                                            </p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-500">Next: {record.nextAction}</p>
-                                        </div>
-                                        <div className="flex min-w-[11rem] flex-col items-end gap-2">
-                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${getPilotReviewToneClasses(record.loiStatus)}`}>
-                                                {record.loiStatus}
-                                            </span>
-                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${getPilotReviewToneClasses(record.decisionStatus)}`}>
-                                                {record.decisionStatus}
-                                            </span>
-                                            <Link
-                                                to={`/admin/application-review/${record.id}`}
-                                                className="rounded-md border border-cyan-500/30 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-cyan-400/80 transition-all duration-200 hover:border-cyan-500/50 hover:bg-cyan-500/10"
-                                            >
-                                                Open review
-                                            </Link>
-                                        </div>
+                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-cyan-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
                                     </div>
+                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Active Data Tokens</span>
                                 </div>
-                            ))}
+                            </div>
+                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">8,472</span>
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">TOKEN UTILIZATION</span>
+                                    <span className="text-[9px] text-slate-500 font-medium">72%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-cyan-500/60 to-cyan-500/30 rounded-full" style={{ width: '72%' }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-red-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Quarantined</span>
+                                </div>
+                            </div>
+                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">23</span>
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">SECURITY THREATS</span>
+                                    <span className="text-[9px] text-slate-500 font-medium">12%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-red-500/60 to-red-500/30 rounded-full" style={{ width: '12%' }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl p-5 shadow-2xl shadow-black/30">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-emerald-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Escrow Volume</span>
+                                </div>
+                            </div>
+                            <span className="text-4xl font-semibold text-slate-100 tracking-tight">$2.4M</span>
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[9px] text-slate-600 font-medium tracking-wider">FUND ALLOCATION</span>
+                                    <span className="text-[9px] text-slate-500 font-medium">89%</span>
+                                </div>
+                                <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-emerald-500/60 to-emerald-500/30 rounded-full" style={{ width: '89%' }} />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="col-span-4 overflow-hidden rounded-xl border border-slate-800/50 bg-slate-900/60 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                        <div className="border-b border-slate-800/60 px-5 py-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-300">Decision Watchlist</h2>
-                                <span className="text-[9px] font-medium tracking-wider text-slate-600">NEAREST DEADLINES</span>
-                            </div>
-                        </div>
-
-                        <div className="divide-y divide-slate-800/30">
-                            {upcomingPilotReviews.map((record) => {
-                                const checklistCounts = getDocumentChecklistCounts(record)
-                                return (
-                                    <div key={record.id} className="px-5 py-4">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <div className="text-[11px] font-semibold text-slate-200">{record.organizationName}</div>
-                                                <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">{record.owner}</div>
-                                            </div>
-                                            <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getPilotReviewToneClasses(record.reviewStatus)}`}>
-                                                {record.reviewStatus}
-                                            </div>
-                                        </div>
-                                        <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{record.nextAction}</p>
-                                        <p className="mt-2 text-[9px] text-slate-500">
-                                            {checklistCounts.ready} ready · {checklistCounts.review} in review · {checklistCounts.missing} missing
-                                        </p>
-                                        <p className="mt-2 text-[9px] text-slate-600">Deadline: {record.reviewDeadlineLabel}</p>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-12 gap-5 mb-6">
+                    <div className="grid grid-cols-12 gap-5 mb-6">
                         <div className="col-span-7 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Controlled Evaluation Lifecycle</h2>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Deal Lifecycle Foundation</h2>
                                     <p className="text-[10px] text-slate-500 mt-1">
-                                        Shared scoring model across organization passports, rights packages, protected evaluation, validation, and release.
+                                        Shared scoring model for passport, quote, checkout, validation, credit, and release.
                                     </p>
                                 </div>
                                 <div className="px-3 py-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-semibold text-cyan-300 tracking-[0.12em] uppercase">
@@ -365,7 +344,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-[10px] font-semibold text-slate-500 tracking-[0.12em] uppercase">Stage Distribution</span>
                                     <span className="text-[9px] text-slate-600 tracking-wider">
-                                        {dealLifecycleSummary.humanReviewCount} manual lane(s)
+                                        {dealLifecycleSummary.humanReviewCount} human review lane(s)
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
@@ -387,7 +366,7 @@ export default function AdminDashboard() {
                                                         {dealLifecycleSummary.stageCounts[stage]}
                                                     </span>
                                                 </div>
-                                                <p className="mt-2 text-[9px] leading-relaxed text-slate-600">{normalizeAdminCopy(meta.detail)}</p>
+                                                <p className="mt-2 text-[9px] leading-relaxed text-slate-600">{meta.detail}</p>
                                             </div>
                                         )
                                     })}
@@ -398,8 +377,8 @@ export default function AdminDashboard() {
                         <div className="col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Review Triage</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Review packets are routed automatically by stage, risk, urgency, and approval policy.</p>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Automated Deal Triage</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Deals are now routed automatically by stage, risk, urgency, and approval policy.</p>
                                 </div>
                                 <div className="text-[9px] text-slate-600 tracking-wider">
                                     {dealTriageSummary.manualCount} manual
@@ -416,7 +395,7 @@ export default function AdminDashboard() {
                                             <div className="mt-2 text-xl font-semibold text-slate-100">
                                                 {dealTriageSummary.laneCounts[lane]}
                                             </div>
-                                            <p className="mt-1 text-[8px] leading-relaxed text-slate-600">{normalizeAdminCopy(meta.detail)}</p>
+                                            <p className="mt-1 text-[8px] leading-relaxed text-slate-600">{meta.detail}</p>
                                         </div>
                                     )
                                 })}
@@ -460,17 +439,17 @@ export default function AdminDashboard() {
                                             </div>
 
                                             <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {normalizeAdminCopy(deal.triageReason)}
+                                                {deal.triageReason}
                                             </p>
                                             <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                Next: {normalizeAdminCopy(deal.nextAction)}
+                                                Next: {deal.nextAction}
                                             </p>
                                         </div>
                                     )
                                 })}
                                 {triageActionQueue.length === 0 && (
                                     <div className="px-5 py-5 text-[10px] text-slate-500">
-                                        No manual triage items are active. Current records can continue in watch or auto-advance lanes.
+                                        No manual triage items are active. Current deals can continue in watch or auto-advance lanes.
                                     </div>
                                 )}
                             </div>
@@ -481,8 +460,8 @@ export default function AdminDashboard() {
                         <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Evidence & Release Readiness</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Automated checks decide what is ready for signoff, what needs approval, and what stays frozen.</p>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Release Readiness</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Automated checks decide what can release, what needs approval, and what stays frozen.</p>
                                 </div>
                                 <div className="text-[9px] text-slate-600 tracking-wider">
                                     {releaseReadinessSummary.autoReleaseCount} safe
@@ -520,10 +499,10 @@ export default function AdminDashboard() {
                                                 </div>
                                             </div>
                                             <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {normalizeAdminCopy(deal.releaseReadiness.summary)}
+                                                {deal.releaseReadiness.summary}
                                             </p>
                                             <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                Next: {normalizeAdminCopy(deal.releaseReadiness.recommendedAction)}
+                                                Next: {deal.releaseReadiness.recommendedAction}
                                             </p>
                                         </div>
                                     )
@@ -539,7 +518,7 @@ export default function AdminDashboard() {
                         <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Organization Passport Reminders</h2>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Passport Reminders</h2>
                                     <p className="text-[10px] text-slate-500 mt-1">Expiry, diligence gaps, and reuse blockers are grouped into a single reminder queue.</p>
                                 </div>
                                 <div className="text-[9px] text-slate-600 tracking-wider">
@@ -585,8 +564,8 @@ export default function AdminDashboard() {
                         <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Policy Exceptions</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Only unusual rights, handling, or release patterns are pulled into the admin review lane.</p>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Rights Risk Scoring</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Only unusual or high-risk rights packages are pulled into the admin review lane.</p>
                                 </div>
                                 <div className="text-[9px] text-slate-600 tracking-wider">
                                     {rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} flagged
@@ -616,7 +595,7 @@ export default function AdminDashboard() {
                                                 <div>
                                                     <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
                                                     <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                        policy risk {deal.rightsRisk.score} · {deal.queue.replace('_', ' ')}
+                                                        rights risk {deal.rightsRisk.score} · {deal.queue.replace('_', ' ')}
                                                     </div>
                                                 </div>
                                                 <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(meta.tone)}`}>
@@ -624,17 +603,17 @@ export default function AdminDashboard() {
                                                 </div>
                                             </div>
                                             <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {normalizeAdminCopy(deal.rightsRisk.flags[0] ?? deal.rightsRisk.summary)}
+                                                {deal.rightsRisk.flags[0] ?? deal.rightsRisk.summary}
                                             </p>
                                             <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
-                                                {normalizeAdminCopy(deal.rightsRisk.summary)}
+                                                {deal.rightsRisk.summary}
                                             </p>
                                         </div>
                                     )
                                 })}
                                 {rightsFlagQueue.length === 0 && (
                                     <div className="px-5 py-5 text-[10px] text-slate-500">
-                                        No high-risk policy exceptions are active right now.
+                                        No high-risk rights packages are active right now.
                                     </div>
                                 )}
                             </div>
@@ -645,7 +624,7 @@ export default function AdminDashboard() {
                         <div className="col-span-8 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Automated Review Lane</h2>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Live Interrogation Feed</h2>
                                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-800/60 rounded-full">
                                         <div className="w-1.5 h-1.5 bg-cyan-500/80 rounded-full animate-pulse shadow-[0_0_6px_rgba(6,185,185,0.5)]" />
                                         <span className="text-[9px] font-semibold text-slate-500 tracking-wider">LIVE</span>
@@ -655,7 +634,7 @@ export default function AdminDashboard() {
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
-                                    POLICY ENGINE ACTIVE
+                                    AI GUARDIAN ACTIVE
                                 </div>
                             </div>
                             <div className="overflow-x-auto">
@@ -663,9 +642,9 @@ export default function AdminDashboard() {
                                     <thead className="bg-slate-950/40">
                                         <tr className="text-[9px] font-semibold text-slate-600 tracking-[0.12em] uppercase">
                                             <th className="text-left px-5 py-3 font-medium">Timestamp</th>
-                                            <th className="text-left px-5 py-3 font-medium">Organization ID</th>
+                                            <th className="text-left px-5 py-3 font-medium">Vendor ID</th>
                                             <th className="text-left px-5 py-3 font-medium">Dataset Name</th>
-                                            <th className="text-left px-5 py-3 font-medium">Review Status</th>
+                                            <th className="text-left px-5 py-3 font-medium">AI Status</th>
                                             <th className="text-left px-5 py-3 font-medium">Action</th>
                                         </tr>
                                     </thead>
@@ -678,7 +657,7 @@ export default function AdminDashboard() {
                                                 <td className="px-5 py-4">{getStatusBadge(row.status)}</td>
                                                 <td className="px-5 py-4">
                                                     <button className={`text-[9px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-md transition-all duration-200 ${
-                                                        row.action === 'Contain'
+                                                        row.action === 'Block'
                                                             ? 'border border-red-500/30 text-red-400/80 hover:bg-red-500/10 hover:border-red-500/50'
                                                             : 'border border-slate-700/50 text-slate-400/80 hover:bg-slate-800/50 hover:border-slate-600/50'
                                                     }`}>
@@ -695,7 +674,7 @@ export default function AdminDashboard() {
                         <div className="col-span-4 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Policy & Control Alerts</h2>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Security Alerts</h2>
                                     <span className="text-[9px] font-medium text-slate-600 tracking-wider">LAST 24H</span>
                                 </div>
                             </div>
@@ -744,16 +723,17 @@ export default function AdminDashboard() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-[11px] font-semibold text-slate-400 tracking-[0.08em] uppercase">Containment Controls</h3>
-                                    <p className="text-[9px] text-slate-600 mt-0.5 tracking-wider">Requires dual authorization • Immediate effect</p>
+                                    <h3 className="text-[11px] font-semibold text-slate-400 tracking-[0.08em] uppercase">Emergency Controls</h3>
+                                    <p className="text-[9px] text-slate-600 mt-0.5 tracking-wider">Requires dual authentication • Immediate effect</p>
                                 </div>
                             </div>
                             <button className="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-red-400/80 border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 hover:border-red-800/60 rounded-lg transition-all duration-200">
-                                Freeze New Evaluations
+                                Global Kill-Switch
                             </button>
                         </div>
                     </div>
-            </div>
-        </AdminLayout>
+                </div>
+            </main>
+        </div>
     )
 }
