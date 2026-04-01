@@ -3,6 +3,7 @@ export type CloudProvider = 'AWS' | 'Azure' | 'Google Cloud' | 'OCI'
 type CloudProviderLogoProps = {
     provider: CloudProvider
     className?: string
+    grayscale?: boolean
 }
 
 const providerVisuals = {
@@ -49,9 +50,10 @@ export function getCloudProviderVisuals(provider: CloudProvider) {
     return providerVisuals[provider]
 }
 
-export default function CloudProviderLogo({ provider, className = '' }: CloudProviderLogoProps) {
+export default function CloudProviderLogo({ provider, className = '', grayscale = false }: CloudProviderLogoProps) {
     const visuals = getCloudProviderVisuals(provider)
     const iconClassName = `${visuals.iconClassName} ${className}`.trim()
+    const grayscaleStyle: React.CSSProperties = grayscale ? { filter: 'grayscale(100%) brightness(0.9)' } : {}
 
     if (provider === 'AWS') {
         return (
@@ -60,7 +62,7 @@ export default function CloudProviderLogo({ provider, className = '' }: CloudPro
                 viewBox="0 0 24 24"
                 aria-hidden="true"
                 focusable="false"
-                style={{ color: visuals.color }}
+                style={{ color: visuals.color, ...grayscaleStyle }}
             >
                 <path
                     fill="currentColor"
@@ -77,7 +79,7 @@ export default function CloudProviderLogo({ provider, className = '' }: CloudPro
                 viewBox="0 0 24 24"
                 aria-hidden="true"
                 focusable="false"
-                style={{ color: visuals.color }}
+                style={{ color: visuals.color, ...grayscaleStyle }}
             >
                 <path
                     fill="currentColor"
@@ -94,7 +96,7 @@ export default function CloudProviderLogo({ provider, className = '' }: CloudPro
                 viewBox="0 0 24 24"
                 aria-hidden="true"
                 focusable="false"
-                style={{ color: visuals.color }}
+                style={{ color: visuals.color, ...grayscaleStyle }}
             >
                 <path
                     fill="currentColor"
@@ -110,7 +112,7 @@ export default function CloudProviderLogo({ provider, className = '' }: CloudPro
             viewBox="0 0 24 24"
             aria-hidden="true"
             focusable="false"
-            style={{ color: visuals.color }}
+            style={{ color: visuals.color, ...grayscaleStyle }}
         >
             <path
                 fill="currentColor"

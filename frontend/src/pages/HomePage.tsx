@@ -491,15 +491,15 @@ export default function HomePage() {
     const heroHighlights = [
         {
             title: 'Confidence Before Access',
-            detail: 'Review dataset fit, provenance, and handling constraints before a dataset moves into pilot review.',
+            detail: 'Fit, provenance, and handling checks before pilot access.',
         },
         {
             title: 'Protected Evaluation',
-            detail: 'Move from metadata preview into governed evaluation with scoped controls before broader access is expanded.',
+            detail: 'Scoped evaluation before broader access opens.',
         },
         {
             title: 'Policy & Approval Alignment',
-            detail: 'Keep requesting teams, contributing institutions, privacy, legal, and governance reviewers aligned in one controlled workflow.',
+            detail: 'One workflow for privacy, legal, and governance sign-off.',
         },
     ]
 
@@ -508,19 +508,19 @@ export default function HomePage() {
     const sharedResponsibilityCards: Array<{ title: CloudProvider; detail: string }> = [
         {
             title: 'AWS',
-            detail: 'Shared responsibility baseline for infrastructure security, resilience, and cloud control inheritance.',
+            detail: 'Infrastructure controls and resilience inherited from AWS.',
         },
         {
             title: 'Azure',
-            detail: 'Shared responsibility model for regulated workloads, identity controls, and regional deployment governance.',
+            detail: 'Identity, regional governance, and workload controls under Azure.',
         },
         {
             title: 'Google Cloud',
-            detail: 'Shared responsibility approach for cloud operations, data protection posture, and controlled analytics environments.',
+            detail: 'Operational controls and protected analytics under Google Cloud.',
         },
         {
             title: 'OCI',
-            detail: 'Shared security model for residency-sensitive deployment, infrastructure controls, and enterprise isolation patterns.',
+            detail: 'Residency-sensitive deployment and isolation controls under OCI.',
         },
     ]
 
@@ -645,6 +645,10 @@ const joinSegments = [
                 @keyframes ctaPulse {
                     0%,100% { transform: scale(0.95); opacity: 0.28; }
                     50% { transform: scale(1.08); opacity: 0.65; }
+                }
+                @keyframes scrollBounce {
+                    0%,100% { transform: translateY(0); }
+                    50% { transform: translateY(6px); }
                 }
 
                 .hero-grid-lines {
@@ -822,7 +826,7 @@ const joinSegments = [
                             </MotionReveal>
 
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
-                                <p className="mt-5 max-w-2xl text-xs leading-7 text-slate-300/90 sm:text-sm md:text-base md:leading-8">
+                                <p className="mt-5 max-w-[65ch] text-xs leading-7 text-slate-200 sm:text-sm md:text-base md:leading-8">
                                     Redoubt is a data confidence layer for governed access, helping organizations evaluate
                                     sensitive external datasets with provenance, policy, and audit context before a pilot begins.
                                 </p>
@@ -830,22 +834,20 @@ const joinSegments = [
 
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={320} className="w-full">
                                 <div className="mx-auto mt-8 w-full max-w-[48rem] lg:mt-10">
-                                    <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(12,20,40,0.84)_0%,rgba(4,10,24,0.92)_100%)] p-3 shadow-[0_24px_80px_rgba(2,8,23,0.34)] backdrop-blur-xl sm:p-4">
-                                        <div className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent" />
-                                        <div className="absolute -left-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-cyan-400/8 blur-[72px]" />
-                                        <div className="absolute -right-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-sky-400/8 blur-[72px]" />
-
+                                    <div className="relative w-full">
+                                        <div className="pointer-events-none absolute left-[24%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[78px]" />
+                                        <div className="pointer-events-none absolute left-[76%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/12 blur-[82px]" />
                                         <div className="relative grid gap-3 sm:grid-cols-2 sm:gap-4">
                                             <Link
                                                 to="/login"
                                                 onClick={handleSignInFromLanding}
-                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/70 px-6 py-4 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_30px_rgba(34,211,238,0.12)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_42px_rgba(34,211,238,0.22)]"
+                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/72 px-6 py-4 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.16),0_18px_42px_rgba(2,8,23,0.26)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_52px_rgba(34,211,238,0.24),0_20px_46px_rgba(2,8,23,0.28)]"
                                             >
                                                 Sign In →
                                             </Link>
                                             <button
                                                 onClick={handleRequestPlatformAccess}
-                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_0_36px_rgba(34,211,238,0.3)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_48px_rgba(34,211,238,0.38)]"
+                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_0_44px_rgba(34,211,238,0.34),0_18px_42px_rgba(2,8,23,0.22)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_58px_rgba(34,211,238,0.42),0_20px_46px_rgba(2,8,23,0.24)]"
                                             >
                                                 Request Platform Access
                                             </button>
@@ -853,8 +855,8 @@ const joinSegments = [
                                     </div>
 
                                     <div className="mt-5 flex justify-center lg:mt-6">
-                                        <div className="relative w-full overflow-hidden rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(15,23,42,0.28)_100%)] p-2.5 shadow-[0_20px_70px_rgba(2,8,23,0.26)] backdrop-blur-xl">
-                                            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/20 to-transparent" />
+                                        <div className="relative w-full">
+                                            <div className="pointer-events-none absolute inset-x-8 top-1/2 h-16 -translate-y-1/2 rounded-full bg-emerald-400/6 blur-[72px]" />
                                             <div className="relative grid gap-2.5 md:grid-cols-3">
                                                 {trustSignals.map((item, index) => (
                                                     <MotionReveal
@@ -863,7 +865,7 @@ const joinSegments = [
                                                         reducedMotion={prefersReducedMotion}
                                                         delay={690 + index * 70}
                                                     >
-                                                        <span className="landing-panel inline-flex min-h-[3.35rem] w-full items-center justify-center gap-2.5 rounded-[1rem] border border-white/10 bg-[linear-gradient(180deg,rgba(16,185,129,0.14)_0%,rgba(15,23,42,0.4)_100%)] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50 shadow-[0_12px_30px_rgba(5,150,105,0.12)] backdrop-blur-xl">
+                                                        <span className="landing-panel inline-flex min-h-[3.35rem] w-full items-center justify-center gap-2.5 rounded-[1rem] border border-emerald-300/12 bg-[linear-gradient(180deg,rgba(16,185,129,0.16)_0%,rgba(15,23,42,0.42)_100%)] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50 shadow-[0_0_26px_rgba(16,185,129,0.12),0_14px_34px_rgba(2,8,23,0.18)] backdrop-blur-xl">
                                                             <span
                                                                 className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.7)]"
                                                                 style={{ animationDelay: `${index * 0.18}s` }}
@@ -881,26 +883,25 @@ const joinSegments = [
                         </div>
 
                         <div className="mx-auto mt-10 w-full max-w-5xl lg:mt-12">
-                            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,32,0.84)_0%,rgba(4,10,24,0.94)_100%)] px-4 py-5 shadow-[0_32px_120px_rgba(2,8,23,0.42),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                                <div className="absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent" />
-                                <div className="absolute -top-20 left-1/2 h-40 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[115px]" />
-                                <div className="absolute -left-10 top-20 h-44 w-44 rounded-full bg-blue-500/10 blur-[120px]" />
-                                <div className="absolute -right-6 bottom-12 h-40 w-40 rounded-full bg-emerald-400/8 blur-[110px]" />
+                            <div className="relative">
+                                <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[115px]" />
+                                <div className="pointer-events-none absolute -left-10 top-16 h-44 w-44 rounded-full bg-blue-500/10 blur-[120px]" />
+                                <div className="pointer-events-none absolute -right-6 bottom-8 h-40 w-40 rounded-full bg-emerald-400/8 blur-[110px]" />
 
                                 <div className="relative">
-                                    <div className="grid gap-4 lg:grid-cols-3">
+                                    <div className="grid items-stretch gap-4 lg:grid-cols-3">
                                         {heroHighlights.map((item, index) => (
                                             <MotionReveal
                                                 key={item.title}
                                                 inView={heroReady}
                                                 reducedMotion={prefersReducedMotion}
                                                 delay={310 + index * 90}
-                                                className="h-full"
+                                                className="flex h-full"
                                             >
-                                                <TiltCard disabled={prefersReducedMotion} className="h-full">
-                                                    <div className="landing-panel relative flex h-full flex-col rounded-[1.35rem] border border-white/12 bg-white/[0.055] p-4 text-left shadow-[0_20px_60px_rgba(2,8,23,0.28),0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur-xl sm:p-5">
-                                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.14)_0%,rgba(14,165,233,0.05)_34%,transparent_72%)]" />
-                                                        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                                                <TiltCard disabled={prefersReducedMotion} className="flex h-full">
+                                                    <div className="landing-panel relative grid h-full w-full grid-rows-[auto_1fr] gap-5 rounded-[1.35rem] border border-white/12 bg-white/[0.055] p-5 text-left shadow-[0_22px_64px_rgba(2,8,23,0.3),0_0_40px_rgba(34,211,238,0.08),0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur-xl sm:p-6">
+                                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.18)_0%,rgba(14,165,233,0.06)_34%,transparent_72%)]" />
+                                                        <div className="pointer-events-none absolute -bottom-8 right-6 h-24 w-24 rounded-full bg-cyan-300/8 blur-[72px]" />
 
                                                         <div className="relative flex items-center gap-3">
                                                             <span
@@ -911,11 +912,10 @@ const joinSegments = [
                                                                 {item.title}
                                                             </p>
                                                         </div>
-                                                        <p className="relative mt-4 text-sm leading-6 text-slate-300/88 sm:text-[15px]">
-                                                            {item.detail}
-                                                        </p>
-                                                        <div className="relative mt-auto pt-4">
-                                                            <div className="h-px w-full bg-gradient-to-r from-cyan-200/35 via-white/10 to-transparent" />
+                                                        <div className="relative flex items-center">
+                                                            <p className="text-sm leading-6 text-slate-200 sm:text-[15px]">
+                                                                {item.detail}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </TiltCard>
@@ -927,10 +927,9 @@ const joinSegments = [
                         </div>
 
                         <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={860} className="w-full">
-                            <div className="mx-auto mt-8 w-full max-w-4xl sm:mt-10">
-                                <div className="relative overflow-hidden rounded-[1.55rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(15,23,42,0.16)_100%)] px-4 py-5 shadow-[0_14px_48px_rgba(2,8,23,0.2)] backdrop-blur-lg sm:px-6 sm:py-6 lg:px-6 lg:py-6">
-                                    <div className="absolute inset-x-14 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
-
+                            <div className="mx-auto mt-8 w-full max-w-5xl sm:mt-10">
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute left-1/2 top-20 h-36 w-[24rem] -translate-x-1/2 rounded-full bg-cyan-400/8 blur-[110px]" />
                                     <div className="relative text-center">
                                         <div className="text-[10px] font-semibold tracking-[0.18em] text-slate-500">
                                             Shared Responsibility Models
@@ -945,13 +944,19 @@ const joinSegments = [
                                             return (
                                                 <div
                                                     key={card.title}
-                                                    className="landing-panel relative flex min-h-[10.25rem] flex-col overflow-hidden rounded-[1.15rem] border border-white/8 bg-slate-950/26 p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-md sm:p-5"
+                                                    className="landing-panel relative grid min-h-[10.25rem] grid-rows-[auto_1fr] gap-4 overflow-hidden rounded-[1.35rem] border border-white/8 bg-slate-950/26 p-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02),0_18px_44px_rgba(2,8,23,0.2)] backdrop-blur-md sm:p-6"
                                                 >
                                                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                                                     <div
-                                                        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-3xl"
+                                                        className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full blur-[108px]"
                                                         style={{
                                                             background: `radial-gradient(circle, ${visuals.glow} 0%, transparent 72%)`,
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="pointer-events-none absolute bottom-0 left-6 h-20 w-20 rounded-full blur-[76px]"
+                                                        style={{
+                                                            background: `radial-gradient(circle, ${visuals.glow} 0%, transparent 74%)`,
                                                         }}
                                                     />
 
@@ -972,11 +977,10 @@ const joinSegments = [
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <p className="relative mt-4 text-xs leading-6 text-slate-400/88 sm:text-sm sm:leading-6">
-                                                        {card.detail}
-                                                    </p>
-                                                    <div className="relative mt-auto pt-5">
-                                                        <div className="h-px w-full bg-gradient-to-r from-white/12 via-white/6 to-transparent" />
+                                                    <div className="relative flex items-center">
+                                                        <p className="text-sm leading-6 text-slate-200 sm:text-sm sm:leading-6">
+                                                            {card.detail}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             )
