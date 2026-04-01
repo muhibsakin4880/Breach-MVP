@@ -782,24 +782,24 @@ const joinSegments = [
                     <div className="hero-orb motion-safe-home absolute left-1/2 top-20 h-72 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[140px]" />
                     <div className="hero-orb alt motion-safe-home absolute left-[10%] top-[28%] h-36 w-36 rounded-full bg-blue-500/10 blur-[110px]" />
                     <div className="hero-orb alt motion-safe-home absolute right-[12%] top-[22%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[120px]" />
-                    <div className="absolute inset-x-0 top-10 flex justify-center">
-                        <div className="hero-orbit motion-safe-home h-[34rem] w-[34rem] rounded-full border border-cyan-400/10" />
-                    </div>
-                    <div className="absolute inset-x-0 top-16 flex justify-center">
-                        <div className="hero-orbit delay motion-safe-home h-[28rem] w-[28rem] rounded-full border border-cyan-300/10" />
-                    </div>
-                    <div className="absolute inset-x-0 top-24 flex justify-center">
-                        <div className="hero-orbit fast motion-safe-home h-[22rem] w-[22rem] rounded-full border border-cyan-200/10" />
-                    </div>
                     <ParticleCanvas disabled={prefersReducedMotion} />
 
                     <div className="relative z-10 mx-auto max-w-6xl px-6">
                         <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-4xl flex-col items-center justify-center text-center">
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion}>
-                                <div className="relative mb-8 sm:mb-10">
+                                <div className="relative isolate mb-8 sm:mb-10">
+                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                        <div className="hero-orbit motion-safe-home h-[30rem] w-[30rem] rounded-full border border-cyan-400/10" />
+                                    </div>
+                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                        <div className="hero-orbit delay motion-safe-home h-[24rem] w-[24rem] rounded-full border border-cyan-300/10" />
+                                    </div>
+                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                        <div className="hero-orbit fast motion-safe-home h-[18rem] w-[18rem] rounded-full border border-cyan-200/10" />
+                                    </div>
                                     <div className="absolute inset-0 rounded-full bg-cyan-400/12 blur-3xl" />
                                     <div className="absolute inset-4 rounded-full border border-cyan-300/10" />
-                                    <div className="relative scale-[0.82] sm:scale-[0.92] md:scale-100">
+                                    <div className="relative z-10 scale-[0.82] sm:scale-[0.92] md:scale-100">
                                         <PermissionGateEmblem visible={heroVisible} />
                                     </div>
                                 </div>
@@ -827,87 +827,140 @@ const joinSegments = [
                                 </p>
                             </MotionReveal>
 
-                            <div className="mt-8 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
-                                {heroHighlights.map((item, index) => (
-                                    <MotionReveal
-                                        key={item.title}
-                                        inView={heroReady}
-                                        reducedMotion={prefersReducedMotion}
-                                        delay={310 + index * 90}
-                                        className="h-full"
-                                    >
-                                        <TiltCard disabled={prefersReducedMotion} className="h-full">
-                                            <div className="landing-panel h-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left shadow-[0_0_30px_rgba(15,23,42,0.35)] backdrop-blur-md">
-                                                <div className="mb-2 flex items-center gap-2">
-                                                    <span
-                                                        className="signal-dot motion-safe-home h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]"
-                                                        style={{ animationDelay: `${index * 0.15}s` }}
-                                                    />
-                                                    <p className="text-sm font-semibold text-cyan-50">{item.title}</p>
-                                                </div>
-                                                <p className="text-sm leading-6 text-slate-400">{item.detail}</p>
-                                            </div>
-                                        </TiltCard>
-                                    </MotionReveal>
-                                ))}
-                            </div>
+                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={320} className="w-full">
+                                <div className="mx-auto mt-8 w-full max-w-[48rem] lg:mt-10">
+                                    <div className="relative w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(12,20,40,0.84)_0%,rgba(4,10,24,0.92)_100%)] p-3 shadow-[0_24px_80px_rgba(2,8,23,0.34)] backdrop-blur-xl sm:p-4">
+                                        <div className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent" />
+                                        <div className="absolute -left-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-cyan-400/8 blur-[72px]" />
+                                        <div className="absolute -right-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-sky-400/8 blur-[72px]" />
 
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={600}>
-                                <div className="mt-10 flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                                    <Link
-                                        to="/login"
-                                        onClick={handleSignInFromLanding}
-                                        className="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-cyan-300/30 bg-cyan-300/12 px-6 py-3.5 text-sm font-semibold text-cyan-50 shadow-[0_0_30px_rgba(34,211,238,0.18)] transition-all duration-300 hover:border-cyan-200/60 hover:bg-cyan-300/18 hover:shadow-[0_0_40px_rgba(34,211,238,0.28)]"
-                                    >
-                                        Sign In →
-                                    </Link>
-                                    <button
-                                        onClick={handleRequestPlatformAccess}
-                                        className="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_0_36px_rgba(34,211,238,0.32)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_48px_rgba(34,211,238,0.4)]"
-                                    >
-                                        Request Platform Access
-                                    </button>
+                                        <div className="relative grid gap-3 sm:grid-cols-2 sm:gap-4">
+                                            <Link
+                                                to="/login"
+                                                onClick={handleSignInFromLanding}
+                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/70 px-6 py-4 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_30px_rgba(34,211,238,0.12)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_42px_rgba(34,211,238,0.22)]"
+                                            >
+                                                Sign In →
+                                            </Link>
+                                            <button
+                                                onClick={handleRequestPlatformAccess}
+                                                className="inline-flex min-h-[4.25rem] w-full items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-4 text-sm font-semibold text-slate-950 shadow-[0_0_36px_rgba(34,211,238,0.3)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_48px_rgba(34,211,238,0.38)]"
+                                            >
+                                                Request Platform Access
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-5 flex justify-center lg:mt-6">
+                                        <div className="relative w-full overflow-hidden rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(15,23,42,0.28)_100%)] p-2.5 shadow-[0_20px_70px_rgba(2,8,23,0.26)] backdrop-blur-xl">
+                                            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/20 to-transparent" />
+                                            <div className="relative grid gap-2.5 md:grid-cols-3">
+                                                {trustSignals.map((item, index) => (
+                                                    <MotionReveal
+                                                        key={item}
+                                                        inView={heroReady}
+                                                        reducedMotion={prefersReducedMotion}
+                                                        delay={690 + index * 70}
+                                                    >
+                                                        <span className="landing-panel inline-flex min-h-[3.35rem] w-full items-center justify-center gap-2.5 rounded-[1rem] border border-white/10 bg-[linear-gradient(180deg,rgba(16,185,129,0.14)_0%,rgba(15,23,42,0.4)_100%)] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-50 shadow-[0_12px_30px_rgba(5,150,105,0.12)] backdrop-blur-xl">
+                                                            <span
+                                                                className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.7)]"
+                                                                style={{ animationDelay: `${index * 0.18}s` }}
+                                                            />
+                                                            {item}
+                                                        </span>
+                                                    </MotionReveal>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </MotionReveal>
 
-                            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                                {trustSignals.map((item, index) => (
-                                    <MotionReveal
-                                        key={item}
-                                        inView={heroReady}
-                                        reducedMotion={prefersReducedMotion}
-                                        delay={690 + index * 70}
-                                    >
-                                        <span className="landing-panel inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-emerald-100">
-                                            <span
-                                                className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.7)]"
-                                                style={{ animationDelay: `${index * 0.18}s` }}
-                                            />
-                                            {item}
-                                        </span>
-                                    </MotionReveal>
-                                ))}
-                            </div>
+                        </div>
 
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={860} className="w-full">
-                                <div className="mt-6 w-full max-w-4xl rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md">
-                                    <div className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                                        Shared Responsibility Models
+                        <div className="mx-auto mt-10 w-full max-w-5xl lg:mt-12">
+                            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,15,32,0.84)_0%,rgba(4,10,24,0.94)_100%)] px-4 py-5 shadow-[0_32px_120px_rgba(2,8,23,0.42),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+                                <div className="absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent" />
+                                <div className="absolute -top-20 left-1/2 h-40 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[115px]" />
+                                <div className="absolute -left-10 top-20 h-44 w-44 rounded-full bg-blue-500/10 blur-[120px]" />
+                                <div className="absolute -right-6 bottom-12 h-40 w-40 rounded-full bg-emerald-400/8 blur-[110px]" />
+
+                                <div className="relative">
+                                    <div className="grid gap-4 lg:grid-cols-3">
+                                        {heroHighlights.map((item, index) => (
+                                            <MotionReveal
+                                                key={item.title}
+                                                inView={heroReady}
+                                                reducedMotion={prefersReducedMotion}
+                                                delay={310 + index * 90}
+                                                className="h-full"
+                                            >
+                                                <TiltCard disabled={prefersReducedMotion} className="h-full">
+                                                    <div className="landing-panel relative flex h-full flex-col rounded-[1.35rem] border border-white/12 bg-white/[0.055] p-4 text-left shadow-[0_20px_60px_rgba(2,8,23,0.28),0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur-xl sm:p-5">
+                                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.14)_0%,rgba(14,165,233,0.05)_34%,transparent_72%)]" />
+                                                        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+
+                                                        <div className="relative flex items-center gap-3">
+                                                            <span
+                                                                className="signal-dot motion-safe-home h-3 w-3 rounded-full bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.85)]"
+                                                                style={{ animationDelay: `${index * 0.15}s` }}
+                                                            />
+                                                            <p className="text-[15px] font-semibold tracking-[0.01em] text-cyan-50 sm:text-base">
+                                                                {item.title}
+                                                            </p>
+                                                        </div>
+                                                        <p className="relative mt-4 text-sm leading-6 text-slate-300/88 sm:text-[15px]">
+                                                            {item.detail}
+                                                        </p>
+                                                        <div className="relative mt-auto pt-4">
+                                                            <div className="h-px w-full bg-gradient-to-r from-cyan-200/35 via-white/10 to-transparent" />
+                                                        </div>
+                                                    </div>
+                                                </TiltCard>
+                                            </MotionReveal>
+                                        ))}
                                     </div>
-                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={860} className="w-full">
+                            <div className="mx-auto mt-8 w-full max-w-4xl sm:mt-10">
+                                <div className="relative overflow-hidden rounded-[1.55rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(15,23,42,0.16)_100%)] px-4 py-5 shadow-[0_14px_48px_rgba(2,8,23,0.2)] backdrop-blur-lg sm:px-6 sm:py-6 lg:px-6 lg:py-6">
+                                    <div className="absolute inset-x-14 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+
+                                    <div className="relative text-center">
+                                        <div className="text-[10px] font-semibold tracking-[0.18em] text-slate-500">
+                                            Shared Responsibility Models
+                                        </div>
+                                        <div className="mx-auto mt-3 h-px w-16 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                                    </div>
+
+                                    <div className="relative mt-6 grid gap-3 md:grid-cols-2">
                                         {sharedResponsibilityCards.map((card) => (
                                             <div
                                                 key={card.title}
-                                                className="rounded-xl border border-cyan-400/10 bg-slate-950/45 px-4 py-4 text-left"
+                                                className="landing-panel relative flex min-h-[9.25rem] flex-col overflow-hidden rounded-[1.15rem] border border-white/8 bg-slate-950/26 p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-md sm:p-5"
                                             >
-                                                <div className="text-sm font-semibold text-cyan-100">{card.title}</div>
-                                                <p className="mt-2 text-xs leading-6 text-slate-400">{card.detail}</p>
+                                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                                                <div className="relative flex items-center gap-3">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-500/80" />
+                                                    <div className="text-sm font-medium tracking-[0.01em] text-slate-200">{card.title}</div>
+                                                </div>
+                                                <p className="relative mt-4 text-xs leading-6 text-slate-400/88 sm:text-sm sm:leading-6">
+                                                    {card.detail}
+                                                </p>
+                                                <div className="relative mt-auto pt-5">
+                                                    <div className="h-px w-full bg-gradient-to-r from-white/12 via-white/6 to-transparent" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                            </MotionReveal>
-                        </div>
+                            </div>
+                        </MotionReveal>
                     </div>
                 </section>
 
