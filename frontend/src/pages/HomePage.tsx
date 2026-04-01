@@ -227,7 +227,19 @@ function ParticleCanvas({ disabled = false }: { disabled?: boolean }) {
 // Rings counter-rotate so alignment is never a given —
 // access is never assumed, always earned.
 // ──────────────────────────────────────────────────────────────
-function PermissionGateEmblem({ visible }: { visible: boolean }) {
+function PermissionGateEmblem({
+    visible,
+    size = 230,
+    className = '',
+    center = true,
+    animated = true,
+}: {
+    visible: boolean
+    size?: number
+    className?: string
+    center?: boolean
+    animated?: boolean
+}) {
     const CX = 110, CY = 110
 
     const rings = [
@@ -263,12 +275,16 @@ function PermissionGateEmblem({ visible }: { visible: boolean }) {
 
     return (
         <div
-            className={`mx-auto mb-10 w-[230px] h-[230px] transition-all duration-700 ${
+            className={`${center ? 'mx-auto' : ''} transition-all duration-700 ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
-            style={visible ? {
+            } ${className}`}
+            style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                ...(visible && animated ? {
                 animation: 'logoFloat 6s ease-in-out infinite, logoGlow 4s ease-in-out infinite'
-            } : {}}
+                } : {}),
+            }}
         >
             <svg
                 viewBox="0 0 220 220"
@@ -356,7 +372,7 @@ function PermissionGateEmblem({ visible }: { visible: boolean }) {
                 {/* ROTATING PERMISSION RINGS */}
                 {rings.map((ring, ri) => (
                     <g key={`ring${ri}`}
-                        style={{ transformOrigin: `${CX}px ${CY}px`, animation: ring.anim }}
+                        style={animated ? { transformOrigin: `${CX}px ${CY}px`, animation: ring.anim } : undefined}
                     >
                         {/* Arc segments — verified permission zones */}
                         {ring.arcs.map(([s, e], ai) => (
@@ -403,7 +419,7 @@ function PermissionGateEmblem({ visible }: { visible: boolean }) {
                                     />
                                     <circle cx={p.x} cy={p.y} r="1.2"
                                         fill="white" opacity="0.9"
-                                        style={{ animation: `innerPulse ${2 + gi * 0.4}s ease-in-out infinite` }}
+                                        style={animated ? { animation: `innerPulse ${2 + gi * 0.4}s ease-in-out infinite` } : undefined}
                                     />
                                 </g>
                             )
@@ -443,7 +459,7 @@ function PermissionGateEmblem({ visible }: { visible: boolean }) {
                 <circle cx={CX} cy={CY+3} r="1.1"
                     fill="#00E5FF"
                     filter="url(#pgLock)"
-                    style={{ animation: 'innerPulse 2s ease-in-out infinite' }}
+                    style={animated ? { animation: 'innerPulse 2s ease-in-out infinite' } : undefined}
                 />
                 {/* Keyhole stem */}
                 <rect x={CX-1} y={CY+4} width="2" height="3.5" rx="0.5"
@@ -454,7 +470,7 @@ function PermissionGateEmblem({ visible }: { visible: boolean }) {
                 <circle cx={CX} cy={CY} r="9"
                     fill="rgba(0,229,255,0.04)"
                     filter="url(#pgLock)"
-                    style={{ animation: 'innerPulse 3s ease-in-out infinite' }}
+                    style={animated ? { animation: 'innerPulse 3s ease-in-out infinite' } : undefined}
                 />
             </svg>
         </div>
@@ -731,13 +747,15 @@ const joinSegments = [
             {/* ── NAVBAR ── */}
             {!wizardOpen && (
                 <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800">
-                    <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">R</span>
-                            </div>
-                            <span className="text-white font-semibold text-lg">Redoubt</span>
-                        </div>
+                    <div className="relative h-16">
+                        <Link to="/" className="absolute left-4 top-1/2 flex -translate-y-1/2 items-center gap-2.5 shrink-0 sm:left-6">
+                            <PermissionGateEmblem visible={true} size={32} center={false} animated={false} className="shrink-0" />
+                            <span className="redoubt-font inline-block bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[19px] font-black uppercase leading-none tracking-[0.08em] text-transparent [text-shadow:0_0_10px_rgba(103,232,249,0.2)] sm:text-[22px]">
+                                REDOUBT
+                            </span>
+                        </Link>
+                        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-full">
+                            <div className="w-[184px] shrink-0" />
                         <nav className="hidden md:flex items-center gap-8 text-sm">
                             <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
                             <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
@@ -758,6 +776,7 @@ const joinSegments = [
                             >
                                 Request Access
                             </button>
+                        </div>
                         </div>
                     </div>
                 </header>
@@ -805,7 +824,7 @@ const joinSegments = [
                                     <div className="absolute inset-0 rounded-full bg-cyan-400/12 blur-3xl" />
                                     <div className="absolute inset-4 rounded-full border border-cyan-300/10" />
                                     <div className="relative z-10 scale-[0.82] sm:scale-[0.92] md:scale-100">
-                                        <PermissionGateEmblem visible={heroVisible} />
+                                        <PermissionGateEmblem visible={heroVisible} className="mb-10" />
                                     </div>
                                 </div>
                             </MotionReveal>

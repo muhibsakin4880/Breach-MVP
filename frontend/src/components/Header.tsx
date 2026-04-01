@@ -61,13 +61,18 @@ export default function Header() {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800">
-            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-[4.5rem]">
                 {!hideBrand ? (
-                    <Link to="/" className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">R</span>
+                    <Link to="/" className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#58c7ee] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_28px_rgba(34,211,238,0.16)]">
+                            <span className="text-lg font-bold text-white">R</span>
                         </div>
-                        <span className="text-white font-semibold text-lg">Redoubt</span>
+                        <span
+                            className="inline-block bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[1.3rem] font-extrabold uppercase leading-none tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)] sm:text-[1.4rem]"
+                            style={{ fontFamily: "'Syne', 'Inter', system-ui, -apple-system, sans-serif", lineHeight: 1.2 }}
+                        >
+                            REDOUBT
+                        </span>
                     </Link>
                 ) : (
                     <div />
