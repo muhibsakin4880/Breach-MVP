@@ -1,8 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { participantOnboardingActiveStepTitles } from '../onboarding/constants'
+import {
+    participantOnboardingActiveStepTitles,
+    participantOnboardingEstimatedReviewTime,
+    participantOnboardingNextSteps,
+    participantOnboardingPolicyPath,
+    participantOnboardingReviewStatus
+} from '../onboarding/constants'
 import { emptySubmissionMeta, readSubmissionMeta } from '../onboarding/storage'
+
+const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
 type TimelineStatus = 'complete' | 'active' | 'upcoming'
 
@@ -19,13 +27,13 @@ const timelineSteps: TimelineStep[] = [
         status: 'complete'
     },
     {
-        title: 'Trust committee review',
-        description: 'Security, compliance, and governance review is underway.',
+        title: 'Verification and compliance review',
+        description: 'We are reviewing your organization identity, stated use case, and supporting authorization evidence.',
         status: 'active'
     },
     {
         title: 'Access decision',
-        description: 'Credentials are issued via email once the review is complete.',
+        description: 'You will receive the application decision and next access steps by email.',
         status: 'upcoming'
     }
 ]
@@ -39,13 +47,13 @@ export default function ApplicationStatusPage() {
                 <div className="mb-8 space-y-2">
                     <div className="flex items-center gap-3">
                         <span className="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-semibold">
-                            Step 5 of 5
+                            Application submitted
                         </span>
                     </div>
                     <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Application Portal</p>
                     <h1 className="text-3xl font-bold">Application Status</h1>
                     <p className="text-slate-400">
-                        Track your onboarding request and review progress with the Redoubt trust committee.
+                        Track your onboarding request as it moves through verification and compliance review.
                     </p>
                 </div>
 
@@ -53,7 +61,7 @@ export default function ApplicationStatusPage() {
                     <div className="min-w-[760px] flex items-start">
                         {participantOnboardingActiveStepTitles.map((title, idx) => {
                             const currentStep = idx + 1
-                            const done = currentStep < 5
+                            const done = currentStep <= participantOnboardingActiveStepTitles.length
                             return (
                                 <div key={title} className="flex items-center flex-1 last:flex-none">
                                     <div className="w-32">
@@ -113,12 +121,12 @@ export default function ApplicationStatusPage() {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-400">Status</span>
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 border border-blue-400/40 text-blue-200">
-                                    In review
+                                    {participantOnboardingReviewStatus}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-400">Estimated review time</span>
-                                <span className="text-slate-100 font-semibold">2-3 business days</span>
+                                <span className="text-slate-100 font-semibold">{participantOnboardingEstimatedReviewTime}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-400">Next update</span>
@@ -193,13 +201,23 @@ export default function ApplicationStatusPage() {
                     <div className="bg-slate-900/55 border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
                         <h3 className="text-lg font-semibold text-white">What happens next</h3>
                         <ol className="space-y-2 text-sm text-slate-300">
-                            <li><span className="text-cyan-400 font-mono text-xs">[1]</span> Automated DNS & Corporate Entity Verification (KYB).</li>
-                            <li><span className="text-cyan-400 font-mono text-xs">[2]</span> Human-in-the-loop DPO & Legal Mandate Audit.</li>
-                            <li><span className="text-cyan-400 font-mono text-xs">[3]</span> Upon clearance, you will receive a Secure Enclave setup link via email to configure your cryptographic keys and vault access.</li>
+                            {participantOnboardingNextSteps.map((step, index) => (
+                                <li key={step}>
+                                    <span className="text-cyan-400 font-mono text-xs">[{index + 1}]</span> {step}
+                                </li>
+                            ))}
                         </ol>
                     </div>
 
                     <div className="border-t border-slate-800/80 pt-6 flex flex-wrap gap-3">
+                        {MOCK_AUTH && (
+                            <Link
+                                to="/login"
+                                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors"
+                            >
+                                Open Participant Console
+                            </Link>
+                        )}
                         <Link
                             to="/"
                             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
@@ -207,10 +225,10 @@ export default function ApplicationStatusPage() {
                             Return to Home
                         </Link>
                         <Link
-                            to="/login"
+                            to={participantOnboardingPolicyPath}
                             className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-200 hover:text-white font-semibold transition-colors"
                         >
-                            Log in to view updates
+                            Review Trust Center
                         </Link>
                     </div>
                 </div>

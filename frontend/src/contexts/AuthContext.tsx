@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { clearOnboardingState } from '../onboarding/storage'
 
 export type AccessApplicationStatus = 'not_started' | 'pending' | 'approved'
 
@@ -37,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [accessStatus, setAccessStatus] = useState<AccessApplicationStatus>(() => {
         const storedStatus = localStorage.getItem(STORAGE_ACCESS_STATUS)
         if (isAccessStatus(storedStatus)) {
-            if (MOCK_AUTH && storedStatus === 'pending') return 'approved'
             return storedStatus
         }
         return MOCK_AUTH ? 'approved' : 'not_started'
@@ -71,13 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [applicantEmail])
 
     const signIn = () => {
-        if (MOCK_AUTH) {
-            setAccessStatus('approved')
-            setIsAuthenticated(true)
-            return true
-        }
-
-        if (accessStatus !== 'approved') return false
+        const canAccessWorkspace =
+            accessStatus === 'approved' ||
+            (MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started'))
+        if (!canAccessWorkspace) return false
         setIsAuthenticated(true)
         return true
     }
@@ -90,25 +87,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const startOnboarding = () => {
         if (MOCK_AUTH) {
             // In mock mode allow re-running onboarding end-to-end without manual storage resets.
+            clearOnboardingState()
             setAccessStatus('not_started')
             setOnboardingInitiated(true)
             setIsAuthenticated(false)
+            setApplicantEmail('')
             return
         }
 
         if (accessStatus === 'not_started') {
+            clearOnboardingState()
             setOnboardingInitiated(true)
+            setApplicantEmail('')
         }
     }
 
     const submitApplication = (officialWorkEmail: string) => {
         setApplicantEmail(officialWorkEmail.trim())
-        if (MOCK_AUTH) {
-            setAccessStatus('approved')
-            setOnboardingInitiated(false)
-            setIsAuthenticated(false)
-            return
-        }
         setAccessStatus('pending')
         setOnboardingInitiated(false)
         setIsAuthenticated(false)

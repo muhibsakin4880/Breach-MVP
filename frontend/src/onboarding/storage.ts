@@ -74,6 +74,14 @@ export const writeOnboardingValue = <T,>(key: string, value: T) => {
     window.localStorage.setItem(key, JSON.stringify(value))
 }
 
+export const clearOnboardingState = () => {
+    if (!hasWindow()) return
+
+    Object.values(onboardingStorageKeys).forEach((key) => {
+        window.localStorage.removeItem(key)
+    })
+}
+
 export const readSubmissionMeta = (fallback: SubmissionMeta = emptySubmissionMeta) =>
     readOnboardingValue<SubmissionMeta>(onboardingStorageKeys.submissionMeta, fallback)
 

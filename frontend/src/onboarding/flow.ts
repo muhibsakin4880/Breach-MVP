@@ -1,4 +1,4 @@
-import { participantOnboardingPaths } from './constants'
+import { participantOnboardingPaths, participantOnboardingPostSubmitPath } from './constants'
 import {
     emptyComplianceCommitment,
     emptyLegalAcknowledgment,
@@ -71,13 +71,27 @@ export const getOnboardingResumePath = (snapshot = readOnboardingSnapshot()) => 
     if (firstIncompletePath) return firstIncompletePath
 
     if (hasSubmittedOnboarding()) {
-        return participantOnboardingPaths.confirmation
+        return participantOnboardingPostSubmitPath
     }
 
     return participantOnboardingPaths.step5
 }
 
 export const getOnboardingGuardRedirect = (currentPath: string, snapshot = readOnboardingSnapshot()) => {
+    if (hasSubmittedOnboarding()) {
+        switch (currentPath) {
+            case participantOnboardingPaths.step1:
+            case participantOnboardingPaths.step2:
+            case participantOnboardingPaths.step3:
+            case participantOnboardingPaths.step4:
+            case participantOnboardingPaths.step5:
+            case participantOnboardingPaths.confirmation:
+                return participantOnboardingPostSubmitPath
+            default:
+                break
+        }
+    }
+
     switch (currentPath) {
         case participantOnboardingPaths.step1:
             return null
@@ -99,11 +113,8 @@ export const getOnboardingGuardRedirect = (currentPath: string, snapshot = readO
                 return participantOnboardingPaths.step3
             }
             return isStep4Complete(snapshot.verification) ? null : participantOnboardingPaths.step4
-        case participantOnboardingPaths.confirmation: {
-            const firstIncompletePath = getFirstIncompleteOnboardingPath(snapshot)
-            if (firstIncompletePath) return firstIncompletePath
-            return hasSubmittedOnboarding() ? null : participantOnboardingPaths.step5
-        }
+        case participantOnboardingPaths.confirmation:
+            return participantOnboardingPaths.step5
         default:
             return null
     }

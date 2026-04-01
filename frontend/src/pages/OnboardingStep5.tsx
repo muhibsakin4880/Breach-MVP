@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../contexts/AuthContext'
-import { participantOnboardingPaths } from '../onboarding/constants'
+import {
+    participantOnboardingPostSubmitPath,
+    participantOnboardingPaths,
+    participantOnboardingVerificationSummary
+} from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { buildSubmissionMeta } from '../onboarding/submission'
@@ -58,7 +62,7 @@ export default function OnboardingStep5() {
 
         writeSubmissionMeta(submissionMeta)
         submitApplication(latestSnapshot.step1.officialWorkEmail.trim())
-        navigate(participantOnboardingPaths.confirmation)
+        navigate(participantOnboardingPostSubmitPath)
     }
 
     const handleBack = () => {
@@ -78,9 +82,9 @@ export default function OnboardingStep5() {
                     <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-5 mb-6">
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-xl font-semibold">Final Review</h2>
+                                <h2 className="text-xl font-semibold">Final Review &amp; Commitments</h2>
                                 <p className="mt-1 text-sm text-slate-400">
-                                    Confirm your onboarding details before submitting the application.
+                                    Confirm your onboarding details, then accept the required commitments before submitting the application.
                                 </p>
                             </div>
                             <span className="text-xs uppercase tracking-[0.14em] text-blue-200">Review Required</span>
@@ -224,14 +228,15 @@ export default function OnboardingStep5() {
                                         </div>
                                     </div>
                                 </div>
+                                <p className="text-sm text-slate-400">{participantOnboardingVerificationSummary}</p>
                             </article>
                         </div>
                     </section>
 
                     <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
-                        <h2 className="text-xl font-semibold">Compliance Commitment</h2>
+                        <h2 className="text-xl font-semibold">Required Commitments</h2>
                         <p className="text-sm text-slate-400">
-                            All commitments are required before application submission.
+                            These commitments define how your organisation will use approved access if your application is cleared.
                         </p>
 
                         <label className="flex items-start gap-3 text-sm text-slate-200">
@@ -241,7 +246,7 @@ export default function OnboardingStep5() {
                                 checked={state.responsibleDataUsage}
                                 onChange={(e) => handleChange('responsibleDataUsage', e.target.checked)}
                             />
-                            <span>I agree to responsible data usage.</span>
+                            <span>I will use approved data only for the purpose described in this application.</span>
                         </label>
 
                         <label className="flex items-start gap-3 text-sm text-slate-200">
@@ -251,7 +256,7 @@ export default function OnboardingStep5() {
                                 checked={state.noUnauthorizedSharing}
                                 onChange={(e) => handleChange('noUnauthorizedSharing', e.target.checked)}
                             />
-                            <span>I agree to no unauthorized sharing.</span>
+                            <span>I will not share, resell, or redistribute approved data outside the authorised scope.</span>
                         </label>
 
                         <label className="flex items-start gap-3 text-sm text-slate-200">
@@ -261,7 +266,7 @@ export default function OnboardingStep5() {
                                 checked={state.platformCompliancePolicies}
                                 onChange={(e) => handleChange('platformCompliancePolicies', e.target.checked)}
                             />
-                            <span>I agree to platform compliance policies.</span>
+                            <span>I will follow Redoubt governance requirements and contributor permissions.</span>
                         </label>
                     </section>
 

@@ -144,8 +144,12 @@ function App() {
     }
 
     const RequireWorkspaceAccess = (element: JSX.Element) => {
-        if (accessStatus !== 'approved') {
-            if (accessStatus === 'pending') return <Navigate to="/onboarding" replace />
+        const canAccessWorkspace =
+            accessStatus === 'approved' ||
+            (MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started'))
+
+        if (!canAccessWorkspace) {
+            if (accessStatus === 'pending') return <Navigate to={participantOnboardingPaths.applicationStatus} replace />
             return <Navigate to="/" replace />
         }
         if (!isAuthenticated) return <Navigate to="/login" replace />

@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
-import { participantOnboardingPaths } from '../onboarding/constants'
+import {
+    participantOnboardingPaths,
+    participantOnboardingPolicyLabel,
+    participantOnboardingPolicyPath
+} from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { isStep3Complete } from '../onboarding/flow'
@@ -107,7 +111,7 @@ export default function OnboardingStep3() {
                             checked={legalAcknowledgment.authorizedRepresentative}
                             onChange={(e) => handleLegalChange('authorizedRepresentative', e.target.checked)}
                         />
-                        <span>I confirm that I am authorised to represent [Organisation Name] on this platform.</span>
+                        <span>I confirm that I am authorised to represent my organisation for controlled access requests on Redoubt.</span>
                     </label>
 
                     <label className="flex items-start gap-3 text-[13px] text-slate-400">
@@ -118,15 +122,14 @@ export default function OnboardingStep3() {
                             onChange={(e) => handleLegalChange('governancePolicyAccepted', e.target.checked)}
                         />
                         <span>
-                            I agree to the{' '}
-                            <a
-                                href="#"
-                                onClick={(e) => e.preventDefault()}
+                            I have reviewed the{' '}
+                            <Link
+                                to={participantOnboardingPolicyPath}
                                 className="text-blue-400 underline underline-offset-2"
                             >
-                                Redoubt Data Governance Policy
-                            </a>{' '}
-                            and accept that all data access is logged, governed, and subject to contributor permissions.
+                                {participantOnboardingPolicyLabel}
+                            </Link>{' '}
+                            and understand that access requests are logged, policy-scoped, and subject to contributor permissions.
                         </span>
                     </label>
 
@@ -138,8 +141,8 @@ export default function OnboardingStep3() {
                             onChange={(e) => handleLegalChange('nonRedistributionAcknowledged', e.target.checked)}
                         />
                         <span>
-                            I acknowledge that data obtained through this platform may not be redistributed, resold, or
-                            used beyond the stated purpose without explicit written consent.
+                            I acknowledge that approved data access is limited to the stated purpose in this application
+                            and may not be redistributed, resold, or repurposed without explicit written consent.
                         </span>
                     </label>
                 </section>

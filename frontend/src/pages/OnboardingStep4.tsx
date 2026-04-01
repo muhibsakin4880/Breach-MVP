@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { participantOnboardingPaths } from '../onboarding/constants'
+import {
+    participantOnboardingPaths,
+    participantOnboardingVerificationSummary
+} from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { isStep4Complete } from '../onboarding/flow'
@@ -142,9 +145,7 @@ export default function OnboardingStep4() {
                         <h2 className="text-xl font-semibold">Verification &amp; Credentials</h2>
                         <span className="text-xs uppercase tracking-[0.14em] text-amber-200">Required</span>
                     </div>
-                    <p className="text-sm text-slate-400">
-                        Confirm identity and provide authorization documents before we can approve access.
-                    </p>
+                    <p className="text-sm text-slate-400">{participantOnboardingVerificationSummary}</p>
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
@@ -152,7 +153,9 @@ export default function OnboardingStep4() {
                                 <h3 className="text-base font-semibold text-white">Connect LinkedIn</h3>
                                 <span className="text-xs text-amber-300">Required</span>
                             </div>
-                            <p className="mt-1 text-sm text-slate-400">Instantly verify your organizational affiliation.</p>
+                            <p className="mt-1 text-sm text-slate-400">
+                                Confirm the public professional profile tied to your organizational role.
+                            </p>
 
                             <div className="mt-4">
                                 {isLinkedInConnected ? (
@@ -179,7 +182,7 @@ export default function OnboardingStep4() {
                                 <span className="text-xs text-amber-300">Required</span>
                             </div>
                             <p className="mt-1 text-sm text-slate-400">
-                                Verify your organizational identity via DNS TXT record or Corporate IdP (Okta/Entra).
+                                Verify the domain associated with your work email using a DNS TXT record check.
                             </p>
 
                             <div className="mt-4">
@@ -232,7 +235,9 @@ export default function OnboardingStep4() {
                                 <h3 className="text-base font-semibold text-white">Upload Proof of Affiliation</h3>
                                 <span className="text-xs text-amber-300">Required</span>
                             </div>
-                            <p className="mt-1 text-sm text-slate-400">PDF, JPG or PNG only. Max 5MB.</p>
+                            <p className="mt-1 text-sm text-slate-400">
+                                Upload a badge, staff profile, or other document that supports your organisational affiliation. PDF, JPG or PNG only. Max 5MB.
+                            </p>
 
                             <label
                                 htmlFor="affiliation-proof-upload"
@@ -276,7 +281,7 @@ export default function OnboardingStep4() {
                                 <span className="text-xs text-amber-300">Required</span>
                             </div>
                             <p className="mt-1 text-sm text-slate-400">
-                                Examples: DPA, IRB approval, or letter of authority.
+                                Upload the approval or authority document that covers this access request. Examples: DPA, IRB approval, or letter of authority.
                             </p>
 
                             <label

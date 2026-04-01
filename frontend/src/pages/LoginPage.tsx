@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -19,13 +19,15 @@ const generateTimestamp = () => {
 }
 
 export default function LoginPage() {
-    const { isAuthenticated, accessStatus, signIn, applicantEmail } = useAuth()
+    const { isAuthenticated, accessStatus, signIn } = useAuth()
     const [step, setStep] = useState<1 | 2>(1)
     const [emailOrNodeId, setEmailOrNodeId] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [sessionId] = useState(() => generateSessionId())
     const [timestamp] = useState(() => generateTimestamp())
+    const hasMockConsoleAccess = MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started')
+    const hasMockReviewAccess = MOCK_AUTH && accessStatus === 'pending'
 
     if (isAuthenticated && accessStatus === 'approved') return <Navigate to="/dashboard" replace />
 
@@ -48,12 +50,10 @@ export default function LoginPage() {
 
     const handleAuthMethodSelect = (method: string) => {
         console.log('Selected auth method:', method)
-        if (MOCK_AUTH) {
-            signIn()
-        }
+        signIn()
     }
 
-    if (!MOCK_AUTH && accessStatus === 'pending') {
+    if (accessStatus === 'pending' && !hasMockReviewAccess) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black" />
@@ -67,7 +67,7 @@ export default function LoginPage() {
                     </p>
                     <div className="pt-2 flex justify-center">
                         <Link
-                            to="/onboarding"
+                            to="/application-status"
                             className="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-colors"
                         >
                             View Application Status
@@ -78,7 +78,7 @@ export default function LoginPage() {
         )
     }
 
-    if (!MOCK_AUTH && accessStatus !== 'approved') {
+    if (accessStatus === 'not_started' && !hasMockConsoleAccess) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black" />
@@ -106,6 +106,22 @@ export default function LoginPage() {
             <div className="absolute inset-0 backdrop-blur-sm bg-black/60" />
             
             <div className="relative bg-slate-900 rounded-xl border border-slate-700 p-6 max-w-md w-full shadow-2xl">
+                {hasMockReviewAccess && (
+                    <div className="mb-5 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                        <div className="font-semibold">Application review is still pending.</div>
+                        <div className="mt-1 text-amber-100/80">
+                            Mock access is enabled, so you can still enter the participant console while the review UI stays visible.
+                        </div>
+                        <div className="mt-3">
+                            <Link
+                                to="/application-status"
+                                className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200 hover:text-white transition-colors"
+                            >
+                                View application status
+                            </Link>
+                        </div>
+                    </div>
+                )}
                 {step === 1 ? (
                     <form onSubmit={handleVerifyIdentity} noValidate>
                         <div className="text-center mb-6">
