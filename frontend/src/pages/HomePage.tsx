@@ -748,35 +748,28 @@ const joinSegments = [
             {!wizardOpen && (
                 <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800">
                     <div className="relative h-16">
-                        <Link to="/" className="absolute left-4 top-1/2 flex -translate-y-1/2 items-center gap-2.5 shrink-0 sm:left-6">
-                            <PermissionGateEmblem visible={true} size={32} center={false} animated={false} className="shrink-0" />
-                            <span className="redoubt-font inline-block bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[19px] font-black uppercase leading-none tracking-[0.08em] text-transparent [text-shadow:0_0_10px_rgba(103,232,249,0.2)] sm:text-[22px]">
-                                REDOUBT
-                            </span>
-                        </Link>
                         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-full">
-                            <div className="w-[184px] shrink-0" />
-                        <nav className="hidden md:flex items-center gap-8 text-sm">
-                            <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
-                            <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
-                            <Link to="/solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</Link>
-                            <a href="#join" className="text-slate-300 hover:text-white transition-colors">Join</a>
-                        </nav>
-                        <div className="flex items-center gap-3">
-                            <Link
-                                to="/login"
-                                onClick={handleSignInFromLanding}
-                                className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-                            >
-                                Sign In
-                            </Link>
-                            <button
-                                onClick={handleRequestPlatformAccess}
-                                className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
-                            >
-                                Request Access
-                            </button>
-                        </div>
+                            <nav className="hidden md:flex items-center gap-8 text-sm">
+                                <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
+                                <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
+                                <Link to="/solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</Link>
+                                <a href="#join" className="text-slate-300 hover:text-white transition-colors">Join</a>
+                            </nav>
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    to="/login"
+                                    onClick={handleSignInFromLanding}
+                                    className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                                >
+                                    Sign In
+                                </Link>
+                                <button
+                                    onClick={handleRequestPlatformAccess}
+                                    className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
+                                >
+                                    Request Access
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </header>
