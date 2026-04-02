@@ -35,7 +35,9 @@ export const emptyVerificationSnapshot: VerificationSnapshot = {
     linkedInConnected: false,
     domainVerified: false,
     affiliationFileName: null,
-    authorizationFileName: null
+    authorizationFileName: null,
+    authenticationMethod: null,
+    ssoDomain: ''
 }
 
 export const emptyComplianceCommitment: ComplianceCommitment = {

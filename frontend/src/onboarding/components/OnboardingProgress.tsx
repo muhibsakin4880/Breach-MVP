@@ -71,7 +71,7 @@ export default function OnboardingProgress({
     }
 
     return (
-        <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="mb-6 grid grid-cols-5 gap-2">
             {steps.map((title, idx) => {
                 const currentStep = idx + 1
                 const active = currentStep === activeStep

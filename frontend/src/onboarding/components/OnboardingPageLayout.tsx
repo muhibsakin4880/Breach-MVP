@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import {
-    participantOnboardingStepTitles,
+    participantOnboardingActiveStepTitles,
     participantOnboardingSubtitle,
     participantOnboardingTitle
 } from '../constants'
@@ -10,13 +10,11 @@ import OnboardingProgress from './OnboardingProgress'
 type OnboardingPageLayoutProps = {
     activeStep?: number
     children: ReactNode
-    progressVariant?: 'grid' | 'connector'
 }
 
 export default function OnboardingPageLayout({
     activeStep,
-    children,
-    progressVariant = 'grid'
+    children
 }: OnboardingPageLayoutProps) {
     return (
         <div className="bg-slate-900 min-h-screen text-white">
@@ -26,11 +24,11 @@ export default function OnboardingPageLayout({
                     <p className="text-slate-400">{participantOnboardingSubtitle}</p>
                 </div>
 
-                {typeof activeStep === 'number' && (
+                {typeof activeStep === 'number' && activeStep >= 1 && activeStep <= 5 && (
                     <OnboardingProgress
                         activeStep={activeStep}
-                        steps={participantOnboardingStepTitles}
-                        variant={progressVariant}
+                        steps={participantOnboardingActiveStepTitles}
+                        variant="grid"
                     />
                 )}
 

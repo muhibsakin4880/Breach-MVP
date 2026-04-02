@@ -13,11 +13,15 @@ export type LegalAcknowledgment = {
     nonRedistributionAcknowledged: boolean
 }
 
+export type AuthenticationMethod = 'sso' | 'hardware_key'
+
 export type VerificationSnapshot = {
     linkedInConnected: boolean
     domainVerified: boolean
     affiliationFileName: string | null
     authorizationFileName: string | null
+    authenticationMethod: AuthenticationMethod | null
+    ssoDomain: string
 }
 
 export type ComplianceCommitment = {

@@ -22,11 +22,16 @@ import {
     writeOnboardingValue,
     writeSubmissionMeta
 } from '../onboarding/storage'
-import type { ComplianceCommitment } from '../onboarding/types'
+import type { AuthenticationMethod, ComplianceCommitment } from '../onboarding/types'
 
 const reviewSectionClassName = 'rounded-xl border border-slate-700 bg-slate-900/70 p-4 space-y-3'
 const detailLabelClassName = 'text-xs uppercase tracking-[0.18em] text-slate-500'
 const detailValueClassName = 'text-sm text-slate-200'
+
+const authenticationMethodLabels: Record<AuthenticationMethod, string> = {
+    sso: 'Okta / Microsoft Entra (SSO)',
+    hardware_key: 'Hardware Key (YubiKey / WebAuthn)'
+}
 
 export default function OnboardingStep5() {
     const navigate = useNavigate()
@@ -227,6 +232,22 @@ export default function OnboardingStep5() {
                                             {reviewSnapshot.verification.authorizationFileName || 'No file uploaded'}
                                         </div>
                                     </div>
+                                    <div>
+                                        <div className={detailLabelClassName}>Authentication Method</div>
+                                        <div className={detailValueClassName}>
+                                            {reviewSnapshot.verification.authenticationMethod
+                                                ? authenticationMethodLabels[reviewSnapshot.verification.authenticationMethod]
+                                                : 'No authentication method selected'}
+                                        </div>
+                                    </div>
+                                    {reviewSnapshot.verification.authenticationMethod === 'sso' && (
+                                        <div>
+                                            <div className={detailLabelClassName}>SSO Domain</div>
+                                            <div className={detailValueClassName}>
+                                                {reviewSnapshot.verification.ssoDomain || 'No SSO domain provided'}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <p className="text-sm text-slate-400">{participantOnboardingVerificationSummary}</p>
                             </article>

@@ -72,7 +72,9 @@ const defaultVerification: VerificationSnapshot = {
     linkedInConnected: true,
     domainVerified: true,
     affiliationFileName: 'northbridge-affiliation.pdf',
-    authorizationFileName: 'northbridge-compliance-letter.pdf'
+    authorizationFileName: 'northbridge-compliance-letter.pdf',
+    authenticationMethod: 'hardware_key',
+    ssoDomain: ''
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,
@@ -195,10 +197,12 @@ export const buildCompliancePassport = (): CompliancePassport => {
                 verification.domainVerified &&
                 verification.linkedInConnected &&
                 Boolean(verification.affiliationFileName) &&
-                Boolean(verification.authorizationFileName),
+                Boolean(verification.authorizationFileName) &&
+                Boolean(verification.authenticationMethod) &&
+                (verification.authenticationMethod !== 'sso' || verification.ssoDomain.trim().length > 0),
             detail: verification.linkedInConnected && verification.domainVerified
                 ? `${verification.affiliationFileName ?? 'Affiliation file'} · ${verification.authorizationFileName ?? 'Authorization file'}`
-                : 'LinkedIn, DNS, and document verification still required'
+                : 'LinkedIn, DNS, document verification, and auth setup still required'
         },
         {
             key: 'commitments',

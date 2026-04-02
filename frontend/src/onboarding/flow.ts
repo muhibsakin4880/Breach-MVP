@@ -42,11 +42,16 @@ export const isStep3Complete = (participationIntent: string[], legalAcknowledgme
     legalAcknowledgment.governancePolicyAccepted &&
     legalAcknowledgment.nonRedistributionAcknowledged
 
+const hasAuthenticationSetup = (verification: VerificationSnapshot) =>
+    verification.authenticationMethod !== null &&
+    (verification.authenticationMethod !== 'sso' || verification.ssoDomain.trim().length > 0)
+
 export const isStep4Complete = (verification: VerificationSnapshot) =>
     verification.linkedInConnected &&
     verification.domainVerified &&
     Boolean(verification.affiliationFileName) &&
-    Boolean(verification.authorizationFileName)
+    Boolean(verification.authorizationFileName) &&
+    hasAuthenticationSetup(verification)
 
 export const isStep5Complete = (compliance: ComplianceCommitment) =>
     compliance.responsibleDataUsage &&

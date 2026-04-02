@@ -175,7 +175,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText(/Please complete all required fields with a valid corporate email\./)).toBeVisible()
     })
 
-    test('step 4 keeps progress disabled until LinkedIn, DNS, and both uploads are complete', async ({ page }) => {
+    test('step 4 keeps progress disabled until verification, uploads, and auth setup are complete', async ({ page }) => {
         await seedAppState(page, {
             onboarding: {
                 step1: completedStep1,
@@ -191,6 +191,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByRole('button', { name: 'Verify DNS Record' })).toBeVisible()
         await expect(page.getByText('Upload Proof of Affiliation')).toBeVisible()
         await expect(page.getByText('Upload Authorization / Compliance Letter')).toBeVisible()
+        await expect(page.getByText('Authentication Setup')).toBeVisible()
     })
 
     test('a completed onboarding submission lands on the onboarding confirmation screen and still allows mock console access', async ({ page }) => {
@@ -224,10 +225,12 @@ test.describe('participant onboarding', () => {
 
         await expect(page.getByText('affiliation-proof.pdf')).toBeVisible()
         await expect(page.getByText('authorization-letter.pdf')).toBeVisible()
+        await page.getByText('Secure Email Token', { exact: true }).click()
 
         await page.getByRole('button', { name: 'Next' }).click()
         await expect(page).toHaveURL(/\/onboarding\/step5$/)
         await expect(page.getByRole('heading', { name: 'Final Review & Commitments' })).toBeVisible()
+        await expect(page.getByText('Secure Email Token', { exact: true })).toBeVisible()
 
         await page.getByRole('checkbox', { name: /I will use approved data only/i }).check()
         await page.getByRole('checkbox', { name: /I will not share, resell, or redistribute/i }).check()

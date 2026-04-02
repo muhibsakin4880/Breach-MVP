@@ -8,17 +8,48 @@ import { isStep1Complete } from '../onboarding/flow'
 import { emptyStep1FormState, onboardingStorageKeys, readOnboardingValue, writeOnboardingValue } from '../onboarding/storage'
 import type { Step1FormState } from '../onboarding/types'
 
+const BLOCKED_EMAIL_DOMAINS = new Set([
+    'gmail.com',
+    'googlemail.com',
+    'outlook.com',
+    'hotmail.com',
+    'yahoo.com',
+    'yahoo.co.uk',
+    'icloud.com',
+    'me.com',
+    'protonmail.com',
+    'tutanota.com',
+    'aol.com',
+    'live.com'
+])
+
+function isPersonalEmail(email: string): boolean {
+    const domain = email.toLowerCase().split('@')[1]
+    return domain ? BLOCKED_EMAIL_DOMAINS.has(domain) : false
+}
+
 export default function OnboardingStep1() {
     const navigate = useNavigate()
     const [state, setState] = useState<Step1FormState>(() =>
         readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState)
     )
     const [showError, setShowError] = useState(false)
+    const [emailWarning, setEmailWarning] = useState<string | null>(null)
 
     const handleChange = (field: keyof Step1FormState, value: string) => {
         const next = { ...state, [field]: value }
         setState(next)
         writeOnboardingValue(onboardingStorageKeys.step1, next)
+        
+        if (field === 'officialWorkEmail' && value.includes('@')) {
+            if (isPersonalEmail(value)) {
+                setEmailWarning('⚠️ Personal email addresses are not accepted. Please use your verified corporate email.')
+            } else {
+                setEmailWarning(null)
+            }
+        } else if (field === 'officialWorkEmail') {
+            setEmailWarning(null)
+        }
     }
 
     const fillMockData = () => {
@@ -83,6 +114,7 @@ export default function OnboardingStep1() {
                                 onChange={(e) => handleChange('officialWorkEmail', e.target.value)}
                                 placeholder="name@organization.com"
                             />
+                            {emailWarning && <p className="mt-1 text-sm text-amber-300">{emailWarning}</p>}
                         </div>
                         <div>
                             <label className="block text-sm text-slate-300 mb-2">Invite code</label>
