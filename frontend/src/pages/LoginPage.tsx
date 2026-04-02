@@ -18,12 +18,14 @@ const generateTimestamp = () => {
     return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC'
 }
 
+type AuthScreen = 1 | 2
+
 export default function LoginPage() {
     const { isAuthenticated, accessStatus, signIn } = useAuth()
-    const [step, setStep] = useState<1 | 2>(1)
-    const [emailOrNodeId, setEmailOrNodeId] = useState('')
+    const [screen, setScreen] = useState<1 | 2>(1)
+    const [authMethod, setAuthMethod] = useState<'sso' | 'hardware'>('sso')
+    const [email, setEmail] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const [sessionId] = useState(() => generateSessionId())
     const [timestamp] = useState(() => generateTimestamp())
     const hasMockConsoleAccess = MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started')
@@ -31,26 +33,23 @@ export default function LoginPage() {
 
     if (isAuthenticated && accessStatus === 'approved') return <Navigate to="/dashboard" replace />
 
-    const handleVerifyIdentity = (e: React.FormEvent) => {
+    const handleContinue = (e: React.FormEvent) => {
         e.preventDefault()
-        setError(null)
-
-        const trimmed = emailOrNodeId.trim()
-        if (!trimmed) {
-            setError('Corporate identity is required.')
-            return
-        }
-
         setIsLoading(true)
         setTimeout(() => {
             setIsLoading(false)
-            setStep(2)
+            setScreen(2)
+            setAuthMethod('sso')
         }, 1500)
     }
 
-    const handleAuthMethodSelect = (method: string) => {
-        console.log('Selected auth method:', method)
+    const handleAuthenticate = () => {
         signIn()
+    }
+
+    const handleStartOver = () => {
+        setScreen(1)
+        setEmail('')
     }
 
     if (accessStatus === 'pending' && !hasMockReviewAccess) {
@@ -122,36 +121,37 @@ export default function LoginPage() {
                         </div>
                     </div>
                 )}
-                {step === 1 ? (
-                    <form onSubmit={handleVerifyIdentity} noValidate>
+
+                {screen === 1 ? (
+                    <form onSubmit={handleContinue} noValidate>
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold text-white mb-1">System Authentication</h1>
+                            <h1 className="text-2xl font-bold text-white mb-1">Secure Node Entry</h1>
                             <p className="text-sm text-slate-400">
-                                Enter your corporate identity to request a secure session.
+                                Enter your verified corporate email to begin authentication
                             </p>
                         </div>
 
-                        <div className="mb-6">
+                        <div className="mb-4">
+                            <label className="block text-xs uppercase tracking-[0.16em] text-slate-400 mb-2">
+                                Corporate Email
+                            </label>
                             <input
-                                type="text"
-                                className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder:text-slate-600"
-                                placeholder="Authorized Corporate Email or Node ID"
-                                value={emailOrNodeId}
-                                onChange={(e) => setEmailOrNodeId(e.target.value)}
+                                type="email"
+                                className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-600"
+                                placeholder="you@yourcompany.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading}
                             />
+                            <p className="mt-2 text-xs text-slate-500">
+                                Personal email addresses are not accepted
+                            </p>
                         </div>
-
-                        {error && (
-                            <div className="mb-4 text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
-                                {error}
-                            </div>
-                        )}
 
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full px-4 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                            disabled={isLoading || !email.trim()}
+                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -159,10 +159,10 @@ export default function LoginPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span>Verifying Node...</span>
+                                    <span>Resolving Node...</span>
                                 </>
                             ) : (
-                                <span>Verify Identity →</span>
+                                <span>Continue →</span>
                             )}
                         </button>
 
@@ -178,42 +178,119 @@ export default function LoginPage() {
                             </p>
                         </div>
                     </form>
+                ) : authMethod === 'sso' ? (
+                    <div>
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 mb-3">
+                                <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h1 className="text-2xl font-bold text-white mb-1">SSO Redirect</h1>
+                        </div>
+
+                        <div className="mb-4 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Identity node located.</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Organization:</span>
+                                <span className="text-white font-medium">Demo Corporation</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Auth method:</span>
+                                <span className="text-white font-medium">Okta / Microsoft Entra</span>
+                            </div>
+                        </div>
+
+                        <div className="mb-6 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                            <p>You are being redirected to your organization's SSO provider. Complete authentication there to access Redoubt.</p>
+                        </div>
+
+                        <div className="mb-4 p-3 bg-slate-950 rounded-lg border border-slate-700">
+                            <span className="text-xs text-slate-500">SSO Domain: </span>
+                            <span className="text-sm font-mono text-emerald-400">demo.okta.com</span>
+                        </div>
+
+                        <button
+                            onClick={handleAuthenticate}
+                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                        >
+                            Continue to SSO →
+                        </button>
+
+                        <button
+                            onClick={handleStartOver}
+                            className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                            Wrong account? ← Start over
+                        </button>
+
+                        <div className="mt-6 pt-4 border-t border-slate-800">
+                            <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
+                                Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
+                            </p>
+                            <p className="text-[10px] text-slate-600 font-mono mt-2">
+                                Session ID: RDT-{sessionId}
+                            </p>
+                            <p className="text-[10px] text-slate-600 font-mono">
+                                Timestamp: {timestamp}
+                            </p>
+                        </div>
+                    </div>
                 ) : (
                     <div>
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold text-emerald-400 mb-1">Identity Verified ✓</h1>
-                            <p className="text-sm text-slate-400">
-                                Select your enterprise authentication method:
-                            </p>
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 mb-3">
+                                <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </div>
+                            <h1 className="text-2xl font-bold text-white mb-1">Hardware Key Required</h1>
                         </div>
 
-                        <div className="space-y-3 mb-6">
-                            <button
-                                onClick={() => handleAuthMethodSelect('okta')}
-                                className="w-full px-4 py-4 bg-slate-950 border border-slate-700 hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] rounded-lg transition-all flex items-center gap-3 group"
-                            >
-                                <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:border-cyan-500/50 transition-colors">
-                                    <svg className="w-5 h-5 text-slate-400 group-hover:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                </div>
-                                <span className="text-slate-200 font-medium">Authenticate via Okta / Microsoft Entra (SSO)</span>
-                            </button>
-
-                            <button
-                                onClick={() => handleAuthMethodSelect('webauthn')}
-                                className="w-full px-4 py-4 bg-slate-950 border border-slate-700 hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] rounded-lg transition-all flex items-center gap-3 group"
-                            >
-                                <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:border-cyan-500/50 transition-colors">
-                                    <svg className="w-5 h-5 text-slate-400 group-hover:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
-                                </div>
-                                <span className="text-slate-200 font-medium">Use Hardware Key (WebAuthn / YubiKey)</span>
-                            </button>
+                        <div className="mb-4 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Identity node located.</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Organization:</span>
+                                <span className="text-white font-medium">Demo Corporation</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Auth method:</span>
+                                <span className="text-white font-medium">YubiKey / WebAuthn</span>
+                            </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-800">
+                        <div className="mb-6 rounded-lg border border-blue-400/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
+                            <p>Insert your registered hardware key and tap when prompted.</p>
+                        </div>
+
+                        <div className="mb-6 flex flex-col items-center">
+                            <div className="animate-pulse">
+                                <svg className="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </div>
+                            <span className="mt-2 text-sm text-slate-400">Waiting for key tap...</span>
+                        </div>
+
+                        <button
+                            onClick={handleAuthenticate}
+                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                        >
+                            Authenticate with Key
+                        </button>
+
+                        <button
+                            onClick={handleStartOver}
+                            className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                            Wrong account? ← Start over
+                        </button>
+
+                        <div className="mt-6 pt-4 border-t border-slate-800">
                             <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
                                 Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
                             </p>
