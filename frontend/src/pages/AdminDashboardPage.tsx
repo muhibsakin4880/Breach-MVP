@@ -1,6 +1,16 @@
 import { Link, Navigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import AdminLayout from '../components/admin/AdminLayout'
+import SmartAlertsPanel from '../components/admin/SmartAlertsPanel'
+import QuickActionsBar from '../components/admin/QuickActionsBar'
+import AutomatedWorkflows from '../components/admin/AutomatedWorkflows'
+import AuditActivityPanel from '../components/admin/AuditActivityPanel'
+import AICopilot from '../components/admin/AICopilot'
+import RecentActivityFeed from '../components/admin/RecentActivityFeed'
+import ActiveTokensPanel from '../components/admin/ActiveTokensPanel'
+import { MetricCardSkeleton, AlertItemSkeleton, WorkflowRowSkeleton, ActivityRowSkeleton, CardSkeleton, StatSkeleton } from '../components/admin/SkeletonLoader'
 import { useAuth } from '../contexts/AuthContext'
+import { smartAlerts, recentAuditEvents } from '../components/admin/mockData'
 import {
     adminVisibilityBoundaries,
     approvalBlockers,
@@ -102,6 +112,22 @@ function SectionHeader({ title, detail, actionLabel, actionTo }: SectionHeaderPr
 
 export default function AdminDashboardPage() {
     const { isAuthenticated } = useAuth()
+    const [loading, setLoading] = useState(true)
+    const [lastUpdated, setLastUpdated] = useState(new Date())
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 1500)
+        return () => clearTimeout(timer)
+    }, [])
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setLastUpdated(new Date())
+        }, 60000)
+        return () => clearInterval(interval)
+    }, [])
+
+    const formatTime = (date: Date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
     if (!isAuthenticated) {
         return <Navigate to="/admin/login" replace />
@@ -187,20 +213,25 @@ export default function AdminDashboardPage() {
     ]
 
     return (
-        <AdminLayout title="CONTROL DASHBOARD" subtitle="GOVERNANCE, EVIDENCE & EXCEPTIONS">
-            <div className="space-y-10">
+        <AdminLayout title="CONTROL DASHBOARD" subtitle="GOVERNANCE, EVIDENCE & EXCEPTIONS" lastUpdated={formatTime(lastUpdated)}>
+            <div className={`space-y-10 transition-opacity duration-700 ${loading ? 'opacity-0' : 'opacity-100'}`}>
                 <section>
                     <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">KEY METRICS</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-4 gap-6">
-                        {summaryCards.map((card) => (
-                            <div
-                                key={card.label}
-                                className="relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 p-6 shadow-2xl shadow-black/20 transition-all duration-300 hover:border-slate-700/60"
-                            >
+                    {loading ? (
+                        <div className="grid grid-cols-4 gap-6">
+                            {[...Array(4)].map((_, i) => <StatSkeleton key={i} />)}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-4 gap-6">
+                            {summaryCards.map((card) => (
+                                <div
+                                    key={card.label}
+                                    className="relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 p-6 shadow-2xl shadow-black/20 transition-all duration-300 hover:border-slate-700/60 hover:scale-[1.01]"
+                                >
                                 <div className="absolute right-0 top-0 w-24 h-24 opacity-5" style={{ background: `radial-gradient(circle at top right, ${card.tone === 'cyan' ? '#06b6d4' : card.tone === 'amber' ? '#f59e0b' : card.tone === 'emerald' ? '#10b981' : '#ef4444'}, transparent 70%)` }} />
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
@@ -221,7 +252,25 @@ export default function AdminDashboardPage() {
                             </div>
                         ))}
                     </div>
+                    )}
                 </section>
+
+                {loading ? <CardSkeleton /> : <SmartAlertsPanel />}
+
+                <QuickActionsBar />
+
+                <AutomatedWorkflows />
+
+                <div className="grid grid-cols-12 gap-6">
+                    <div className="col-span-8">
+                        <RecentActivityFeed />
+                    </div>
+                    <div className="col-span-4">
+                        <ActiveTokensPanel />
+                    </div>
+                </div>
+
+                <AuditActivityPanel />
 
                 <section>
                     <div className="mb-6 flex items-center gap-2">
@@ -560,6 +609,7 @@ export default function AdminDashboardPage() {
                     </div>
                 </section>
             </div>
+            <AICopilot />
         </AdminLayout>
     )
 }

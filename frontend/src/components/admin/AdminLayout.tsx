@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import LogoMark from '../LogoMark'
 import { useAuth } from '../../contexts/AuthContext'
+import NotificationDropdown from './NotificationDropdown'
 
 type MenuItem = {
     label: string
@@ -65,9 +66,10 @@ type AdminLayoutProps = {
     children: React.ReactNode
     title: string
     subtitle?: string
+    lastUpdated?: string
 }
 
-export default function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, subtitle, lastUpdated }: AdminLayoutProps) {
     const location = useLocation()
     const navigate = useNavigate()
     const { signOut } = useAuth()
@@ -219,11 +221,15 @@ export default function AdminLayout({ children, title, subtitle }: AdminLayoutPr
                         <span className="text-[10px] text-slate-600 font-medium tracking-wider">{subtitle}</span>
                     </div>
                     <div className="flex items-center gap-5">
+                        {lastUpdated && (
+                            <span className="text-[10px] text-slate-500">Last updated: {lastUpdated}</span>
+                        )}
                         <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-emerald-500/80 rounded-full shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
                             <span className="text-[10px] font-medium text-slate-400 tracking-wider">OPERATIONAL</span>
                         </div>
                         <span className="text-[10px] font-mono text-slate-600">{new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC</span>
+                        <NotificationDropdown />
                         <button
                             onClick={handleLogout}
                             className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-medium tracking-wider text-slate-500 hover:text-slate-300 border border-slate-800/60 hover:border-slate-700/80 rounded-md transition-all duration-200"
