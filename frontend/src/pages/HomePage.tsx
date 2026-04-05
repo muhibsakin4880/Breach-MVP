@@ -501,6 +501,7 @@ export default function HomePage() {
     const trustRef = useInView(0.18)
     const solutionsRef = useInView(0.18)
     const whoCanJoinRef = useInView(0.18)
+    const pricingRef = useInView(0.01)
     const finalCtaRef = useInView(0.18)
 
     useEffect(() => {
@@ -1314,10 +1315,10 @@ const joinSegments = [
                 {/* ════════════════════════════════════════
                     PROVIDER PRICING
                 ════════════════════════════════════════ */}
-                <section id="provider-pricing" className="py-24 bg-slate-950 relative">
+                <section id="provider-pricing" ref={pricingRef.ref} className="py-24 bg-slate-950 relative">
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(6,182,212,0.03)_50%,transparent_100%)]" />
                     <div className="relative max-w-6xl mx-auto px-6">
-                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion}>
+                        <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion}>
                             <div className="text-center mb-12">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium mb-4">
                                     <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-400"></span>
@@ -1331,7 +1332,7 @@ const joinSegments = [
                             </div>
                         </MotionReveal>
 
-                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={80}>
+                        <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion} delay={80}>
                             <div className="flex justify-center mb-8">
                                 <div className="inline-flex items-center bg-slate-900/80 rounded-full border border-slate-700 p-1">
                                     <button
@@ -1352,7 +1353,7 @@ const joinSegments = [
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Starter Card */}
-                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={120}>
+                            <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion} delay={120}>
                                 <div className="relative rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6 flex flex-col h-full">
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-medium">
@@ -1398,7 +1399,7 @@ const joinSegments = [
                             </MotionReveal>
 
                             {/* Professional Card */}
-                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={200}>
+                            <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion} delay={200}>
                                 <div className="relative rounded-2xl border border-cyan-500/40 bg-slate-900/80 p-6 flex flex-col h-full shadow-[0_0_40px_rgba(6,182,212,0.15)]">
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-semibold border border-cyan-500/30">
@@ -1449,7 +1450,7 @@ const joinSegments = [
                             </MotionReveal>
 
                             {/* Enterprise Card */}
-                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={280}>
+                            <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion} delay={280}>
                                 <div className="relative rounded-2xl border border-purple-500/40 bg-slate-900/60 p-6 flex flex-col h-full">
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/30">
@@ -1499,7 +1500,7 @@ const joinSegments = [
                             </MotionReveal>
                         </div>
 
-                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={360}>
+                        <MotionReveal inView={pricingRef.inView} reducedMotion={prefersReducedMotion} delay={360}>
                             <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-cyan-400/10 to-cyan-500/10 border border-cyan-500/20 p-8">
                                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                                     <div className="flex items-center gap-4">
