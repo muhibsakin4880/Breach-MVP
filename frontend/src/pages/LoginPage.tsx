@@ -39,7 +39,6 @@ export default function LoginPage() {
         setTimeout(() => {
             setIsLoading(false)
             setScreen(2)
-            setAuthMethod('sso')
         }, 1500)
     }
 
@@ -50,6 +49,10 @@ export default function LoginPage() {
     const handleStartOver = () => {
         setScreen(1)
         setEmail('')
+    }
+
+    const handleAuthMethodSwitch = (method: 'sso' | 'hardware') => {
+        setAuthMethod(method)
     }
 
     if (accessStatus === 'pending' && !hasMockReviewAccess) {
@@ -178,7 +181,7 @@ export default function LoginPage() {
                             </p>
                         </div>
                     </form>
-                ) : authMethod === 'sso' ? (
+                ) : (
                     <div>
                         <div className="text-center mb-6">
                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 mb-3">
@@ -212,95 +215,122 @@ export default function LoginPage() {
                             <span className="text-sm font-mono text-emerald-400">demo.okta.com</span>
                         </div>
 
-                        <button
-                            onClick={handleAuthenticate}
-                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                        >
-                            Continue to SSO →
-                        </button>
-
-                        <button
-                            onClick={handleStartOver}
-                            className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
-                        >
-                            Wrong account? ← Start over
-                        </button>
-
-                        <div className="mt-6 pt-4 border-t border-slate-800">
-                            <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
-                                Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
-                            </p>
-                            <p className="text-[10px] text-slate-600 font-mono mt-2">
-                                Session ID: RDT-{sessionId}
-                            </p>
-                            <p className="text-[10px] text-slate-600 font-mono">
-                                Timestamp: {timestamp}
-                            </p>
+                        <div className="flex gap-2 mb-4">
+                            <button
+                                onClick={() => handleAuthMethodSwitch('sso')}
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    authMethod === 'sso'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                                }`}
+                            >
+                                SSO
+                            </button>
+                            <button
+                                onClick={() => handleAuthMethodSwitch('hardware')}
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    authMethod === 'hardware'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                                }`}
+                            >
+                                Hardware Key
+                            </button>
                         </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div className="text-center mb-6">
-                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 mb-3">
-                                <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
+
+                        {authMethod === 'sso' ? (
+                            <div>
+                                <button
+                                    onClick={handleAuthenticate}
+                                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                                >
+                                    Continue to SSO →
+                                </button>
+
+                                <button
+                                    onClick={handleStartOver}
+                                    className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                                >
+                                    Wrong account? ← Start over
+                                </button>
+
+                                <div className="mt-6 pt-4 border-t border-slate-800">
+                                    <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
+                                        Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 font-mono mt-2">
+                                        Session ID: RDT-{sessionId}
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 font-mono">
+                                        Timestamp: {timestamp}
+                                    </p>
+                                </div>
                             </div>
-                            <h1 className="text-2xl font-bold text-white mb-1">Hardware Key Required</h1>
-                        </div>
+                        ) : (
+                            <div>
+                                <div className="text-center mb-6">
+                                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/40 mb-3">
+                                        <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                    </div>
+                                    <h1 className="text-2xl font-bold text-white mb-1">Hardware Key Required</h1>
+                                </div>
 
-                        <div className="mb-4 space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Identity node located.</span>
+                                <div className="mb-4 space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Identity node located.</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Organization:</span>
+                                        <span className="text-white font-medium">Demo Corporation</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Auth method:</span>
+                                        <span className="text-white font-medium">YubiKey / WebAuthn</span>
+                                    </div>
+                                </div>
+
+                                <div className="mb-6 rounded-lg border border-blue-400/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
+                                    <p>Insert your registered hardware key and tap when prompted.</p>
+                                </div>
+
+                                <div className="mb-6 flex flex-col items-center">
+                                    <div className="animate-pulse">
+                                        <svg className="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                    </div>
+                                    <span className="mt-2 text-sm text-slate-400">Waiting for key tap...</span>
+                                </div>
+
+                                <button
+                                    onClick={handleAuthenticate}
+                                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                                >
+                                    Authenticate with Key
+                                </button>
+
+                                <button
+                                    onClick={handleStartOver}
+                                    className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                                >
+                                    Wrong account? ← Start over
+                                </button>
+
+                                <div className="mt-6 pt-4 border-t border-slate-800">
+                                    <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
+                                        Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 font-mono mt-2">
+                                        Session ID: RDT-{sessionId}
+                                    </p>
+                                    <p className="text-[10px] text-slate-600 font-mono">
+                                        Timestamp: {timestamp}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Organization:</span>
-                                <span className="text-white font-medium">Demo Corporation</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400">Auth method:</span>
-                                <span className="text-white font-medium">YubiKey / WebAuthn</span>
-                            </div>
-                        </div>
-
-                        <div className="mb-6 rounded-lg border border-blue-400/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
-                            <p>Insert your registered hardware key and tap when prompted.</p>
-                        </div>
-
-                        <div className="mb-6 flex flex-col items-center">
-                            <div className="animate-pulse">
-                                <svg className="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </div>
-                            <span className="mt-2 text-sm text-slate-400">Waiting for key tap...</span>
-                        </div>
-
-                        <button
-                            onClick={handleAuthenticate}
-                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                        >
-                            Authenticate with Key
-                        </button>
-
-                        <button
-                            onClick={handleStartOver}
-                            className="mt-3 w-full text-center text-sm text-slate-500 hover:text-slate-300 transition-colors"
-                        >
-                            Wrong account? ← Start over
-                        </button>
-
-                        <div className="mt-6 pt-4 border-t border-slate-800">
-                            <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
-                                Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged. Unauthorized access violates Redoubt's Zero-Trust policy.
-                            </p>
-                            <p className="text-[10px] text-slate-600 font-mono mt-2">
-                                Session ID: RDT-{sessionId}
-                            </p>
-                            <p className="text-[10px] text-slate-600 font-mono">
-                                Timestamp: {timestamp}
-                            </p>
-                        </div>
+                        )}
                     </div>
                 )}
 
