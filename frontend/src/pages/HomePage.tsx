@@ -490,6 +490,7 @@ export default function HomePage() {
     const [wizardStep,  setWizardStep]  = useState(1)
     const [heroVisible, setHeroVisible] = useState(false)
     const [adminModalOpen, setAdminModalOpen] = useState(false)
+    const [isAnnual, setIsAnnual] = useState(false)
     const [adminId, setAdminId] = useState('admin@redoubt.io')
     const [adminPassphrase, setAdminPassphrase] = useState('admin123')
     const [adminSecurityKey, setAdminSecurityKey] = useState('123456')
@@ -821,6 +822,7 @@ const joinSegments = [
                                 <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
                                 <Link to="/solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</Link>
                                 <a href="#join" className="text-slate-300 hover:text-white transition-colors">Who Can Join</a>
+                                <a href="#provider-pricing" className="text-slate-300 hover:text-white transition-colors">Provider Pricing</a>
                             </nav>
                             <div className="flex items-center gap-3">
                                 <button
@@ -1303,6 +1305,237 @@ const joinSegments = [
                                             </div>
                                         </TiltCard>
                                     ))}
+                                </div>
+                            </div>
+                        </MotionReveal>
+                    </div>
+                </section>
+
+                {/* ════════════════════════════════════════
+                    PROVIDER PRICING
+                ════════════════════════════════════════ */}
+                <section id="provider-pricing" className="py-24 bg-slate-950 relative">
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(6,182,212,0.03)_50%,transparent_100%)]" />
+                    <div className="relative max-w-6xl mx-auto px-6">
+                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion}>
+                            <div className="text-center mb-12">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium mb-4">
+                                    <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-400"></span>
+                                    Provider Pricing
+                                </div>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Start monetizing your data</h2>
+                                <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
+                                    Choose the plan that fits your organization.<br />
+                                    Upgrade or cancel anytime.
+                                </p>
+                            </div>
+                        </MotionReveal>
+
+                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={80}>
+                            <div className="flex justify-center mb-8">
+                                <div className="inline-flex items-center bg-slate-900/80 rounded-full border border-slate-700 p-1">
+                                    <button
+                                        onClick={() => setIsAnnual(false)}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!isAnnual ? 'bg-cyan-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        Monthly
+                                    </button>
+                                    <button
+                                        onClick={() => setIsAnnual(true)}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isAnnual ? 'bg-cyan-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        Annual (Save 20%)
+                                    </button>
+                                </div>
+                            </div>
+                        </MotionReveal>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Starter Card */}
+                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={120}>
+                                <div className="relative rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6 flex flex-col h-full">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-medium">
+                                            Get Started
+                                        </span>
+                                    </div>
+                                    <div className="text-center pt-4">
+                                        <h3 className="text-xl font-semibold text-white mb-2">Starter</h3>
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            <span className="text-4xl font-bold text-white">{isAnnual ? 'Free' : 'Free'}</span>
+                                            <span className="text-sm text-slate-400">Forever</span>
+                                        </div>
+                                    </div>
+                                    <ul className="mt-6 space-y-3 flex-1">
+                                        {[
+                                            { text: '1 dataset listing', included: true },
+                                            { text: 'Basic AI confidence scan', included: true },
+                                            { text: 'Standard audit trail', included: true },
+                                            { text: 'Community support', included: true },
+                                            { text: 'GDPR aligned storage', included: true },
+                                            { text: 'Priority AI pipeline', included: false },
+                                            { text: 'Advanced compliance tools', included: false },
+                                            { text: 'DUA templates', included: false },
+                                            { text: 'Analytics dashboard', included: false },
+                                        ].map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-2 text-sm">
+                                                <span className={feature.included ? 'text-emerald-400' : 'text-red-400'}>
+                                                    {feature.included ? '✓' : '✗'}
+                                                </span>
+                                                <span className={feature.included ? 'text-slate-300' : 'text-slate-500'}>
+                                                    {feature.text}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <button
+                                        onClick={() => navigate('/onboarding')}
+                                        className="mt-6 w-full py-3 border border-slate-600 text-slate-300 font-medium rounded-xl hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                                    >
+                                        Start Free →
+                                    </button>
+                                </div>
+                            </MotionReveal>
+
+                            {/* Professional Card */}
+                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={200}>
+                                <div className="relative rounded-2xl border border-cyan-500/40 bg-slate-900/80 p-6 flex flex-col h-full shadow-[0_0_40px_rgba(6,182,212,0.15)]">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-semibold border border-cyan-500/30">
+                                            Most Popular
+                                        </span>
+                                    </div>
+                                    <div className="text-center pt-4">
+                                        <h3 className="text-xl font-semibold text-white mb-2">Professional</h3>
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            <span className="text-4xl font-bold text-white">${isAnnual ? '239' : '299'}</span>
+                                            <span className="text-sm text-slate-400">/month</span>
+                                        </div>
+                                        {isAnnual && (
+                                            <p className="text-xs text-slate-500 mt-1">billed $2,868/year</p>
+                                        )}
+                                    </div>
+                                    <ul className="mt-6 space-y-3 flex-1">
+                                        {[
+                                            { text: '5 dataset listings', included: true },
+                                            { text: 'Priority AI confidence scan', included: true },
+                                            { text: 'Advanced audit trail', included: true },
+                                            { text: 'DUA template library', included: true },
+                                            { text: 'Analytics dashboard', included: true },
+                                            { text: 'Email support', included: true },
+                                            { text: 'GDPR + HIPAA aligned', included: true },
+                                            { text: 'Unlimited datasets', included: false },
+                                            { text: 'Dedicated AI pipeline', included: false },
+                                            { text: 'Custom compliance controls', included: false },
+                                            { text: 'SLA guarantee', included: false },
+                                        ].map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-2 text-sm">
+                                                <span className={feature.included ? 'text-emerald-400' : 'text-red-400'}>
+                                                    {feature.included ? '✓' : '✗'}
+                                                </span>
+                                                <span className={feature.included ? 'text-slate-300' : 'text-slate-500'}>
+                                                    {feature.text}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <button
+                                        onClick={() => navigate('/onboarding')}
+                                        className="mt-6 w-full py-3 bg-cyan-500 text-slate-900 font-semibold rounded-xl hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                                    >
+                                        Get Started →
+                                    </button>
+                                </div>
+                            </MotionReveal>
+
+                            {/* Enterprise Card */}
+                            <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={280}>
+                                <div className="relative rounded-2xl border border-purple-500/40 bg-slate-900/60 p-6 flex flex-col h-full">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/30">
+                                            Full Power
+                                        </span>
+                                    </div>
+                                    <div className="text-center pt-4">
+                                        <h3 className="text-xl font-semibold text-white mb-2">Enterprise</h3>
+                                        <div className="flex items-baseline justify-center gap-1">
+                                            <span className="text-4xl font-bold text-white">${isAnnual ? '799' : '999'}</span>
+                                            <span className="text-sm text-slate-400">/month</span>
+                                        </div>
+                                        {isAnnual && (
+                                            <p className="text-xs text-slate-500 mt-1">billed $9,588/year</p>
+                                        )}
+                                    </div>
+                                    <ul className="mt-6 space-y-3 flex-1">
+                                        {[
+                                            { text: 'Unlimited dataset listings', included: true },
+                                            { text: 'Dedicated AI pipeline', included: true },
+                                            { text: 'Custom compliance controls', included: true },
+                                            { text: 'White-glove onboarding', included: true },
+                                            { text: 'SLA guarantee', included: true },
+                                            { text: 'Dedicated support', included: true },
+                                            { text: 'GDPR + HIPAA + SOC 2', included: true },
+                                            { text: 'Custom DUA templates', included: true },
+                                            { text: 'Priority feature requests', included: true },
+                                            { text: 'API access', included: true },
+                                        ].map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-2 text-sm">
+                                                <span className={feature.included ? 'text-emerald-400' : 'text-red-400'}>
+                                                    {feature.included ? '✓' : '✗'}
+                                                </span>
+                                                <span className={feature.included ? 'text-slate-300' : 'text-slate-500'}>
+                                                    {feature.text}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <button
+                                        onClick={() => window.location.href = 'mailto:sales@redoubt.io'}
+                                        className="mt-6 w-full py-3 border border-purple-500 text-purple-300 font-medium rounded-xl hover:bg-purple-500/10 transition-all"
+                                    >
+                                        Contact Sales →
+                                    </button>
+                                </div>
+                            </MotionReveal>
+                        </div>
+
+                        <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion} delay={360}>
+                            <div className="mt-12 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-cyan-400/10 to-cyan-500/10 border border-cyan-500/20 p-8">
+                                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300">
+                                            <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white">Founding Provider Program</h3>
+                                            <p className="text-sm text-slate-400">Limited to first 20 providers</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-center lg:text-left">
+                                        <p className="text-sm text-slate-300 max-w-lg">
+                                            Apply for an LOI partnership and receive 1 year of Professional plan completely free ($3,588 value). In return, we ask for your feedback, a case study, and permission to feature your organization as a launch partner.
+                                        </p>
+                                        <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-4">
+                                            {['1 year free Professional', 'Logo as launch partner', 'Priority feature requests', 'Co-marketing opportunities'].map((benefit, i) => (
+                                                <span key={i} className="flex items-center gap-1 text-xs text-slate-300">
+                                                    <span className="text-cyan-300">★</span> {benefit}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-3">
+                                        <button
+                                            onClick={() => navigate('/onboarding')}
+                                            className="px-6 py-3 bg-cyan-500 text-slate-900 font-semibold rounded-xl hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                                        >
+                                            Apply for Founding Provider →
+                                        </button>
+                                        <p className="text-xs text-slate-500">
+                                            Already have an account? <Link to="/login" className="text-cyan-400 hover:underline">Sign in</Link> to upgrade your plan.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </MotionReveal>

@@ -25,7 +25,6 @@ import ContributionsPage from './pages/ContributionsPage'
 import ContributionDetailPage from './pages/ContributionDetailPage'
 import ContributionStatusDetailsPage from './pages/ContributionStatusDetailsPage'
 import ProviderDashboardPage from './pages/ProviderDashboardPage'
-import ProviderOnboardingPage from './pages/ProviderOnboardingPage'
 import AccessRequestsPage from './pages/AccessRequestsPage'
 import AccessRequestDetailPage from './pages/AccessRequestDetailPage'
 import TrustProfilePage from './pages/TrustProfilePage'
@@ -258,7 +257,6 @@ function App() {
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
-                    <Route path="provider/onboarding" element={<ProviderOnboardingPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />

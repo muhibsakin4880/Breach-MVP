@@ -33,7 +33,6 @@ const navGroups: NavGroup[] = [
         title: 'PROVIDER WORKFLOW',
         items: [
             { label: 'Provider Dashboard', to: '/provider/dashboard' },
-            { label: 'Provider Onboarding', to: '/provider/onboarding' },
             { label: 'Contributions', to: '/contributions' }
         ]
     },
