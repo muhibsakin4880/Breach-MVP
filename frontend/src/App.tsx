@@ -130,10 +130,17 @@ function App() {
         isAuthenticated,
         isAdmin,
         accessStatus,
+        workspaceRole,
         accessIntentPromptPending = false,
         submitAccessIntent,
         skipAccessIntent
     } = auth
+
+    const getDashboardPath = () => {
+        return workspaceRole === 'provider' || workspaceRole === 'hybrid'
+            ? '/provider/dashboard'
+            : '/dashboard'
+    }
 
     const RequireOnboardingAccess = (element: JSX.Element) => {
         if (accessStatus === 'pending') return element
@@ -223,7 +230,7 @@ function App() {
                     <Route path="demo/security-ops" element={<SecurityOperationsPage />} />
                     <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
-                    <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
+                    <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={getDashboardPath()} replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path={participantOnboardingPaths.entry.slice(1)} element={RequireOnboardingAccess(<OnboardingEntryPage />)} />
                     <Route path={participantOnboardingPaths.step1.slice(1)} element={RequireOnboardingAccess(<OnboardingStep1 />)} />

@@ -3,12 +3,37 @@ import { clearOnboardingState } from '../onboarding/storage'
 
 export type AccessApplicationStatus = 'not_started' | 'pending' | 'approved'
 
+export type WorkspaceRole = 'buyer' | 'provider' | 'hybrid'
+
+export type ProviderPlanTier = 'starter' | 'professional' | 'enterprise'
+
+export type ProviderAccountState = {
+    tier: ProviderPlanTier
+    datasetLimit: 1 | 5 | null
+    datasetsUsed: number
+    canCreateDataset: boolean
+    isFoundingProvider: boolean
+    foundingProgramEndsAt: string | null
+}
+
+const defaultProviderState: ProviderAccountState = {
+    tier: 'starter',
+    datasetLimit: 1,
+    datasetsUsed: 0,
+    canCreateDataset: true,
+    isFoundingProvider: false,
+    foundingProgramEndsAt: null
+}
+
 type AuthContextValue = {
     isAuthenticated: boolean
     isAdmin: boolean
     accessStatus: AccessApplicationStatus
     onboardingInitiated: boolean
     applicantEmail: string
+    workspaceRole: WorkspaceRole
+    providerAccount: ProviderAccountState
+    updateWorkspaceRole: (role: WorkspaceRole) => void
     signIn: () => boolean
     signInAdmin: (email: string, password: string) => boolean
     signOut: () => void
@@ -61,6 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (stored !== null) return stored === 'true'
         return false
     })
+    const [workspaceRole, setRole] = useState<WorkspaceRole>('buyer')
+    const [providerAccount, setProviderAccount] = useState<ProviderAccountState>(defaultProviderState)
 
     useEffect(() => {
         localStorage.setItem(STORAGE_AUTH, String(isAuthenticated))
@@ -105,8 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signOut = () => {
         setIsAuthenticated(false)
         setIsAdmin(false)
+        setRole('buyer')
         localStorage.removeItem(STORAGE_AUTH)
         localStorage.removeItem(STORAGE_IS_ADMIN)
+    }
+
+    const updateWorkspaceRole = (role: WorkspaceRole) => {
+        setRole(role)
     }
 
     const startOnboarding = () => {
@@ -142,6 +174,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 accessStatus,
                 onboardingInitiated,
                 applicantEmail,
+                workspaceRole,
+                providerAccount,
+                updateWorkspaceRole,
                 signIn,
                 signInAdmin,
                 signOut,

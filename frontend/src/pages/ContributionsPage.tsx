@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 type ContributionStatus = 'Processing' | 'Needs fixes' | 'Approved' | 'Restricted' | 'Rejected'
 type PipelineState = 'complete' | 'current' | 'pending' | 'blocked'
@@ -146,6 +147,7 @@ const feedbackStyles: Record<FeedbackItem['severity'], string> = {
 }
 
 export default function ContributionsPage() {
+    const { providerAccount } = useAuth()
     const [activeStep, setActiveStep] = useState(0)
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
@@ -1046,17 +1048,71 @@ type="button"
                         Back to Dashboard
                     </button>
                 ) : (
-                    <button
-                        onClick={() => {
-                            setActiveStep(0)
-                            setIsUploadViewOpen(true)
-                        }}
-                        className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-blue-300/40 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-sm font-semibold text-white shadow-lg shadow-blue-700/25 transition-all self-start"
-                    >
-                        Upload New Dataset
-                    </button>
+                    providerAccount.canCreateDataset ? (
+                        <button
+                            onClick={() => {
+                                setActiveStep(0)
+                                setIsUploadViewOpen(true)
+                            }}
+                            className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-blue-300/40 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-sm font-semibold text-white shadow-lg shadow-blue-700/25 transition-all self-start"
+                        >
+                            Upload New Dataset
+                        </button>
+                    ) : (
+                        <button
+                            disabled
+                            className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-slate-600 bg-slate-800 text-sm font-semibold text-slate-500 cursor-not-allowed self-start opacity-60"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Upload New Dataset
+                        </button>
+                    )
                 )}
             </div>
+
+            {!isUploadViewOpen && !providerAccount.canCreateDataset && (
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+                    <div className="text-sm text-amber-200">
+                        Dataset limit reached. Upgrade your plan to add more datasets.{' '}
+
+                    </div>
+                </div>
+            )}
+
+            {!isUploadViewOpen && (
+                <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-slate-200">Dataset Quota</span>
+                        {providerAccount.tier === 'starter' && (
+                            <span className="text-xs text-slate-400">{providerAccount.datasetsUsed} of {providerAccount.datasetLimit} dataset used</span>
+                        )}
+                        {providerAccount.tier === 'professional' && (
+                            <span className="text-xs text-slate-400">{providerAccount.datasetsUsed} of {providerAccount.datasetLimit} datasets used</span>
+                        )}
+                        {providerAccount.tier === 'enterprise' && (
+                            <span className="text-xs text-emerald-400">Unlimited datasets</span>
+                        )}
+                    </div>
+                    {providerAccount.tier !== 'enterprise' && (
+                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div 
+                                className={`h-full rounded-full transition-all ${
+                                    providerAccount.tier === 'starter' 
+                                        ? (providerAccount.datasetsUsed >= 1 ? 'bg-amber-500' : 'bg-cyan-500')
+                                        : 'bg-cyan-500'
+                                }`}
+                                style={{ 
+                                    width: providerAccount.tier === 'starter' 
+                                        ? '100%' 
+                                        : `${Math.min((providerAccount.datasetsUsed / (providerAccount.datasetLimit || 5)) * 100, 100)}%` 
+                                }} 
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
 
             {!isUploadViewOpen && (
                 <>
@@ -1205,7 +1261,32 @@ type="button"
                                 <h3 className="text-lg font-semibold">{stepPreview[activeStep].title}</h3>
                                 <p className="text-sm text-slate-400">{stepPreview[activeStep].description}</p>
                             </div>
-                            {stepPreview[activeStep].body}
+                            {activeStep === 0 && !providerAccount.canCreateDataset ? (
+                                <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-6 text-center space-y-4">
+                                    <div className="text-lg font-semibold text-rose-200">
+                                        You have reached your dataset limit for the {providerAccount.tier.charAt(0).toUpperCase() + providerAccount.tier.slice(1)} plan ({providerAccount.datasetLimit} dataset).
+                                    </div>
+                                    <div className="text-sm text-slate-300">
+                                        Upgrade to Professional to list up to 5 datasets.
+                                    </div>
+                                    <div className="flex justify-center gap-3">
+                                        <button
+                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white transition-colors"
+                                        >
+                                            Upgrade Plan →
+                                        </button>
+                                        <button
+                                            onClick={() => setIsUploadViewOpen(false)}
+                                            className="px-4 py-2 rounded-lg border border-slate-600 hover:border-slate-500 text-sm font-semibold text-slate-300 transition-colors"
+                                        >
+                                            Go Back
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                stepPreview[activeStep].body
+                            )}
+                            {!(activeStep === 0 && !providerAccount.canCreateDataset) && (
                             <div className="flex gap-2 pt-2">
                                 <button
                                     onClick={() => setActiveStep(prev => Math.max(prev - 1, 0))}
@@ -1223,6 +1304,7 @@ type="button"
                                     </button>
                                 )}
                             </div>
+                            )}
                         </div>
                     </section>
 

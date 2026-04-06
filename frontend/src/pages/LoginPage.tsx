@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
@@ -21,7 +21,8 @@ const generateTimestamp = () => {
 type AuthScreen = 1 | 2
 
 export default function LoginPage() {
-    const { isAuthenticated, accessStatus, signIn } = useAuth()
+    const { isAuthenticated, accessStatus, signIn, workspaceRole, updateWorkspaceRole } = useAuth()
+    const navigate = useNavigate()
     const [screen, setScreen] = useState<1 | 2>(1)
     const [authMethod, setAuthMethod] = useState<'sso' | 'hardware'>('sso')
     const [email, setEmail] = useState('')
@@ -31,7 +32,12 @@ export default function LoginPage() {
     const hasMockConsoleAccess = MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started')
     const hasMockReviewAccess = MOCK_AUTH && accessStatus === 'pending'
 
-    if (isAuthenticated && accessStatus === 'approved') return <Navigate to="/dashboard" replace />
+    if (isAuthenticated && accessStatus === 'approved') {
+        const targetPath = workspaceRole === 'provider' || workspaceRole === 'hybrid' 
+            ? '/provider/dashboard' 
+            : '/dashboard'
+        return <Navigate to={targetPath} replace />
+    }
 
     const handleContinue = (e: React.FormEvent) => {
         e.preventDefault()
@@ -44,6 +50,16 @@ export default function LoginPage() {
 
     const handleAuthenticate = () => {
         signIn()
+        
+        const isProvider = email.toLowerCase().includes('provider') || email.toLowerCase().includes('contrib')
+        
+        if (isProvider) {
+            updateWorkspaceRole('provider')
+            navigate('/provider/dashboard')
+        } else {
+            updateWorkspaceRole('buyer')
+            navigate('/dashboard')
+        }
     }
 
     const handleStartOver = () => {
