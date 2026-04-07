@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import {
+    dashboardColorTokens,
+    dashboardComponentTokens,
+    dashboardRadiusTokens,
+    dashboardShadowTokens,
+    dashboardSpacingTokens,
+    dashboardTypographyTokens
+} from '../dashboardTokens'
 import { dashboardAtAGlanceCards } from '../data/dashboardAtAGlanceData'
 import {
     dashboardActivityTimeline,
@@ -15,15 +23,52 @@ import {
 } from '../data/dashboardPanelsData'
 
 const dashboardText = {
-    eyebrow: 'text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500',
-    sectionTitle: 'text-xl font-bold text-white',
-    panelTitle: 'text-lg font-semibold text-white',
-    body: 'text-sm leading-6 text-slate-400',
-    meta: 'text-xs text-slate-500'
-}
+    eyebrow: dashboardTypographyTokens['text-eyebrow'],
+    heroEyebrow: dashboardTypographyTokens['text-hero-eyebrow'],
+    heroTitle: dashboardTypographyTokens['text-hero-title'],
+    sectionTitle: dashboardTypographyTokens['text-section-title'],
+    panelTitle: dashboardTypographyTokens['text-panel-title'],
+    itemTitle: dashboardTypographyTokens['text-item-title'],
+    body: dashboardTypographyTokens['text-body'],
+    bodyStrong: dashboardTypographyTokens['text-body-strong'],
+    meta: dashboardTypographyTokens['text-muted'],
+    metaStrong: dashboardTypographyTokens['text-muted-strong'],
+    value: dashboardTypographyTokens['text-value']
+} as const
 
-const dashboardPanelClass =
-    'rounded-2xl border border-white/10 bg-slate-800/30 p-5 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.95)]'
+const dashboardPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
+const dashboardPageShellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']} xl:pr-[96px]`
+const dashboardPanelClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']}`
+const dashboardItemCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding']}`
+const dashboardAccentCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-accent']} ${dashboardColorTokens['surface-accent']} ${dashboardSpacingTokens['card-padding']}`
+const dashboardSoftCardClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['card-soft']} ${dashboardShadowTokens['shadow-card']}`
+const dashboardActionButtonClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding']}`
+const dashboardActionButtonTallClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding-tall']}`
+const dashboardFloatingRailClass = `${dashboardRadiusTokens['radius-lg']} ${dashboardComponentTokens['floating-rail']} ${dashboardShadowTokens['shadow-float']}`
+const dashboardTooltipClass = `${dashboardComponentTokens.tooltip} ${dashboardRadiusTokens['radius-sm']} ${dashboardShadowTokens['shadow-tooltip']}`
+const dashboardQuickActionButtonClass = dashboardComponentTokens['quick-action-button']
+const dashboardFocusRingClass = dashboardComponentTokens['focus-ring']
+const dashboardStripEmptyClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-card-soft']} ${dashboardSpacingTokens['card-padding']} ${dashboardShadowTokens['shadow-card']}`
+const dashboardEmptyStateBaseClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['empty-border']}`
+const dashboardSectionIntroClass = dashboardSpacingTokens['section-intro']
+const dashboardModuleStackClass = dashboardSpacingTokens['stack-4']
+const dashboardCompactStackClass = dashboardSpacingTokens['stack-3']
+const dashboardGridGapClass = dashboardSpacingTokens['space-6']
+const dashboardDenseGapClass = dashboardSpacingTokens['space-4']
+const dashboardCompactGapClass = dashboardSpacingTokens['space-3']
+
+const dashboardModuleFlags = {
+    atAGlance: { isLoading: false, isEmpty: false },
+    priority: { isLoading: false, isEmpty: false },
+    upcomingSessions: { isLoading: false, isEmpty: false },
+    checklist: { isLoading: false, isEmpty: false },
+    announcements: { isLoading: false, isEmpty: false },
+    quickLinks: { isLoading: false, isEmpty: false },
+    support: { isLoading: false, isEmpty: false },
+    progress: { isLoading: false, isEmpty: false },
+    timeline: { isLoading: false, isEmpty: false },
+    stickyActions: { isLoading: false, isEmpty: false }
+} as const
 
 export default function DashboardPage() {
     const { accessStatus, applicantEmail } = useAuth()
@@ -34,34 +79,34 @@ export default function DashboardPage() {
     const checklistProgress = Math.round((completedChecklistItems / dashboardChecklistItems.length) * 100)
 
     return (
-        <div className="relative min-h-screen bg-slate-900 text-white">
-            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_25%_0%,rgba(16,185,129,0.12),transparent_50%),radial-gradient(ellipse_at_80%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
+        <div className={dashboardPageClass}>
+            <div className={dashboardComponentTokens['page-background']} />
 
-            <div className="relative mx-auto max-w-[1680px] px-8 py-10 lg:px-12 xl:pr-[15rem]">
-                <section className="mb-8" aria-labelledby="dashboard-intro-banner">
-                    <div className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.86))] px-6 py-5 shadow-[0_22px_60px_-34px_rgba(6,182,212,0.5)]">
-                        <div className="flex min-h-[88px] items-center justify-between gap-6">
+            <div className={dashboardPageShellClass}>
+                <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="dashboard-intro-banner">
+                    <div className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
+                        <div className={`flex min-h-[88px] items-center justify-between ${dashboardGridGapClass}`}>
                             <div>
-                                <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Participant Workspace</p>
-                                <h1 id="dashboard-intro-banner" className="mt-2 text-4xl font-bold tracking-tight text-white">
+                                <p className={dashboardText.heroEyebrow}>Participant Workspace</p>
+                                <h1 id="dashboard-intro-banner" className={`mt-2 ${dashboardText.heroTitle}`}>
                                     Welcome back, {participantName}
                                 </h1>
-                                <p className="mt-2 text-sm leading-6 text-slate-300">
+                                <p className={`mt-2 ${dashboardText.bodyStrong}`}>
                                     Continue managing trust, access, and escrow milestones from the same governed workspace.
                                 </p>
                             </div>
 
-                            <div className="flex shrink-0 items-center gap-3">
-                                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100">
+                            <div className={`flex shrink-0 items-center ${dashboardCompactGapClass}`}>
+                                <span className={`${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['status-badge']} ${dashboardSpacingTokens['chip-padding']}`}>
                                     {programStatusLabel}
                                 </span>
-                                <div className="rounded-xl border border-white/10 bg-slate-950/45 px-4 py-3">
-                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Next milestone date</div>
-                                    <div className="mt-1 text-sm font-semibold text-slate-100">{nextMilestoneDate}</div>
+                                <div className={`${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-overlay-soft']} ${dashboardSpacingTokens['card-padding-compact']}`}>
+                                    <div className={dashboardText.eyebrow}>Next milestone date</div>
+                                    <div className={`mt-2 ${dashboardText.itemTitle} ${dashboardColorTokens['text-strong']}`}>{nextMilestoneDate}</div>
                                 </div>
                                 <button
                                     type="button"
-                                    className="rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                    className={dashboardActionButtonTallClass}
                                     aria-label="Continue where you left off in the participant dashboard"
                                 >
                                     Continue where you left off
@@ -71,55 +116,81 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                <section className="mb-8" aria-labelledby="today-at-a-glance">
-                    <div className="mb-4">
+                <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="today-at-a-glance">
+                    <div className={dashboardSectionIntroClass}>
                         <h2 id="today-at-a-glance" className={dashboardText.sectionTitle}>Today at a Glance</h2>
-                        <p className={`mt-1 ${dashboardText.body}`}>Fast-read operating signals for the current participant session.</p>
+                        <p className={`mt-2 ${dashboardText.body}`}>Fast-read operating signals for the current participant session.</p>
                     </div>
-                    <div className="grid grid-cols-5 gap-3">
-                        {dashboardAtAGlanceCards.map(card => (
-                            <article
-                                key={card.label}
-                                className="flex min-h-[96px] flex-col justify-between rounded-xl border border-white/10 bg-slate-800/35 px-4 py-3 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.95)]"
-                            >
-                                <div className={dashboardText.eyebrow}>{card.label}</div>
-                                <div className="mt-2 text-3xl font-semibold tracking-tight text-white">{card.value}</div>
-                                <div className={`mt-2 text-xs font-medium ${card.toneClassName}`}>{card.trend}</div>
-                            </article>
-                        ))}
-                    </div>
+                    <DashboardStateRenderer
+                        isLoading={dashboardModuleFlags.atAGlance.isLoading}
+                        isEmpty={dashboardModuleFlags.atAGlance.isEmpty}
+                        loading={<DashboardAtAGlanceSkeleton />}
+                        empty={
+                            <DashboardStripEmptyState
+                                icon="spark"
+                                text="No glance metrics available yet. Start a session to populate today’s snapshot."
+                                action={{ label: 'Browse datasets', to: '/datasets' }}
+                            />
+                        }
+                    >
+                        <div className={`grid grid-cols-5 ${dashboardCompactGapClass}`}>
+                            {dashboardAtAGlanceCards.map(card => (
+                                <article
+                                    key={card.label}
+                                    className={`flex min-h-[96px] flex-col justify-between ${dashboardSoftCardClass}`}
+                                >
+                                    <div className={dashboardText.eyebrow}>{card.label}</div>
+                                    <div className={`mt-2 ${dashboardText.value}`}>{card.value}</div>
+                                    <div className={`mt-2 ${dashboardText.metaStrong} ${card.toneClassName}`}>{card.trend}</div>
+                                </article>
+                            ))}
+                        </div>
+                    </DashboardStateRenderer>
                 </section>
 
                 <section aria-labelledby="dashboard-main-workspace">
-                    <div className="mb-4">
+                    <div className={dashboardSectionIntroClass}>
                         <h2 id="dashboard-main-workspace" className={dashboardText.sectionTitle}>Your working surface</h2>
-                        <p className={`mt-1 ${dashboardText.body}`}>The highest-signal actions, sessions, tasks, and support options for this participant workspace.</p>
+                        <p className={`mt-2 ${dashboardText.body}`}>The highest-signal actions, sessions, tasks, and support options for this participant workspace.</p>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-6">
-                        <div className="col-span-8 space-y-5">
+                    <div className={`grid grid-cols-12 ${dashboardGridGapClass}`}>
+                        <div className={`col-span-8 ${dashboardModuleStackClass}`}>
                             <DashboardPanel
                                 eyebrow="Priority"
                                 title="What should I do next?"
                                 description="Focus on the next three actions most likely to unblock approvals, releases, and trust refresh."
                             >
-                                <div className="space-y-4">
-                                    {dashboardPriorityActions.map((action, index) => (
-                                        <div key={action.title} className="flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                            <div>
-                                                <div className={`${dashboardText.meta} mb-2`}>Priority {index + 1}</div>
-                                                <div className="text-sm font-semibold text-white">{action.title}</div>
-                                                <div className={`mt-2 text-sm ${action.toneClassName}`}>{action.detail}</div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.priority.isLoading}
+                                    isEmpty={dashboardModuleFlags.priority.isEmpty}
+                                    loading={<DashboardListSkeleton count={3} />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="priority"
+                                            text="No priority actions right now. Open your contribution queue to create one."
+                                            action={{ label: 'Open contributions', to: '/contributions' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardModuleStackClass}>
+                                        {dashboardPriorityActions.map((action, index) => (
+                                            <div key={action.title} className={`flex items-center justify-between ${dashboardDenseGapClass} ${dashboardItemCardClass}`}>
+                                                <div>
+                                                    <div className={`${dashboardText.meta} mb-2`}>Priority {index + 1}</div>
+                                                    <div className={dashboardText.itemTitle}>{action.title}</div>
+                                                    <div className={`mt-2 ${dashboardText.body} ${action.toneClassName}`}>{action.detail}</div>
+                                                </div>
+                                                <Link
+                                                    to={action.ctaTo}
+                                                    className={`shrink-0 ${dashboardActionButtonClass}`}
+                                                >
+                                                    {action.ctaLabel}
+                                                </Link>
                                             </div>
-                                            <Link
-                                                to={action.ctaTo}
-                                                className="shrink-0 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
-                                            >
-                                                {action.ctaLabel}
-                                            </Link>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
 
                             <DashboardPanel
@@ -127,20 +198,33 @@ export default function DashboardPage() {
                                 title="Upcoming Sessions"
                                 description="The next scheduled participant touchpoints across review, escrow, and compliance."
                             >
-                                <div className="space-y-4">
-                                    {dashboardUpcomingSessions.map(session => (
-                                        <article key={session.title} className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-white">{session.title}</div>
-                                                    <div className={`mt-1 ${dashboardText.meta}`}>{session.time}</div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.upcomingSessions.isLoading}
+                                    isEmpty={dashboardModuleFlags.upcomingSessions.isEmpty}
+                                    loading={<DashboardListSkeleton count={3} />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="calendar"
+                                            text="No upcoming sessions. Book one now."
+                                            action={{ label: 'Book session', href: 'mailto:support@redoubt.io?subject=Book%20participant%20review%20session' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardModuleStackClass}>
+                                        {dashboardUpcomingSessions.map(session => (
+                                            <article key={session.title} className={dashboardItemCardClass}>
+                                                <div className={`flex items-start justify-between ${dashboardCompactGapClass}`}>
+                                                    <div>
+                                                        <div className={dashboardText.itemTitle}>{session.title}</div>
+                                                        <div className={`mt-2 ${dashboardText.meta}`}>{session.time}</div>
+                                                    </div>
+                                                    <span className={`${dashboardText.metaStrong} ${session.statusClassName}`}>{session.status}</span>
                                                 </div>
-                                                <span className={`text-xs font-medium ${session.statusClassName}`}>{session.status}</span>
-                                            </div>
-                                            <p className={`mt-3 ${dashboardText.body}`}>{session.detail}</p>
-                                        </article>
-                                    ))}
-                                </div>
+                                                <p className={`mt-3 ${dashboardText.body}`}>{session.detail}</p>
+                                            </article>
+                                        ))}
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
 
                             <DashboardPanel
@@ -148,55 +232,81 @@ export default function DashboardPage() {
                                 title="Task Checklist"
                                 description="Progress across the tasks that keep the participant workspace moving toward release readiness."
                             >
-                                <div className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                    <div className="mb-3 flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-white">Completion progress</span>
-                                        <span className="text-xs font-medium text-cyan-300">{completedChecklistItems} of {dashboardChecklistItems.length} done</span>
-                                    </div>
-                                    <div className="h-2.5 rounded-full bg-slate-800">
-                                        <div className="h-2.5 rounded-full bg-cyan-400" style={{ width: `${checklistProgress}%` }} />
-                                    </div>
-                                    <div className={`mt-2 ${dashboardText.meta}`}>{checklistProgress}% complete</div>
-                                </div>
-
-                                <div className="mt-4 space-y-3">
-                                    {dashboardChecklistItems.map(item => (
-                                        <div key={item.label} className="flex items-start gap-3 rounded-xl border border-white/8 bg-slate-900/65 px-4 py-3.5">
-                                            <span
-                                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                                                    item.done
-                                                        ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200'
-                                                        : 'border-slate-600 bg-slate-800 text-slate-500'
-                                                }`}
-                                                aria-hidden="true"
-                                            >
-                                                {item.done ? '✓' : ''}
-                                            </span>
-                                            <div>
-                                                <div className="text-sm font-medium text-white">{item.label}</div>
-                                                <div className={`mt-1 ${dashboardText.meta}`}>{item.detail}</div>
-                                            </div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.checklist.isLoading}
+                                    isEmpty={dashboardModuleFlags.checklist.isEmpty}
+                                    loading={<DashboardChecklistSkeleton />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="tasks"
+                                            text="No checklist items right now. Review your trust profile for the next step."
+                                            action={{ label: 'Open trust profile', to: '/trust-profile' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardItemCardClass}>
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <span className={dashboardText.itemTitle}>Completion progress</span>
+                                            <span className={`${dashboardText.metaStrong} ${dashboardColorTokens['text-accent']}`}>{completedChecklistItems} of {dashboardChecklistItems.length} done</span>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="h-2 rounded-full bg-slate-800">
+                                            <div className="h-2 rounded-full bg-cyan-400" style={{ width: `${checklistProgress}%` }} />
+                                        </div>
+                                        <div className={`mt-2 ${dashboardText.meta}`}>{checklistProgress}% complete</div>
+                                    </div>
+
+                                    <div className={`mt-4 ${dashboardCompactStackClass}`}>
+                                        {dashboardChecklistItems.map(item => (
+                                            <div key={item.label} className={`flex items-start ${dashboardCompactGapClass} ${dashboardItemCardClass} py-3`}>
+                                                <span
+                                                    className={`mt-0 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                                                        item.done
+                                                            ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200'
+                                                            : 'border-slate-600 bg-slate-800 text-slate-500'
+                                                    }`}
+                                                    aria-hidden="true"
+                                                >
+                                                    {item.done ? '✓' : ''}
+                                                </span>
+                                                <div>
+                                                    <div className={dashboardText.itemTitle}>{item.label}</div>
+                                                    <div className={`mt-2 ${dashboardText.meta}`}>{item.detail}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
                         </div>
 
-                        <div className="col-span-4 space-y-5">
+                        <div className={`col-span-4 ${dashboardModuleStackClass}`}>
                             <DashboardPanel
                                 eyebrow="Updates"
                                 title="Announcements"
                                 description="Short operational updates that affect review timing and governance expectations."
                             >
-                                <div className="space-y-4">
-                                    {dashboardAnnouncements.map(announcement => (
-                                        <article key={announcement.title} className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                            <div className="text-sm font-semibold text-white">{announcement.title}</div>
-                                            <div className={`mt-2 ${dashboardText.body}`}>{announcement.detail}</div>
-                                            <div className={`mt-2 ${dashboardText.meta}`}>{announcement.timing}</div>
-                                        </article>
-                                    ))}
-                                </div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.announcements.isLoading}
+                                    isEmpty={dashboardModuleFlags.announcements.isEmpty}
+                                    loading={<DashboardListSkeleton count={2} />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="megaphone"
+                                            text="No announcements right now. Check the audit trail later."
+                                            action={{ label: 'Open audit trail', to: '/audit-trail' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardModuleStackClass}>
+                                        {dashboardAnnouncements.map(announcement => (
+                                            <article key={announcement.title} className={dashboardItemCardClass}>
+                                                <div className={dashboardText.itemTitle}>{announcement.title}</div>
+                                                <div className={`mt-2 ${dashboardText.body}`}>{announcement.detail}</div>
+                                                <div className={`mt-2 ${dashboardText.meta}`}>{announcement.timing}</div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
 
                             <DashboardPanel
@@ -204,21 +314,34 @@ export default function DashboardPage() {
                                 title="Resources / Quick Links"
                                 description="Jump directly into the pages participants use most while managing trust and access."
                             >
-                                <div className="space-y-3">
-                                    {dashboardQuickLinks.map(link => (
-                                        <Link
-                                            key={link.label}
-                                            to={link.to}
-                                            className="block rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4 transition-colors hover:border-cyan-400/30 hover:bg-slate-900"
-                                        >
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div className="text-sm font-semibold text-white">{link.label}</div>
-                                                <span className="text-cyan-300">→</span>
-                                            </div>
-                                            <div className={`mt-2 ${dashboardText.meta}`}>{link.detail}</div>
-                                        </Link>
-                                    ))}
-                                </div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.quickLinks.isLoading}
+                                    isEmpty={dashboardModuleFlags.quickLinks.isEmpty}
+                                    loading={<DashboardListSkeleton count={3} compact />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="links"
+                                            text="No quick links configured. Open your profile to set them up."
+                                            action={{ label: 'Open profile', to: '/profile' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardCompactStackClass}>
+                                        {dashboardQuickLinks.map(link => (
+                                            <Link
+                                                key={link.label}
+                                                to={link.to}
+                                                className={`block ${dashboardItemCardClass} transition-colors hover:border-cyan-400/30 hover:bg-slate-900`}
+                                            >
+                                                <div className={`flex items-center justify-between ${dashboardCompactGapClass}`}>
+                                                    <div className={dashboardText.itemTitle}>{link.label}</div>
+                                                    <span className={dashboardColorTokens['text-accent']}>→</span>
+                                                </div>
+                                                <div className={`mt-2 ${dashboardText.meta}`}>{link.detail}</div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
 
                             <DashboardPanel
@@ -226,108 +349,134 @@ export default function DashboardPage() {
                                 title="Support Contact"
                                 description="Reach the participant support lead for blockers around approvals, sessions, and evidence packages."
                             >
-                                <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-4">
-                                    <div className="text-base font-semibold text-white">{dashboardSupportContact.name}</div>
-                                    <div className="mt-1 text-sm text-cyan-200">{dashboardSupportContact.role}</div>
-                                    <div className={`mt-4 ${dashboardText.meta}`}>{dashboardSupportContact.availability}</div>
-                                    <div className={`mt-1 ${dashboardText.meta}`}>{dashboardSupportContact.responseTime}</div>
-                                    <a
-                                        href={`mailto:${dashboardSupportContact.email}`}
-                                        className="mt-4 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
-                                    >
-                                        Contact support
-                                    </a>
-                                </div>
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.support.isLoading}
+                                    isEmpty={dashboardModuleFlags.support.isEmpty}
+                                    loading={<DashboardListSkeleton count={1} compact />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="support"
+                                            text="No support contact assigned. Message the coordinator now."
+                                            action={{ label: 'Message coordinator', href: 'mailto:support@redoubt.io?subject=Participant%20coordinator%20question' }}
+                                        />
+                                    }
+                                >
+                                    <div className={dashboardAccentCardClass}>
+                                        <div className={dashboardText.panelTitle}>{dashboardSupportContact.name}</div>
+                                        <div className={`mt-2 ${dashboardText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dashboardSupportContact.role}</div>
+                                        <div className={`mt-4 ${dashboardText.meta}`}>{dashboardSupportContact.availability}</div>
+                                        <div className={`mt-2 ${dashboardText.meta}`}>{dashboardSupportContact.responseTime}</div>
+                                        <a
+                                            href={`mailto:${dashboardSupportContact.email}`}
+                                            className={`mt-4 inline-flex ${dashboardActionButtonClass}`}
+                                        >
+                                            Contact support
+                                        </a>
+                                    </div>
+                                </DashboardStateRenderer>
                             </DashboardPanel>
                         </div>
                     </div>
                 </section>
 
-                <section className="mt-8" aria-labelledby="dashboard-progress-row">
-                    <div className="mb-4">
+                <section className="mt-6" aria-labelledby="dashboard-progress-row">
+                    <div className={dashboardSectionIntroClass}>
                         <h2 id="dashboard-progress-row" className={dashboardText.sectionTitle}>Progress and activity</h2>
-                        <p className={`mt-1 ${dashboardText.body}`}>A compact view of operational momentum across readiness, evidence flow, and the next milestone states.</p>
+                        <p className={`mt-2 ${dashboardText.body}`}>A compact view of operational momentum across readiness, evidence flow, and the next milestone states.</p>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-6">
+                    <div className={`grid grid-cols-12 ${dashboardGridGapClass}`}>
                         <DashboardPanel
                             eyebrow="Progress"
                             title="Release momentum"
                             description="Placeholder visualizations for readiness, recent movement, and the pace of participant-side completion."
                             className="col-span-7"
                         >
-                            <div className="grid grid-cols-[220px_minmax(0,1fr)] gap-5">
-                                <div className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-white">Readiness score</span>
-                                        <span className="text-xs font-medium text-cyan-300">78%</span>
+                            <DashboardStateRenderer
+                                isLoading={dashboardModuleFlags.progress.isLoading}
+                                isEmpty={dashboardModuleFlags.progress.isEmpty}
+                                loading={<DashboardProgressSkeleton />}
+                                empty={
+                                    <DashboardEmptyState
+                                        icon="spark"
+                                        text="No progress data yet. Upload a contribution to start tracking."
+                                        action={{ label: 'Upload now', to: '/contributions' }}
+                                    />
+                                }
+                            >
+                                <div className={`grid grid-cols-[220px_minmax(0,1fr)] ${dashboardDenseGapClass}`}>
+                                    <div className={dashboardItemCardClass}>
+                                        <div className="flex items-center justify-between">
+                                            <span className={dashboardText.itemTitle}>Readiness score</span>
+                                            <span className={`${dashboardText.metaStrong} ${dashboardColorTokens['text-accent']}`}>78%</span>
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-center">
+                                            <div className="relative h-36 w-36">
+                                                <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                                                    <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+                                                    <circle
+                                                        cx="60"
+                                                        cy="60"
+                                                        r="44"
+                                                        fill="none"
+                                                        stroke="rgb(34 211 238)"
+                                                        strokeWidth="12"
+                                                        strokeLinecap="round"
+                                                        strokeDasharray="216 276"
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <span className={dashboardText.value}>78%</span>
+                                                    <span className={dashboardText.meta}>On track</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 grid gap-2">
+                                            {dashboardProgressHighlights.map(highlight => (
+                                                <div key={highlight.label} className="flex items-center justify-between rounded-lg border border-white/6 bg-slate-950/45 px-3 py-2">
+                                                    <span className={dashboardText.meta}>{highlight.label}</span>
+                                                    <span className={`${dashboardText.metaStrong} ${highlight.toneClassName}`}>{highlight.value}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="mt-4 flex items-center justify-center">
-                                        <div className="relative h-36 w-36">
-                                            <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-                                                <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
-                                                <circle
-                                                    cx="60"
-                                                    cy="60"
-                                                    r="44"
-                                                    fill="none"
-                                                    stroke="rgb(34 211 238)"
-                                                    strokeWidth="12"
-                                                    strokeLinecap="round"
-                                                    strokeDasharray="216 276"
-                                                />
-                                            </svg>
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                <span className="text-3xl font-semibold text-white">78%</span>
-                                                <span className={dashboardText.meta}>On track</span>
+
+                                    <div className={dashboardModuleStackClass}>
+                                        <div className={dashboardItemCardClass}>
+                                            <div className="flex items-center justify-between">
+                                                <span className={dashboardText.itemTitle}>Readiness bars</span>
+                                                <span className={dashboardText.meta}>Placeholder</span>
+                                            </div>
+                                            <div className="mt-4 space-y-4">
+                                                <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
+                                                <ProgressBarPlaceholder label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
+                                                <ProgressBarPlaceholder label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
+                                            </div>
+                                        </div>
+
+                                        <div className={dashboardItemCardClass}>
+                                            <div className="flex items-center justify-between">
+                                                <span className={dashboardText.itemTitle}>Activity sparkline</span>
+                                                <span className={dashboardText.meta}>Last 7 checkpoints</span>
+                                            </div>
+                                            <div className="mt-4 rounded-lg border border-white/6 bg-slate-950/45 px-3 py-3">
+                                                <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
+                                                    <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
+                                                    <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
+                                                    <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18L320 96L0 96Z" fill="url(#sparkFill)" opacity="0.22" />
+                                                    <defs>
+                                                        <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
+                                                            <stop offset="0%" stopColor="rgb(34 211 238)" />
+                                                            <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                                <div className={`mt-2 ${dashboardText.meta}`}>Steady improvement in review throughput with a stronger close over the last two checkpoints.</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4 grid gap-2">
-                                        {dashboardProgressHighlights.map(highlight => (
-                                            <div key={highlight.label} className="flex items-center justify-between rounded-lg border border-white/6 bg-slate-950/45 px-3 py-2">
-                                                <span className={dashboardText.meta}>{highlight.label}</span>
-                                                <span className={`text-xs font-medium ${highlight.toneClassName}`}>{highlight.value}</span>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
-
-                                <div className="space-y-4">
-                                    <div className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-semibold text-white">Readiness bars</span>
-                                            <span className={dashboardText.meta}>Placeholder</span>
-                                        </div>
-                                        <div className="mt-4 space-y-4">
-                                            <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
-                                            <ProgressBarPlaceholder label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
-                                            <ProgressBarPlaceholder label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-semibold text-white">Activity sparkline</span>
-                                            <span className={dashboardText.meta}>Last 7 checkpoints</span>
-                                        </div>
-                                        <div className="mt-4 rounded-lg border border-white/6 bg-slate-950/45 px-3 py-3">
-                                            <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
-                                                <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-                                                <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
-                                                <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18L320 96L0 96Z" fill="url(#sparkFill)" opacity="0.22" />
-                                                <defs>
-                                                    <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
-                                                        <stop offset="0%" stopColor="rgb(34 211 238)" />
-                                                        <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
-                                                    </linearGradient>
-                                                </defs>
-                                            </svg>
-                                            <div className={`mt-2 ${dashboardText.meta}`}>Steady improvement in review throughput with a stronger close over the last two checkpoints.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </DashboardStateRenderer>
                         </DashboardPanel>
 
                         <DashboardPanel
@@ -336,48 +485,75 @@ export default function DashboardPage() {
                             description="Completed, in-progress, and upcoming milestones with clear state markers for quick scanning."
                             className="col-span-5"
                         >
-                            <div className="space-y-4">
-                                {dashboardActivityTimeline.map((item, index) => {
-                                    const timelineState = getTimelineStateMeta(item.state)
-                                    return (
-                                        <div key={item.title} className="flex gap-4">
-                                            <div className="flex flex-col items-center">
-                                                <span
-                                                    className={`flex h-9 w-9 items-center justify-center rounded-full border ${timelineState.markerClassName}`}
-                                                    aria-hidden="true"
-                                                >
-                                                    {timelineState.icon}
-                                                </span>
-                                                {index < dashboardActivityTimeline.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
-                                            </div>
-                                            <article className="flex-1 rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="text-sm font-semibold text-white">{item.title}</div>
-                                                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${timelineState.badgeClassName}`}>
-                                                        {timelineState.label}
+                            <DashboardStateRenderer
+                                isLoading={dashboardModuleFlags.timeline.isLoading}
+                                isEmpty={dashboardModuleFlags.timeline.isEmpty}
+                                loading={<DashboardTimelineSkeleton />}
+                                empty={
+                                    <DashboardEmptyState
+                                        icon="timeline"
+                                        text="No timeline events yet. Book one now."
+                                        action={{ label: 'Book session', href: 'mailto:support@redoubt.io?subject=Book%20participant%20review%20session' }}
+                                    />
+                                }
+                            >
+                                <div className={dashboardModuleStackClass}>
+                                    {dashboardActivityTimeline.map((item, index) => {
+                                        const timelineState = getTimelineStateMeta(item.state)
+                                        return (
+                                            <div key={item.title} className={`flex ${dashboardDenseGapClass}`}>
+                                                <div className="flex flex-col items-center">
+                                                    <span
+                                                        className={`flex h-9 w-9 items-center justify-center rounded-full border ${timelineState.markerClassName}`}
+                                                        aria-hidden="true"
+                                                    >
+                                                        {timelineState.icon}
                                                     </span>
+                                                    {index < dashboardActivityTimeline.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
                                                 </div>
-                                                <div className={`mt-2 ${dashboardText.meta}`}>{item.timing}</div>
-                                                <p className={`mt-3 ${dashboardText.body}`}>{item.detail}</p>
-                                            </article>
-                                        </div>
-                                    )
-                                })}
-                            </div>
+                                                <article className={`flex-1 ${dashboardItemCardClass}`}>
+                                                    <div className={`flex items-start justify-between ${dashboardCompactGapClass}`}>
+                                                        <div className={dashboardText.itemTitle}>{item.title}</div>
+                                                        <span className={`rounded-full px-3 py-2 text-[11px] font-medium leading-none ${timelineState.badgeClassName}`}>
+                                                            {timelineState.label}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`mt-2 ${dashboardText.meta}`}>{item.timing}</div>
+                                                    <p className={`mt-3 ${dashboardText.body}`}>{item.detail}</p>
+                                                </article>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </DashboardStateRenderer>
                         </DashboardPanel>
                     </div>
                 </section>
 
                 <aside
-                    className="pointer-events-none fixed right-8 top-[116px] z-30 hidden xl:block"
+                    className="pointer-events-none fixed right-6 top-24 z-30 hidden xl:block"
                     aria-label="Desktop quick actions"
                 >
-                    <div className="pointer-events-auto rounded-2xl border border-white/10 bg-slate-950/85 p-3 shadow-[0_20px_40px_-26px_rgba(15,23,42,0.95)] backdrop-blur-xl">
-                        <div className="flex flex-col gap-3">
-                            {dashboardStickyQuickActions.map(action => (
-                                <StickyQuickActionButton key={action.label} action={action} />
-                            ))}
-                        </div>
+                    <div className={dashboardFloatingRailClass}>
+                        <DashboardStateRenderer
+                            isLoading={dashboardModuleFlags.stickyActions.isLoading}
+                            isEmpty={dashboardModuleFlags.stickyActions.isEmpty}
+                            loading={<DashboardQuickActionsSkeleton />}
+                            empty={
+                                <DashboardEmptyState
+                                    icon="actions"
+                                    text="No quick actions available. Open your profile to configure them."
+                                    action={{ label: 'Open profile', to: '/profile' }}
+                                    compact
+                                />
+                            }
+                        >
+                            <div className={`flex flex-col ${dashboardCompactGapClass}`}>
+                                {dashboardStickyQuickActions.map(action => (
+                                    <StickyQuickActionButton key={action.label} action={action} />
+                                ))}
+                            </div>
+                        </DashboardStateRenderer>
                     </div>
                 </aside>
             </div>
@@ -403,7 +579,7 @@ function DashboardPanel({
             <div className={dashboardText.eyebrow}>{eyebrow}</div>
             <h3 className={`mt-2 ${dashboardText.panelTitle}`}>{title}</h3>
             <p className={`mt-2 ${dashboardText.body}`}>{description}</p>
-            <div className="mt-5">{children}</div>
+            <div className="mt-4">{children}</div>
         </section>
     )
 }
@@ -436,11 +612,11 @@ function ProgressBarPlaceholder({
     return (
         <div>
             <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-white">{label}</span>
+                <span className={dashboardText.itemTitle}>{label}</span>
                 <span className={dashboardText.meta}>Placeholder</span>
             </div>
-            <div className="h-2.5 rounded-full bg-slate-800">
-                <div className={`h-2.5 rounded-full ${widthClassName} ${toneClassName}`} />
+            <div className="h-2 rounded-full bg-slate-800">
+                <div className={`h-2 rounded-full ${widthClassName} ${toneClassName}`} />
             </div>
         </div>
     )
@@ -451,22 +627,22 @@ function getTimelineStateMeta(state: 'completed' | 'in_progress' | 'upcoming') {
         case 'completed':
             return {
                 label: 'Completed',
-                badgeClassName: 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
-                markerClassName: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200',
+                badgeClassName: dashboardColorTokens['state-completed-badge'],
+                markerClassName: dashboardColorTokens['state-completed-marker'],
                 icon: '✓'
             }
         case 'in_progress':
             return {
                 label: 'In progress',
-                badgeClassName: 'border border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
-                markerClassName: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-200',
+                badgeClassName: dashboardColorTokens['state-progress-badge'],
+                markerClassName: dashboardColorTokens['state-progress-marker'],
                 icon: '↻'
             }
         default:
             return {
                 label: 'Upcoming',
-                badgeClassName: 'border border-amber-500/30 bg-amber-500/10 text-amber-200',
-                markerClassName: 'border-amber-500/40 bg-amber-500/15 text-amber-200',
+                badgeClassName: dashboardColorTokens['state-upcoming-badge'],
+                markerClassName: dashboardColorTokens['state-upcoming-marker'],
                 icon: '•'
             }
     }
@@ -483,12 +659,12 @@ function StickyQuickActionButton({
             <span
                 id={tooltipId}
                 role="tooltip"
-                className="pointer-events-none absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                className={dashboardTooltipClass}
             >
                 {action.tooltip}
             </span>
             <span
-                className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-slate-900 text-slate-100 transition-colors duration-150 group-hover:border-cyan-400/40 group-hover:text-cyan-200 group-focus-within:border-cyan-400/40 group-focus-within:text-cyan-200"
+                className={dashboardQuickActionButtonClass}
                 aria-hidden="true"
             >
                 <QuickActionIcon icon={action.icon} />
@@ -503,7 +679,7 @@ function StickyQuickActionButton({
                     to={action.to}
                     aria-label={action.label}
                     aria-describedby={tooltipId}
-                    className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    className={dashboardFocusRingClass}
                 >
                     {content}
                 </Link>
@@ -518,7 +694,7 @@ function StickyQuickActionButton({
                 download={action.downloadName}
                 aria-label={action.label}
                 aria-describedby={tooltipId}
-                className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className={dashboardFocusRingClass}
             >
                 {content}
             </a>
@@ -561,4 +737,236 @@ function QuickActionIcon({ icon }: { icon: 'book' | 'upload' | 'message' | 'down
                 </svg>
             )
     }
+}
+
+function DashboardStateRenderer({
+    isLoading,
+    isEmpty,
+    loading,
+    empty,
+    children
+}: {
+    isLoading: boolean
+    isEmpty: boolean
+    loading: ReactNode
+    empty: ReactNode
+    children: ReactNode
+}) {
+    if (isLoading) return <>{loading}</>
+    if (isEmpty) return <>{empty}</>
+    return <>{children}</>
+}
+
+function DashboardStripEmptyState({
+    icon,
+    text,
+    action
+}: {
+    icon: DashboardEmptyIconName
+    text: string
+    action: DashboardStateAction
+}) {
+    return (
+        <div className={dashboardStripEmptyClass}>
+            <DashboardEmptyState icon={icon} text={text} action={action} />
+        </div>
+    )
+}
+
+type DashboardStateAction = {
+    label: string
+    to?: string
+    href?: string
+    downloadName?: string
+}
+
+type DashboardEmptyIconName = 'spark' | 'calendar' | 'priority' | 'tasks' | 'megaphone' | 'links' | 'support' | 'timeline' | 'actions'
+
+function DashboardEmptyState({
+    icon,
+    text,
+    action,
+    compact = false
+}: {
+    icon: DashboardEmptyIconName
+    text: string
+    action: DashboardStateAction
+    compact?: boolean
+}) {
+    return (
+        <div className={`flex flex-col items-start ${dashboardEmptyStateBaseClass} ${compact ? dashboardSpacingTokens['empty-padding-compact'] : dashboardSpacingTokens['card-padding']}`}>
+            <span className={dashboardComponentTokens['icon-well']} aria-hidden="true">
+                <DashboardEmptyIcon icon={icon} />
+            </span>
+            <p className={`mt-4 ${dashboardText.body}`}>{text}</p>
+            <DashboardStateActionLink action={action} className="mt-4" />
+        </div>
+    )
+}
+
+function DashboardStateActionLink({
+    action,
+    className = ''
+}: {
+    action: DashboardStateAction
+    className?: string
+}) {
+    const actionClassName = `inline-flex ${dashboardActionButtonClass} ${className}`.trim()
+
+    if (action.to) {
+        return (
+            <Link to={action.to} className={actionClassName}>
+                {action.label}
+            </Link>
+        )
+    }
+
+    return (
+        <a href={action.href} download={action.downloadName} className={actionClassName}>
+            {action.label}
+        </a>
+    )
+}
+
+function DashboardEmptyIcon({ icon }: { icon: DashboardEmptyIconName }) {
+    switch (icon) {
+        case 'calendar':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3.75v3M17.25 3.75v3M4.5 8.25h15M5.25 5.25h13.5A.75.75 0 0119.5 6v12.75a.75.75 0 01-.75.75H5.25A.75.75 0 014.5 18.75V6a.75.75 0 01.75-.75z" />
+                </svg>
+            )
+        case 'priority':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.75l7.5 4.5v7.5L12 20.25l-7.5-4.5v-7.5L12 3.75z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v4.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75h.01" />
+                </svg>
+            )
+        case 'tasks':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h10.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12h10.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 17.25h10.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h.008v.008H4.5V6.75zM4.5 12h.008v.008H4.5V12zm0 5.25h.008v.008H4.5v-.008z" />
+                </svg>
+            )
+        case 'megaphone':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 10.5h3l8.25-4.5v12l-8.25-4.5h-3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 13.5l1.5 4.5" />
+                </svg>
+            )
+        case 'links':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 13.5l3-3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 16.5l-1.5 1.5a3.182 3.182 0 104.5 4.5l1.5-1.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 7.5l1.5-1.5a3.182 3.182 0 10-4.5-4.5L12 3" />
+                </svg>
+            )
+        case 'support':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 115.82 1c0 2-3 3-3 3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 17h.01" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            )
+        case 'timeline':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.008v.008H6.75V6.75zm0 5.25h.008v.008H6.75V12zm0 5.25h.008v.008H6.75v-.008z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6.75h6.75M10.5 12h6.75M10.5 17.25h6.75" />
+                </svg>
+            )
+        case 'actions':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15" />
+                </svg>
+            )
+        default:
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 15.75l4.5-4.5 3 3 6-7.5 2.25 2.25" />
+                </svg>
+            )
+    }
+}
+
+function DashboardAtAGlanceSkeleton() {
+    return (
+        <div className={`grid grid-cols-5 ${dashboardCompactGapClass}`}>
+            {Array.from({ length: 5 }).map((_, index) => (
+                <DashboardSkeletonCard key={index} minHeightClassName="min-h-[96px]" />
+            ))}
+        </div>
+    )
+}
+
+function DashboardListSkeleton({
+    count,
+    compact = false
+}: {
+    count: number
+    compact?: boolean
+}) {
+    return (
+        <div className={dashboardModuleStackClass}>
+            {Array.from({ length: count }).map((_, index) => (
+                <DashboardSkeletonCard key={index} minHeightClassName={compact ? 'min-h-[96px]' : 'min-h-[112px]'} />
+            ))}
+        </div>
+    )
+}
+
+function DashboardChecklistSkeleton() {
+    return (
+        <div className={dashboardModuleStackClass}>
+            <DashboardSkeletonCard minHeightClassName="min-h-[88px]" />
+            <DashboardListSkeleton count={3} compact />
+        </div>
+    )
+}
+
+function DashboardProgressSkeleton() {
+    return (
+        <div className={`grid grid-cols-[220px_minmax(0,1fr)] ${dashboardDenseGapClass}`}>
+            <DashboardSkeletonCard minHeightClassName="min-h-[324px]" />
+            <div className={dashboardModuleStackClass}>
+                <DashboardSkeletonCard minHeightClassName="min-h-[144px]" />
+                <DashboardSkeletonCard minHeightClassName="min-h-[144px]" />
+            </div>
+        </div>
+    )
+}
+
+function DashboardTimelineSkeleton() {
+    return <DashboardListSkeleton count={3} />
+}
+
+function DashboardQuickActionsSkeleton() {
+    return (
+        <div className={`flex flex-col ${dashboardCompactGapClass}`}>
+            {Array.from({ length: 4 }).map((_, index) => (
+                <span key={index} className={dashboardComponentTokens['skeleton-action']} aria-hidden="true" />
+            ))}
+        </div>
+    )
+}
+
+function DashboardSkeletonCard({ minHeightClassName }: { minHeightClassName: string }) {
+    return (
+        <div className={`animate-pulse ${dashboardItemCardClass} ${minHeightClassName}`}>
+            <div className="h-3 w-20 rounded bg-slate-700/80" />
+            <div className="mt-4 h-6 w-2/3 rounded bg-slate-700/80" />
+            <div className="mt-3 h-3 w-full rounded bg-slate-800" />
+            <div className="mt-2 h-3 w-4/5 rounded bg-slate-800" />
+        </div>
+    )
 }
