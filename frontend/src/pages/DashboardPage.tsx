@@ -1,23 +1,34 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardAtAGlanceCards } from '../data/dashboardAtAGlanceData'
+import {
+    dashboardAnnouncements,
+    dashboardChecklistItems,
+    dashboardPriorityActions,
+    dashboardQuickLinks,
+    dashboardSupportContact,
+    dashboardUpcomingSessions
+} from '../data/dashboardPanelsData'
+
+const dashboardText = {
+    eyebrow: 'text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500',
+    sectionTitle: 'text-xl font-bold text-white',
+    panelTitle: 'text-lg font-semibold text-white',
+    body: 'text-sm leading-6 text-slate-400',
+    meta: 'text-xs text-slate-500'
+}
+
+const dashboardPanelClass =
+    'rounded-2xl border border-white/10 bg-slate-800/30 p-5 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.95)]'
 
 export default function DashboardPage() {
     const { accessStatus, applicantEmail } = useAuth()
-    const netTrustScore = 72
-    const trustInterpretation = netTrustScore >= 80 ? 'Trusted Participant' : netTrustScore >= 60 ? 'Building Trust' : 'New Participant'
-    const trustColor = netTrustScore >= 80 ? 'text-emerald-400' : netTrustScore >= 60 ? 'text-amber-400' : 'text-slate-400'
     const participantName = formatParticipantName(applicantEmail)
     const programStatusLabel = accessStatus === 'approved' ? 'Approved participant' : accessStatus === 'pending' ? 'Application pending' : 'Getting started'
     const nextMilestoneDate = accessStatus === 'approved' ? 'Apr 18, 2026' : accessStatus === 'pending' ? 'Apr 12, 2026' : 'Apr 09, 2026'
-
-    const activeEscrows = 2
-    
-    const recentActivity = [
-        { id: 1, action: 'Dataset access approved', time: '2 hours ago', status: 'success' },
-        { id: 2, action: 'Escrow transaction completed', time: '5 hours ago', status: 'success' },
-        { id: 3, action: 'Trust score updated', time: '1 day ago', status: 'success' }
-    ]
+    const completedChecklistItems = dashboardChecklistItems.filter(item => item.done).length
+    const checklistProgress = Math.round((completedChecklistItems / dashboardChecklistItems.length) * 100)
 
     return (
         <div className="relative min-h-screen bg-slate-900 text-white">
@@ -58,11 +69,9 @@ export default function DashboardPage() {
                 </section>
 
                 <section className="mb-8" aria-labelledby="today-at-a-glance">
-                    <div className="mb-4 flex items-center justify-between">
-                        <div>
-                            <h2 id="today-at-a-glance" className="text-xl font-bold text-white">Today at a Glance</h2>
-                            <p className="mt-1 text-sm text-slate-500">Fast-read operating signals for the current participant session.</p>
-                        </div>
+                    <div className="mb-4">
+                        <h2 id="today-at-a-glance" className={dashboardText.sectionTitle}>Today at a Glance</h2>
+                        <p className={`mt-1 ${dashboardText.body}`}>Fast-read operating signals for the current participant session.</p>
                     </div>
                     <div className="grid grid-cols-5 gap-3">
                         {dashboardAtAGlanceCards.map(card => (
@@ -70,7 +79,7 @@ export default function DashboardPage() {
                                 key={card.label}
                                 className="flex min-h-[96px] flex-col justify-between rounded-xl border border-white/10 bg-slate-800/35 px-4 py-3 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.95)]"
                             >
-                                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">{card.label}</div>
+                                <div className={dashboardText.eyebrow}>{card.label}</div>
                                 <div className="mt-2 text-3xl font-semibold tracking-tight text-white">{card.value}</div>
                                 <div className={`mt-2 text-xs font-medium ${card.toneClassName}`}>{card.trend}</div>
                             </article>
@@ -78,174 +87,181 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                <section className="mb-10">
-                    <h2 className="text-xl font-bold text-white mb-5">What needs your attention</h2>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {netTrustScore < 50 && (
-                            <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-5">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/20">
-                                        <svg className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-sm font-semibold text-white">Complete Your Profile</span>
-                                </div>
-                                <p className="text-xs text-slate-400 mb-4">Add your organization details to improve your Trust Score</p>
-                                <Link
-                                    to="/profile"
-                                    className="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300"
-                                >
-                                    Go to Profile →
-                                </Link>
-                            </div>
-                        )}
+                <section aria-labelledby="dashboard-main-workspace">
+                    <div className="mb-4">
+                        <h2 id="dashboard-main-workspace" className={dashboardText.sectionTitle}>Your working surface</h2>
+                        <p className={`mt-1 ${dashboardText.body}`}>The highest-signal actions, sessions, tasks, and support options for this participant workspace.</p>
+                    </div>
 
-                        <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-5">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-500/20">
-                                    <svg className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                    </svg>
-                                </div>
-                                <span className="text-sm font-semibold text-white">Browse Available Datasets</span>
-                            </div>
-                            <p className="text-xs text-slate-400 mb-4">Explore verified datasets available for your use case</p>
-                            <Link
-                                to="/datasets"
-                                className="inline-flex items-center text-xs font-semibold text-cyan-400 hover:text-cyan-300"
+                    <div className="grid grid-cols-12 gap-6">
+                        <div className="col-span-8 space-y-5">
+                            <DashboardPanel
+                                eyebrow="Priority"
+                                title="What should I do next?"
+                                description="Focus on the next three actions most likely to unblock approvals, releases, and trust refresh."
                             >
-                                Browse Datasets →
-                            </Link>
+                                <div className="space-y-4">
+                                    {dashboardPriorityActions.map((action, index) => (
+                                        <div key={action.title} className="flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
+                                            <div>
+                                                <div className={`${dashboardText.meta} mb-2`}>Priority {index + 1}</div>
+                                                <div className="text-sm font-semibold text-white">{action.title}</div>
+                                                <div className={`mt-2 text-sm ${action.toneClassName}`}>{action.detail}</div>
+                                            </div>
+                                            <Link
+                                                to={action.ctaTo}
+                                                className="shrink-0 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                            >
+                                                {action.ctaLabel}
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            </DashboardPanel>
+
+                            <DashboardPanel
+                                eyebrow="Sessions"
+                                title="Upcoming Sessions"
+                                description="The next scheduled participant touchpoints across review, escrow, and compliance."
+                            >
+                                <div className="space-y-4">
+                                    {dashboardUpcomingSessions.map(session => (
+                                        <article key={session.title} className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-white">{session.title}</div>
+                                                    <div className={`mt-1 ${dashboardText.meta}`}>{session.time}</div>
+                                                </div>
+                                                <span className={`text-xs font-medium ${session.statusClassName}`}>{session.status}</span>
+                                            </div>
+                                            <p className={`mt-3 ${dashboardText.body}`}>{session.detail}</p>
+                                        </article>
+                                    ))}
+                                </div>
+                            </DashboardPanel>
+
+                            <DashboardPanel
+                                eyebrow="Checklist"
+                                title="Task Checklist"
+                                description="Progress across the tasks that keep the participant workspace moving toward release readiness."
+                            >
+                                <div className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <span className="text-sm font-semibold text-white">Completion progress</span>
+                                        <span className="text-xs font-medium text-cyan-300">{completedChecklistItems} of {dashboardChecklistItems.length} done</span>
+                                    </div>
+                                    <div className="h-2.5 rounded-full bg-slate-800">
+                                        <div className="h-2.5 rounded-full bg-cyan-400" style={{ width: `${checklistProgress}%` }} />
+                                    </div>
+                                    <div className={`mt-2 ${dashboardText.meta}`}>{checklistProgress}% complete</div>
+                                </div>
+
+                                <div className="mt-4 space-y-3">
+                                    {dashboardChecklistItems.map(item => (
+                                        <div key={item.label} className="flex items-start gap-3 rounded-xl border border-white/8 bg-slate-900/65 px-4 py-3.5">
+                                            <span
+                                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                                                    item.done
+                                                        ? 'border-emerald-400 bg-emerald-500/15 text-emerald-200'
+                                                        : 'border-slate-600 bg-slate-800 text-slate-500'
+                                                }`}
+                                                aria-hidden="true"
+                                            >
+                                                {item.done ? '✓' : ''}
+                                            </span>
+                                            <div>
+                                                <div className="text-sm font-medium text-white">{item.label}</div>
+                                                <div className={`mt-1 ${dashboardText.meta}`}>{item.detail}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </DashboardPanel>
                         </div>
 
-                        {activeEscrows > 0 && (
-                            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/20">
-                                        <svg className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-sm font-semibold text-white">Check Active Escrows</span>
+                        <div className="col-span-4 space-y-5">
+                            <DashboardPanel
+                                eyebrow="Updates"
+                                title="Announcements"
+                                description="Short operational updates that affect review timing and governance expectations."
+                            >
+                                <div className="space-y-4">
+                                    {dashboardAnnouncements.map(announcement => (
+                                        <article key={announcement.title} className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4">
+                                            <div className="text-sm font-semibold text-white">{announcement.title}</div>
+                                            <div className={`mt-2 ${dashboardText.body}`}>{announcement.detail}</div>
+                                            <div className={`mt-2 ${dashboardText.meta}`}>{announcement.timing}</div>
+                                        </article>
+                                    ))}
                                 </div>
-                                <p className="text-xs text-slate-400 mb-4">You have active escrow transactions awaiting confirmation</p>
-                                <Link
-                                    to="/escrow-center"
-                                    className="inline-flex items-center text-xs font-semibold text-amber-400 hover:text-amber-300"
-                                >
-                                    Go to Escrow →
-                                </Link>
-                            </div>
-                        )}
+                            </DashboardPanel>
+
+                            <DashboardPanel
+                                eyebrow="Links"
+                                title="Resources / Quick Links"
+                                description="Jump directly into the pages participants use most while managing trust and access."
+                            >
+                                <div className="space-y-3">
+                                    {dashboardQuickLinks.map(link => (
+                                        <Link
+                                            key={link.label}
+                                            to={link.to}
+                                            className="block rounded-xl border border-white/8 bg-slate-900/65 px-4 py-4 transition-colors hover:border-cyan-400/30 hover:bg-slate-900"
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="text-sm font-semibold text-white">{link.label}</div>
+                                                <span className="text-cyan-300">→</span>
+                                            </div>
+                                            <div className={`mt-2 ${dashboardText.meta}`}>{link.detail}</div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </DashboardPanel>
+
+                            <DashboardPanel
+                                eyebrow="Support"
+                                title="Support Contact"
+                                description="Reach the participant support lead for blockers around approvals, sessions, and evidence packages."
+                            >
+                                <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-4">
+                                    <div className="text-base font-semibold text-white">{dashboardSupportContact.name}</div>
+                                    <div className="mt-1 text-sm text-cyan-200">{dashboardSupportContact.role}</div>
+                                    <div className={`mt-4 ${dashboardText.meta}`}>{dashboardSupportContact.availability}</div>
+                                    <div className={`mt-1 ${dashboardText.meta}`}>{dashboardSupportContact.responseTime}</div>
+                                    <a
+                                        href={`mailto:${dashboardSupportContact.email}`}
+                                        className="mt-4 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                    >
+                                        Contact support
+                                    </a>
+                                </div>
+                            </DashboardPanel>
+                        </div>
                     </div>
                 </section>
-
-                <section className="mb-10">
-                    <div className="flex flex-col lg:flex-row gap-8 items-start">
-                        <div className="flex-shrink-0">
-                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Your Trust Score</h3>
-                            <div className="relative w-40 h-40">
-                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                    <circle
-                                        cx="50"
-                                        cy="50"
-                                        r="42"
-                                        fill="none"
-                                        stroke="rgba(255,255,255,0.1)"
-                                        strokeWidth="8"
-                                    />
-                                    <circle
-                                        cx="50"
-                                        cy="50"
-                                        r="42"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="8"
-                                        strokeLinecap="round"
-                                        strokeDasharray={`${netTrustScore * 2.64} 264`}
-                                        className={netTrustScore >= 80 ? 'text-emerald-500' : netTrustScore >= 60 ? 'text-amber-500' : 'text-slate-500'}
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                    <span className="text-4xl font-bold text-white">{netTrustScore}</span>
-                                    <span className="text-xs text-slate-500">/ 100</span>
-                                </div>
-                            </div>
-                            <p className={`text-center text-sm font-medium mt-3 ${trustColor}`}>{trustInterpretation}</p>
-                        </div>
-
-                        <div className="flex-1">
-                            <h3 className="text-lg font-bold text-white mb-4">How Redoubt Works</h3>
-                            <div className="grid gap-4 sm:grid-cols-3">
-                                <div className="rounded-xl border border-white/10 bg-slate-800/50 p-4">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400 text-sm font-bold mb-2">1</div>
-                                    <p className="text-sm font-semibold text-white">Browse & Request</p>
-                                    <p className="text-xs text-slate-500 mt-1">Explore verified datasets and submit access requests</p>
-                                </div>
-                                <div className="rounded-xl border border-white/10 bg-slate-800/50 p-4">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-400 text-sm font-bold mb-2">2</div>
-                                    <p className="text-sm font-semibold text-white">Secure Escrow</p>
-                                    <p className="text-xs text-slate-500 mt-1">Funds held securely until data transfer confirmed</p>
-                                </div>
-                                <div className="rounded-xl border border-white/10 bg-slate-800/50 p-4">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 text-sm font-bold mb-2">3</div>
-                                    <p className="text-sm font-semibold text-white">Access Granted</p>
-                                    <p className="text-xs text-slate-500 mt-1">Trust score unlocks more datasets and better rates</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <div className="grid gap-8 lg:grid-cols-2">
-                    <section className="rounded-2xl border border-white/10 bg-slate-800/30 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Active Escrows</h3>
-                            <Link to="/escrow-center" className="text-xs font-medium text-cyan-400 hover:text-cyan-300">
-                                View All →
-                            </Link>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-white/5">
-                                <div>
-                                    <p className="text-sm font-medium text-white">Financial Records Q4</p>
-                                    <p className="text-xs text-slate-500">$2,500 • Processing</p>
-                                </div>
-                                <span className="text-xs font-medium text-amber-400">In Progress</span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-white/5">
-                                <div>
-                                    <p className="text-sm font-medium text-white">Global Climate 2020-2024</p>
-                                    <p className="text-xs text-slate-500">$1,200 • Awaiting Release</p>
-                                </div>
-                                <span className="text-xs font-medium text-cyan-400">Pending</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="rounded-2xl border border-white/10 bg-slate-800/30 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Recent Activity</h3>
-                            <Link to="/audit-trail" className="text-xs font-medium text-cyan-400 hover:text-cyan-300">
-                                View All →
-                            </Link>
-                        </div>
-                        <div className="space-y-3">
-                            {recentActivity.map(activity => (
-                                <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-white/5">
-                                    <div className="h-2 w-2 rounded-full bg-emerald-400" />
-                                    <div className="flex-1">
-                                        <p className="text-sm text-white">{activity.action}</p>
-                                        <p className="text-xs text-slate-500">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                </div>
             </div>
         </div>
+    )
+}
+
+function DashboardPanel({
+    eyebrow,
+    title,
+    description,
+    children
+}: {
+    eyebrow: string
+    title: string
+    description: string
+    children: ReactNode
+}) {
+    return (
+        <section className={dashboardPanelClass}>
+            <div className={dashboardText.eyebrow}>{eyebrow}</div>
+            <h3 className={`mt-2 ${dashboardText.panelTitle}`}>{title}</h3>
+            <p className={`mt-2 ${dashboardText.body}`}>{description}</p>
+            <div className="mt-5">{children}</div>
+        </section>
     )
 }
 
