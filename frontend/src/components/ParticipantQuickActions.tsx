@@ -213,7 +213,7 @@ export default function ParticipantQuickActions() {
     return (
         <div
             ref={menuRef}
-            className="fixed bottom-6 right-4 z-40 flex flex-col gap-3 lg:bottom-auto lg:right-6 lg:top-1/2 lg:-translate-y-1/2"
+            className="fixed inset-x-4 bottom-4 z-40 flex items-center justify-end gap-2 rounded-[28px] border border-slate-700/80 bg-slate-950/88 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-2xl md:inset-x-auto md:right-4 md:bottom-6 md:gap-3 lg:bottom-auto lg:right-6 lg:top-1/2 lg:flex-col lg:justify-center lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:-translate-y-1/2"
             role="toolbar"
             aria-label="Participant quick actions"
         >
@@ -243,7 +243,7 @@ export default function ParticipantQuickActions() {
                                 id={menuId}
                                 role="menu"
                                 aria-label={`${group.label} actions`}
-                                className="absolute bottom-0 right-14 w-64 rounded-2xl border border-slate-700/80 bg-slate-950/95 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-xl lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2"
+                                className="fixed inset-x-4 bottom-20 w-auto rounded-[28px] border border-slate-700/80 bg-slate-950/95 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-xl md:inset-x-auto md:right-4 md:bottom-24 md:w-72 lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-14 lg:top-1/2 lg:w-64 lg:-translate-y-1/2"
                             >
                                 {group.items.map((item) => (
                                     <button

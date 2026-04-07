@@ -178,27 +178,27 @@ export default function AppLayout() {
 
             <div className="relative h-full min-w-0 md:pl-[260px]">
                 <header className="fixed inset-x-0 top-0 z-30 h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl md:left-[260px]">
-                    <div className="flex h-full items-center justify-between px-6">
+                    <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-6">
                         <div className="flex items-center gap-4">
                             <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`} aria-label="Open participant dashboard">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 sm:h-10 sm:w-10">
                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 20.25h6" />
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25v3" />
                                     </svg>
                                 </span>
-                                <span>
+                                <span className="min-w-0">
                                     <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
-                                    <span className="mt-1 block text-sm font-semibold text-slate-100">Redoubt Workspace</span>
+                                    <span className="mt-1 block truncate text-sm font-semibold text-slate-100">Redoubt Workspace</span>
                                 </span>
                             </Link>
                         </div>
 
-                        <nav className="flex items-center gap-3" aria-label="Participant console tools">
+                        <nav className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Participant console tools">
                             <button
                                 type="button"
-                                className={`relative rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
+                                className={`relative rounded-[12px] border border-slate-700 bg-slate-900 px-2.5 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white sm:px-3 ${consoleFocusRingClass}`}
                                 aria-label="Open notifications"
                             >
                                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
@@ -208,7 +208,7 @@ export default function AppLayout() {
                             </button>
                             <button
                                 type="button"
-                                className={`rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
+                                className={`rounded-[12px] border border-slate-700 bg-slate-900 px-2.5 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white sm:px-3 ${consoleFocusRingClass}`}
                                 aria-label="Open help and guidance"
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -219,7 +219,7 @@ export default function AppLayout() {
                             </button>
                             <Link
                                 to="/profile"
-                                className={`flex items-center gap-3 rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
+                                className={`flex items-center gap-2 rounded-[12px] border border-slate-700 bg-slate-900 px-2.5 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white sm:gap-3 sm:px-3 ${consoleFocusRingClass}`}
                                 aria-label="Open profile settings"
                             >
                                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-slate-950">
@@ -237,7 +237,7 @@ export default function AppLayout() {
                 <main
                     id="app-main-content"
                     tabIndex={-1}
-                    className="h-full overflow-y-auto overscroll-y-contain pb-28 pt-[72px] lg:pb-0 lg:pr-24"
+                    className="h-full overflow-y-auto overscroll-y-contain pb-40 pt-[72px] md:pb-44 lg:pb-8 lg:pr-0 xl:pr-28"
                 >
                     <div className="min-h-[calc(100vh-72px)]">
                         <Outlet />

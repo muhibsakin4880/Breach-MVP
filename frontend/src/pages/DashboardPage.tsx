@@ -98,7 +98,7 @@ export default function DashboardPage() {
                                 </p>
                             </div>
 
-                            <div className={`flex shrink-0 flex-col items-start ${dashboardCompactGapClass} sm:flex-row sm:flex-wrap sm:items-center lg:max-w-[30rem] lg:justify-end`}>
+                            <div className={`flex w-full shrink-0 flex-col items-start ${dashboardCompactGapClass} sm:w-auto sm:flex-row sm:flex-wrap sm:items-center lg:max-w-[30rem] lg:justify-end`}>
                                 <span className={`${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['status-badge']} ${dashboardSpacingTokens['chip-padding']}`}>
                                     Approved participant
                                 </span>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
                                 </div>
                                 <button
                                     type="button"
-                                    className={dashboardActionButtonTallClass}
+                                    className={`w-full sm:w-auto ${dashboardActionButtonTallClass}`}
                                     aria-label="Continue where you left off in the participant dashboard"
                                 >
                                     Continue where you left off
@@ -134,7 +134,7 @@ export default function DashboardPage() {
                             />
                         }
                     >
-                        <div className={`grid grid-cols-1 ${dashboardCompactGapClass} md:grid-cols-2 xl:grid-cols-5`}>
+                        <div className={`grid grid-cols-1 ${dashboardCompactGapClass} sm:grid-cols-2 lg:grid-cols-5`}>
                             {dashboardAtAGlanceCards.map(card => (
                                 <article
                                     key={card.label}
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                         <p className={`mt-2 ${dashboardText.body}`}>The highest-signal actions, sessions, tasks, and support options for this participant workspace.</p>
                     </div>
 
-                    <div className={`grid grid-cols-1 ${dashboardGridGapClass} xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]`}>
+                    <div className={`grid grid-cols-1 ${dashboardGridGapClass} lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]`}>
                         <div className={dashboardModuleStackClass}>
                             <DashboardPanel
                                 eyebrow="Priority"
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                                 >
                                     <div className={dashboardModuleStackClass}>
                                         {dashboardPriorityActions.map((action, index) => (
-                                            <div key={action.title} className={`flex flex-col items-start justify-between ${dashboardDenseGapClass} ${dashboardItemCardClass} lg:flex-row lg:items-center`}>
+                                            <div key={action.title} className={`flex flex-col items-start justify-between ${dashboardDenseGapClass} ${dashboardItemCardClass} xl:flex-row xl:items-center`}>
                                                 <div>
                                                     <div className={`${dashboardText.meta} mb-2`}>Priority {index + 1}</div>
                                                     <div className={dashboardText.itemTitle}>{action.title}</div>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                                                 </div>
                                                 <Link
                                                     to={action.ctaTo}
-                                                    className={`shrink-0 ${dashboardActionButtonClass}`}
+                                                    className={`w-full shrink-0 sm:w-auto ${dashboardActionButtonClass}`}
                                                 >
                                                     {action.ctaLabel}
                                                 </Link>
