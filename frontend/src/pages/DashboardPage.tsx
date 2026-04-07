@@ -75,7 +75,7 @@ export default function DashboardPage() {
             <div className={dashboardPageShellClass}>
                 <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="dashboard-intro-banner">
                     <div className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
-                        <div className={`flex min-h-[88px] items-center justify-between ${dashboardGridGapClass}`}>
+                        <div className={`flex min-h-[88px] flex-col justify-between ${dashboardGridGapClass} lg:flex-row lg:items-center`}>
                             <div>
                                 <h1 id="dashboard-intro-banner" className={dashboardText.heroTitle}>Welcome back, Demo</h1>
                                 <p className={`mt-2 ${dashboardText.bodyStrong}`}>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                                 </p>
                             </div>
 
-                            <div className={`flex shrink-0 items-center ${dashboardCompactGapClass}`}>
+                            <div className={`flex shrink-0 flex-col items-start ${dashboardCompactGapClass} sm:flex-row sm:flex-wrap sm:items-center lg:justify-end`}>
                                 <span className={`${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['status-badge']} ${dashboardSpacingTokens['chip-padding']}`}>
                                     Approved participant
                                 </span>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                             />
                         }
                     >
-                        <div className={`grid grid-cols-5 ${dashboardCompactGapClass}`}>
+                        <div className={`grid grid-cols-1 ${dashboardCompactGapClass} md:grid-cols-2 xl:grid-cols-5`}>
                             {dashboardAtAGlanceCards.map(card => (
                                 <article
                                     key={card.label}
@@ -134,14 +134,14 @@ export default function DashboardPage() {
                     </DashboardStateRenderer>
                 </section>
 
-                <section aria-labelledby="dashboard-main-workspace">
+                <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="dashboard-main-workspace">
                     <div className={dashboardSectionIntroClass}>
                         <h2 id="dashboard-main-workspace" className={dashboardText.sectionTitle}>Your working surface</h2>
                         <p className={`mt-2 ${dashboardText.body}`}>The highest-signal actions, sessions, tasks, and support options for this participant workspace.</p>
                     </div>
 
-                    <div className={`grid grid-cols-12 ${dashboardGridGapClass}`}>
-                        <div className={`col-span-8 ${dashboardModuleStackClass}`}>
+                    <div className={`grid grid-cols-1 ${dashboardGridGapClass} xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]`}>
+                        <div className={dashboardModuleStackClass}>
                             <DashboardPanel
                                 eyebrow="Priority"
                                 title="What should I do next?"
@@ -263,9 +263,106 @@ export default function DashboardPage() {
                                     </div>
                                 </DashboardStateRenderer>
                             </DashboardPanel>
+
+                            <div className={dashboardSectionIntroClass}>
+                                <h3 className={dashboardText.sectionTitle}>Progress and activity</h3>
+                                <p className={`mt-2 ${dashboardText.body}`}>A compact view of operational momentum across readiness, evidence flow, and the next milestone states.</p>
+                            </div>
+
+                            <DashboardPanel
+                                eyebrow="Progress"
+                                title="Release momentum"
+                                description="Placeholder visualizations for readiness, recent movement, and the pace of participant-side completion."
+                            >
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.progress.isLoading}
+                                    isEmpty={dashboardModuleFlags.progress.isEmpty}
+                                    loading={<DashboardProgressSkeleton />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="spark"
+                                            text="No progress data yet. Upload a contribution to start tracking."
+                                            action={{ label: 'Upload now', to: '/contributions' }}
+                                        />
+                                    }
+                                >
+                                    <div className={`grid grid-cols-1 ${dashboardDenseGapClass} 2xl:grid-cols-[220px_minmax(0,1fr)]`}>
+                                        <div className={dashboardItemCardClass}>
+                                            <div className="flex items-center justify-between">
+                                                <span className={dashboardText.itemTitle}>Readiness score</span>
+                                                <span className={`${dashboardText.metaStrong} ${dashboardColorTokens['text-accent']}`}>78%</span>
+                                            </div>
+                                            <div className="mt-4 flex items-center justify-center">
+                                                <div className="relative h-36 w-36">
+                                                    <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                                                        <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+                                                        <circle
+                                                            cx="60"
+                                                            cy="60"
+                                                            r="44"
+                                                            fill="none"
+                                                            stroke="rgb(34 211 238)"
+                                                            strokeWidth="12"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray="216 276"
+                                                        />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <span className={dashboardText.value}>78%</span>
+                                                        <span className={dashboardText.meta}>On track</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 grid gap-2">
+                                                {dashboardProgressHighlights.map(highlight => (
+                                                    <div key={highlight.label} className="flex items-center justify-between rounded-lg border border-white/6 bg-slate-950/45 px-3 py-2">
+                                                        <span className={dashboardText.meta}>{highlight.label}</span>
+                                                        <span className={`${dashboardText.metaStrong} ${highlight.toneClassName}`}>{highlight.value}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className={dashboardModuleStackClass}>
+                                            <div className={dashboardItemCardClass}>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={dashboardText.itemTitle}>Readiness bars</span>
+                                                    <span className={dashboardText.meta}>Placeholder</span>
+                                                </div>
+                                                <div className="mt-4 space-y-4">
+                                                    <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
+                                                    <ProgressBarPlaceholder label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
+                                                    <ProgressBarPlaceholder label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
+                                                </div>
+                                            </div>
+
+                                            <div className={dashboardItemCardClass}>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={dashboardText.itemTitle}>Activity sparkline</span>
+                                                    <span className={dashboardText.meta}>Last 7 checkpoints</span>
+                                                </div>
+                                                <div className="mt-4 rounded-lg border border-white/6 bg-slate-950/45 px-3 py-3">
+                                                    <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
+                                                        <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
+                                                        <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
+                                                        <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18L320 96L0 96Z" fill="url(#sparkFill)" opacity="0.22" />
+                                                        <defs>
+                                                            <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
+                                                                <stop offset="0%" stopColor="rgb(34 211 238)" />
+                                                                <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
+                                                            </linearGradient>
+                                                        </defs>
+                                                    </svg>
+                                                    <div className={`mt-2 ${dashboardText.meta}`}>Steady improvement in review throughput with a stronger close over the last two checkpoints.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </DashboardStateRenderer>
+                            </DashboardPanel>
                         </div>
 
-                        <div className={`col-span-4 ${dashboardModuleStackClass}`}>
+                        <div className={dashboardModuleStackClass}>
                             <DashboardPanel
                                 eyebrow="Updates"
                                 title="Announcements"
@@ -360,158 +457,55 @@ export default function DashboardPage() {
                                     </div>
                                 </DashboardStateRenderer>
                             </DashboardPanel>
-                        </div>
-                    </div>
-                </section>
 
-                <section className="mt-6" aria-labelledby="dashboard-progress-row">
-                    <div className={dashboardSectionIntroClass}>
-                        <h2 id="dashboard-progress-row" className={dashboardText.sectionTitle}>Progress and activity</h2>
-                        <p className={`mt-2 ${dashboardText.body}`}>A compact view of operational momentum across readiness, evidence flow, and the next milestone states.</p>
-                    </div>
-
-                    <div className={`grid grid-cols-12 ${dashboardGridGapClass}`}>
-                        <DashboardPanel
-                            eyebrow="Progress"
-                            title="Release momentum"
-                            description="Placeholder visualizations for readiness, recent movement, and the pace of participant-side completion."
-                            className="col-span-7"
-                        >
-                            <DashboardStateRenderer
-                                isLoading={dashboardModuleFlags.progress.isLoading}
-                                isEmpty={dashboardModuleFlags.progress.isEmpty}
-                                loading={<DashboardProgressSkeleton />}
-                                empty={
-                                    <DashboardEmptyState
-                                        icon="spark"
-                                        text="No progress data yet. Upload a contribution to start tracking."
-                                        action={{ label: 'Upload now', to: '/contributions' }}
-                                    />
-                                }
+                            <DashboardPanel
+                                eyebrow="Timeline"
+                                title="Activity timeline"
+                                description="Completed, in-progress, and upcoming milestones with clear state markers for quick scanning."
                             >
-                                <div className={`grid grid-cols-[220px_minmax(0,1fr)] ${dashboardDenseGapClass}`}>
-                                    <div className={dashboardItemCardClass}>
-                                        <div className="flex items-center justify-between">
-                                            <span className={dashboardText.itemTitle}>Readiness score</span>
-                                            <span className={`${dashboardText.metaStrong} ${dashboardColorTokens['text-accent']}`}>78%</span>
-                                        </div>
-                                        <div className="mt-4 flex items-center justify-center">
-                                            <div className="relative h-36 w-36">
-                                                <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-                                                    <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
-                                                    <circle
-                                                        cx="60"
-                                                        cy="60"
-                                                        r="44"
-                                                        fill="none"
-                                                        stroke="rgb(34 211 238)"
-                                                        strokeWidth="12"
-                                                        strokeLinecap="round"
-                                                        strokeDasharray="216 276"
-                                                    />
-                                                </svg>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                    <span className={dashboardText.value}>78%</span>
-                                                    <span className={dashboardText.meta}>On track</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 grid gap-2">
-                                            {dashboardProgressHighlights.map(highlight => (
-                                                <div key={highlight.label} className="flex items-center justify-between rounded-lg border border-white/6 bg-slate-950/45 px-3 py-2">
-                                                    <span className={dashboardText.meta}>{highlight.label}</span>
-                                                    <span className={`${dashboardText.metaStrong} ${highlight.toneClassName}`}>{highlight.value}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
+                                <DashboardStateRenderer
+                                    isLoading={dashboardModuleFlags.timeline.isLoading}
+                                    isEmpty={dashboardModuleFlags.timeline.isEmpty}
+                                    loading={<DashboardTimelineSkeleton />}
+                                    empty={
+                                        <DashboardEmptyState
+                                            icon="timeline"
+                                            text="No timeline events yet. Book one now."
+                                            action={{ label: 'Book session', href: 'mailto:support@redoubt.io?subject=Book%20participant%20review%20session' }}
+                                        />
+                                    }
+                                >
                                     <div className={dashboardModuleStackClass}>
-                                        <div className={dashboardItemCardClass}>
-                                            <div className="flex items-center justify-between">
-                                                <span className={dashboardText.itemTitle}>Readiness bars</span>
-                                                <span className={dashboardText.meta}>Placeholder</span>
-                                            </div>
-                                            <div className="mt-4 space-y-4">
-                                                <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
-                                                <ProgressBarPlaceholder label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
-                                                <ProgressBarPlaceholder label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
-                                            </div>
-                                        </div>
-
-                                        <div className={dashboardItemCardClass}>
-                                            <div className="flex items-center justify-between">
-                                                <span className={dashboardText.itemTitle}>Activity sparkline</span>
-                                                <span className={dashboardText.meta}>Last 7 checkpoints</span>
-                                            </div>
-                                            <div className="mt-4 rounded-lg border border-white/6 bg-slate-950/45 px-3 py-3">
-                                                <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
-                                                    <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-                                                    <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
-                                                    <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18L320 96L0 96Z" fill="url(#sparkFill)" opacity="0.22" />
-                                                    <defs>
-                                                        <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
-                                                            <stop offset="0%" stopColor="rgb(34 211 238)" />
-                                                            <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                </svg>
-                                                <div className={`mt-2 ${dashboardText.meta}`}>Steady improvement in review throughput with a stronger close over the last two checkpoints.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </DashboardStateRenderer>
-                        </DashboardPanel>
-
-                        <DashboardPanel
-                            eyebrow="Timeline"
-                            title="Activity timeline"
-                            description="Completed, in-progress, and upcoming milestones with clear state markers for quick scanning."
-                            className="col-span-5"
-                        >
-                            <DashboardStateRenderer
-                                isLoading={dashboardModuleFlags.timeline.isLoading}
-                                isEmpty={dashboardModuleFlags.timeline.isEmpty}
-                                loading={<DashboardTimelineSkeleton />}
-                                empty={
-                                    <DashboardEmptyState
-                                        icon="timeline"
-                                        text="No timeline events yet. Book one now."
-                                        action={{ label: 'Book session', href: 'mailto:support@redoubt.io?subject=Book%20participant%20review%20session' }}
-                                    />
-                                }
-                            >
-                                <div className={dashboardModuleStackClass}>
-                                    {dashboardActivityTimeline.map((item, index) => {
-                                        const timelineState = getTimelineStateMeta(item.state)
-                                        return (
-                                            <div key={item.title} className={`flex ${dashboardDenseGapClass}`}>
-                                                <div className="flex flex-col items-center">
-                                                    <span
-                                                        className={`flex h-9 w-9 items-center justify-center rounded-full border ${timelineState.markerClassName}`}
-                                                        aria-hidden="true"
-                                                    >
-                                                        {timelineState.icon}
-                                                    </span>
-                                                    {index < dashboardActivityTimeline.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
-                                                </div>
-                                                <article className={`flex-1 ${dashboardItemCardClass}`}>
-                                                    <div className={`flex items-start justify-between ${dashboardCompactGapClass}`}>
-                                                        <div className={dashboardText.itemTitle}>{item.title}</div>
-                                                        <span className={`rounded-full px-3 py-2 text-[11px] font-medium leading-none ${timelineState.badgeClassName}`}>
-                                                            {timelineState.label}
+                                        {dashboardActivityTimeline.map((item, index) => {
+                                            const timelineState = getTimelineStateMeta(item.state)
+                                            return (
+                                                <div key={item.title} className={`flex ${dashboardDenseGapClass}`}>
+                                                    <div className="flex flex-col items-center">
+                                                        <span
+                                                            className={`flex h-9 w-9 items-center justify-center rounded-full border ${timelineState.markerClassName}`}
+                                                            aria-hidden="true"
+                                                        >
+                                                            {timelineState.icon}
                                                         </span>
+                                                        {index < dashboardActivityTimeline.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
                                                     </div>
-                                                    <div className={`mt-2 ${dashboardText.meta}`}>{item.timing}</div>
-                                                    <p className={`mt-3 ${dashboardText.body}`}>{item.detail}</p>
-                                                </article>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </DashboardStateRenderer>
-                        </DashboardPanel>
+                                                    <article className={`flex-1 ${dashboardItemCardClass}`}>
+                                                        <div className={`flex items-start justify-between ${dashboardCompactGapClass}`}>
+                                                            <div className={dashboardText.itemTitle}>{item.title}</div>
+                                                            <span className={`rounded-full px-3 py-2 text-[11px] font-medium leading-none ${timelineState.badgeClassName}`}>
+                                                                {timelineState.label}
+                                                            </span>
+                                                        </div>
+                                                        <div className={`mt-2 ${dashboardText.meta}`}>{item.timing}</div>
+                                                        <p className={`mt-3 ${dashboardText.body}`}>{item.detail}</p>
+                                                    </article>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </DashboardStateRenderer>
+                            </DashboardPanel>
+                        </div>
                     </div>
                 </section>
             </div>
