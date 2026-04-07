@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
 import {
     activityDot,
+    approvedDatasets,
     confidenceColor,
     datasetRequests,
     recentActivity,
@@ -9,475 +9,381 @@ import {
     statusStyles,
     type DatasetRequest
 } from '../data/workspaceData'
-import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
-import { canPerformReviewerAction } from '../domain/actionGuardrails'
-import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
-import ContractHealthPanel from '../components/ContractHealthPanel'
-import TransitionImpactPanel from '../components/TransitionImpactPanel'
-import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
-import ControlTowerPanel from '../components/ControlTowerPanel'
-import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
-import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
-import DecisionGatePanel from '../components/DecisionGatePanel'
-import AlertCenterPanel from '../components/AlertCenterPanel'
-import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
-import RemediationQueuePanel from '../components/RemediationQueuePanel'
-import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 
-type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
-
-type RiskPanelProps = {
-    selectedRequest: DatasetRequest | null
-    riskScore: number
-    riskLevel: RiskLevel
+type WorkflowLane = {
+    label: string
+    count: number
+    detail: string
+    badgeClassName: string
 }
 
-type RequestTableRowProps = {
-    request: DatasetRequest
-    onSelect: () => void
-    riskScore: number
-    isSelected: boolean
+type SummaryCard = {
+    label: string
+    value: string
+    detail: string
+    accentClassName: string
 }
 
-const riskBadgeStyles: Record<RiskLevel, string> = {
-    'Low Risk': 'text-emerald-200 bg-emerald-500/10 border border-emerald-500/30',
-    'Medium Risk': 'text-amber-200 bg-amber-500/10 border border-amber-500/30',
-    'High Risk': 'text-rose-200 bg-rose-500/10 border border-rose-500/30'
+type RequestWorkflowMeta = {
+    label: string
+    detail: string
+    actionLabel: string
+    chipClassName: string
 }
 
-const fixedRiskScores: Record<string, number> = {
-    'Financial Market Tick Data': 32,
-    'Global Climate Observations 2020-2024': 30,
-    'Sentiment Analysis Corpus - Social Media': 65,
-    'Medical Imaging Dataset - Chest X-Rays': 78,
-    'Urban Traffic Flow Patterns': 40
+const createSummaryCards = (needsActionCount: number, pendingCount: number, approvedCount: number): SummaryCard[] => [
+    {
+        label: 'Needs your action',
+        value: String(needsActionCount).padStart(2, '0'),
+        detail: 'Requests with reviewer notes or a resubmission requirement.',
+        accentClassName: 'bg-amber-400'
+    },
+    {
+        label: 'Pending review',
+        value: String(pendingCount).padStart(2, '0'),
+        detail: 'Packages moving through reviewer and policy checks.',
+        accentClassName: 'bg-cyan-400'
+    },
+    {
+        label: 'Approved access',
+        value: String(approvedCount).padStart(2, '0'),
+        detail: 'Requests already cleared for workspace or API access.',
+        accentClassName: 'bg-emerald-400'
+    },
+    {
+        label: 'Active routes',
+        value: String(approvedDatasets.length).padStart(2, '0'),
+        detail: 'Approved delivery paths currently active in this workspace.',
+        accentClassName: 'bg-slate-300'
+    }
+]
+
+function requestNeedsAction(request: DatasetRequest) {
+    return request.status === 'REQUEST_REJECTED' || (request.status === 'REVIEW_IN_PROGRESS' && Boolean(request.reviewerFeedback))
 }
 
-function computeRiskScore(request: DatasetRequest) {
-    if (fixedRiskScores[request.name] !== undefined) return fixedRiskScores[request.name]
-    // fallback heuristic for any new rows
-    const score = Math.min(95, Math.max(25, 100 - request.confidence + 20))
-    return score
+function getRequestWorkflowMeta(request: DatasetRequest): RequestWorkflowMeta {
+    if (request.status === 'REQUEST_APPROVED') {
+        return {
+            label: 'Access is live',
+            detail: `Use ${request.delivery} through the approved route and watch the next review window.`,
+            actionLabel: 'Open request',
+            chipClassName: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+        }
+    }
+
+    if (request.status === 'REQUEST_REJECTED') {
+        return {
+            label: 'Prepare resubmission',
+            detail:
+                request.reviewerFeedback ??
+                request.notes ??
+                'Review the decline reason and update the request package before resubmitting.',
+            actionLabel: 'View reason',
+            chipClassName: 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+        }
+    }
+
+    if (request.reviewerFeedback) {
+        return {
+            label: 'Respond to reviewer note',
+            detail: request.reviewerFeedback,
+            actionLabel: 'Review note',
+            chipClassName: 'border-amber-400/30 bg-amber-500/10 text-amber-200'
+        }
+    }
+
+    return {
+        label: 'Awaiting reviewer decision',
+        detail: request.expectedResolution ?? 'Reviewer assignment and policy checks are still in motion.',
+        actionLabel: 'Track request',
+        chipClassName: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-200'
+    }
 }
 
-function computeRiskLevel(score: number): RiskLevel {
-    if (score < 45) return 'Low Risk'
-    if (score < 75) return 'Medium Risk'
-    return 'High Risk'
+function getWorkflowLanes(pendingCount: number, approvedCount: number, rejectedCount: number): WorkflowLane[] {
+    return [
+        {
+            label: 'Pending review',
+            count: pendingCount,
+            detail: 'Requests currently moving through reviewer checks and governance review.',
+            badgeClassName: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-200'
+        },
+        {
+            label: 'Approved access',
+            count: approvedCount,
+            detail: 'Requests already approved and ready for active dataset usage.',
+            badgeClassName: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+        },
+        {
+            label: 'Resubmission required',
+            count: rejectedCount,
+            detail: 'Requests that need updated evidence, clarification, or a fresh submission.',
+            badgeClassName: 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+        }
+    ]
 }
 
 export default function AccessRequestsPage() {
-    const [selectedRequest, setSelectedRequest] = useState<DatasetRequest | null>(null)
-    const [showRiskAssessment, setShowRiskAssessment] = useState(false)
-
-    const requestedCount = datasetRequests.length
-    const approvedCount = datasetRequests.filter(item => item.status === 'REQUEST_APPROVED').length
-    const pendingCount = datasetRequests.filter(item => item.status === 'REVIEW_IN_PROGRESS').length
-
-    const activeRequest = selectedRequest ?? datasetRequests[0]
-    const riskScore = useMemo(() => computeRiskScore(activeRequest), [activeRequest])
-    const riskLevel = useMemo(() => computeRiskLevel(riskScore), [riskScore])
-    const reviewerPortfolioDigests = useMemo(
-        () =>
-            datasetRequests.map(request => ({
-                contractId: `REQ-${request.id}`,
-                state: request.status,
-                role: 'reviewer' as const
-            })),
-        []
-    )
-    const openRiskAssessment = () => {
-        if (!selectedRequest) setSelectedRequest(datasetRequests[0])
-        setShowRiskAssessment(true)
-    }
-
-    if (showRiskAssessment) {
-        return (
-            <div className="container mx-auto px-4 py-10 space-y-6 text-white">
-                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                    <button
-                        onClick={() => setShowRiskAssessment(false)}
-                        className="mb-4 rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white"
-                    >
-                        Back to Access Requests
-                    </button>
-                    <h1 className="text-2xl font-semibold">Risk Assessment</h1>
-                    <p className="mt-1 text-sm text-slate-400">
-                        Dedicated risk review workspace for: {activeRequest.name}
-                    </p>
-                </section>
-
-                <RiskPanel selectedRequest={activeRequest} riskScore={riskScore} riskLevel={riskLevel} />
-            </div>
-        )
-    }
+    const pendingRequests = datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS')
+    const approvedCount = datasetRequests.filter(request => request.status === 'REQUEST_APPROVED').length
+    const rejectedCount = datasetRequests.filter(request => request.status === 'REQUEST_REJECTED').length
+    const needsActionRequests = datasetRequests.filter(requestNeedsAction)
+    const nextReviewTarget = pendingRequests.find(request => request.expectedResolution)?.expectedResolution ?? 'No pending review milestones'
+    const lanes = getWorkflowLanes(pendingRequests.length, approvedCount, rejectedCount)
 
     return (
-        <div className="container mx-auto px-4 py-10 space-y-6 text-white">
-            <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-                    <div>
-                        <h1 className="text-2xl font-semibold">Access Requests</h1>
-                        <p className="text-slate-400 text-sm">
-                            Full request pipeline management with confidence scores and status tracking.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
-                            {requestedCount} requested
-                        </span>
-                        <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
-                            {pendingCount} pending
-                        </span>
-                        <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
-                            {approvedCount} approved
-                        </span>
-                        <button
-                            onClick={openRiskAssessment}
-                            className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20"
-                        >
-                            Risk Assessment
-                        </button>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                        <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
-                            <tr>
-                                <th className="py-3 pr-4 text-left font-medium">Dataset</th>
-                                <th className="py-3 px-4 text-left font-medium">Confidence</th>
-                                <th className="py-3 px-4 text-left font-medium">Risk</th>
-                                <th className="py-3 px-4 text-left font-medium">Status</th>
-                                <th className="py-3 px-4 text-left font-medium">Last updated</th>
-                                <th className="py-3 pl-4 text-right font-medium">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {datasetRequests.map(request => (
-                                <RequestTableRow
-                                    key={request.id}
-                                    request={request}
-                                    onSelect={() => setSelectedRequest(request)}
-                                    riskScore={computeRiskScore(request)}
-                                    isSelected={selectedRequest?.id === request.id}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <ResilienceInsightsPanel
-                digests={reviewerPortfolioDigests}
-                compact
-                title="Reviewer Portfolio Resilience"
-            />
-            <PortfolioAlertBoard
-                digests={reviewerPortfolioDigests}
-                compact
-                title="Reviewer Portfolio Alerts"
-            />
-            <RemediationQueuePanel
-                digests={reviewerPortfolioDigests}
-                compact
-                title="Reviewer Remediation Queue"
-            />
-            <ReadinessCertificationPanel
-                digests={reviewerPortfolioDigests}
-                compact
-                title="Reviewer Launch Certification"
-            />
-
-            <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <h2 className="text-xl font-semibold">Recent request activity</h2>
-                        <p className="text-slate-400 text-sm">Approvals, pending reviews, and declines.</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
-                        {recentActivity.length} items
-                    </span>
-                </div>
-                <div className="space-y-4">
-                    {recentActivity.map((item, idx) => (
-                        <div key={idx} className="flex gap-3">
-                            <div className="pt-1">
-                                <span className={`inline-block w-2.5 h-2.5 rounded-full ${activityDot[item.type]}`} />
+        <div className="min-h-screen bg-[#0a111f] text-white">
+            <div className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                <header className="rounded-[28px] border border-slate-800 bg-[#10182c]/95 p-6 shadow-[0_24px_70px_-45px_rgba(2,6,23,0.95)]">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="max-w-2xl">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/70 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Participant workflow
                             </div>
-                            <div>
-                                <div className="text-sm font-medium text-white">{item.label}</div>
-                                <div className="text-xs text-slate-400">{item.timestamp}</div>
-                            </div>
+                            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">Access Requests</h1>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">
+                                Track every request from submission through review, clarification, approval, and access activation without leaving the participant workspace.
+                            </p>
                         </div>
+
+                        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-100">
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+                                {needsActionRequests.length} requests need your input
+                            </span>
+                            <div className="rounded-2xl border border-slate-700 bg-slate-950/70 px-4 py-3">
+                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Next review target</div>
+                                <div className="mt-2 text-sm font-medium text-slate-200">{nextReviewTarget}</div>
+                            </div>
+                            <a
+                                href="#request-queue"
+                                className="inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_18px_40px_-24px_rgba(34,211,238,0.75)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300"
+                            >
+                                Review request queue
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {createSummaryCards(needsActionRequests.length, pendingRequests.length, approvedCount).map(card => (
+                        <article
+                            key={card.label}
+                            className="rounded-2xl border border-slate-800 bg-[#10182c]/88 px-5 py-5 shadow-[0_18px_50px_-38px_rgba(2,6,23,0.95)]"
+                        >
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+                                <span className={`h-2.5 w-2.5 rounded-full ${card.accentClassName}`} />
+                            </div>
+                            <p className="mt-4 text-[1.9rem] font-semibold tracking-[-0.06em] text-slate-50">{card.value}</p>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">{card.detail}</p>
+                        </article>
                     ))}
-                </div>
-            </section>
+                </section>
+
+                <section className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,0.95fr)]">
+                    <article
+                        id="request-queue"
+                        className="rounded-[28px] border border-slate-800 bg-[#10182c]/95 p-6 shadow-[0_24px_70px_-45px_rgba(2,6,23,0.95)]"
+                    >
+                        <div className="flex flex-col gap-3 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">Request queue</h2>
+                                <p className="mt-2 text-sm leading-6 text-slate-400">
+                                    Use this queue to scan status, spot blockers, and jump into the exact request that needs the next participant action.
+                                </p>
+                            </div>
+                            <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300">
+                                {datasetRequests.length} active requests
+                            </span>
+                        </div>
+
+                        <div className="mt-5 overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                                <thead className="border-b border-slate-800 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                                    <tr>
+                                        <th className="py-3 pr-4 text-left font-medium">Request</th>
+                                        <th className="hidden py-3 px-4 text-left font-medium md:table-cell">Signal</th>
+                                        <th className="py-3 px-4 text-left font-medium">Status</th>
+                                        <th className="hidden py-3 px-4 text-left font-medium lg:table-cell">Your next step</th>
+                                        <th className="hidden py-3 px-4 text-left font-medium xl:table-cell">Updated</th>
+                                        <th className="py-3 pl-4 text-right font-medium">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-900/80">
+                                    {datasetRequests.map(request => (
+                                        <RequestTableRow key={request.id} request={request} />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <div className="space-y-6">
+                        <section className="rounded-[28px] border border-slate-800 bg-[#10182c]/95 p-6 shadow-[0_24px_70px_-45px_rgba(2,6,23,0.95)]">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">Needs your action now</h2>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                        The requests most likely to move if you respond or resubmit today.
+                                    </p>
+                                </div>
+                                <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-200">
+                                    {needsActionRequests.length} open
+                                </span>
+                            </div>
+
+                            <div className="mt-5 space-y-3">
+                                {needsActionRequests.map(request => {
+                                    const meta = getRequestWorkflowMeta(request)
+                                    return (
+                                        <div
+                                            key={request.id}
+                                            className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-4"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-white">{request.name}</div>
+                                                    <div className="mt-1 text-xs text-slate-500">{request.requestNumber}</div>
+                                                </div>
+                                                <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${meta.chipClassName}`}>
+                                                    {meta.label}
+                                                </span>
+                                            </div>
+                                            <p className="mt-3 text-sm leading-6 text-slate-300">{meta.detail}</p>
+                                            <Link
+                                                to={`/access-requests/${request.id}`}
+                                                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                            >
+                                                {meta.actionLabel}
+                                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </Link>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </section>
+
+                        <section className="rounded-[28px] border border-slate-800 bg-[#10182c]/95 p-6 shadow-[0_24px_70px_-45px_rgba(2,6,23,0.95)]">
+                            <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">Current workflow lanes</h2>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">
+                                A compact read on where the participant request portfolio is sitting right now.
+                            </p>
+
+                            <div className="mt-5 space-y-3">
+                                {lanes.map(lane => (
+                                    <div
+                                        key={lane.label}
+                                        className="flex items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-4"
+                                    >
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">{lane.label}</div>
+                                            <div className="mt-2 text-sm leading-6 text-slate-400">{lane.detail}</div>
+                                        </div>
+                                        <span className={`inline-flex min-w-[2.5rem] items-center justify-center rounded-full border px-3 py-1 text-sm font-semibold ${lane.badgeClassName}`}>
+                                            {lane.count}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </section>
+
+                <section className="mt-8 rounded-[28px] border border-slate-800 bg-[#10182c]/95 p-6 shadow-[0_24px_70px_-45px_rgba(2,6,23,0.95)]">
+                    <div className="flex flex-col gap-3 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">Recent request activity</h2>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">
+                                Timeline context for the current request pipeline across approvals, pending reviews, and decline outcomes.
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300">
+                            {recentActivity.length} timeline events
+                        </span>
+                    </div>
+
+                    <div className="mt-6 space-y-4">
+                        {recentActivity.map((item, index) => (
+                            <div key={item.label} className="flex gap-4">
+                                <div className="flex flex-col items-center">
+                                    <span className={`mt-1 inline-block h-3 w-3 rounded-full ${activityDot[item.type]}`} />
+                                    {index < recentActivity.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
+                                </div>
+                                <div className="pb-5">
+                                    <div className="text-sm font-medium text-white">{item.label}</div>
+                                    <div className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">{item.timestamp}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </div>
         </div>
     )
 }
 
-function RequestTableRow({ request, onSelect, riskScore, isSelected }: RequestTableRowProps) {
-    const riskLevel = computeRiskLevel(riskScore)
+function RequestTableRow({ request }: { request: DatasetRequest }) {
+    const workflow = getRequestWorkflowMeta(request)
 
     return (
-        <tr
-            className={`hover:bg-slate-800/60 transition-colors cursor-pointer ${
-                isSelected ? 'bg-slate-800/60 border-l-2 border-cyan-400' : ''
-            }`}
-            onClick={onSelect}
-        >
+        <tr className="align-top transition-colors hover:bg-white/[0.02]">
             <td className="py-4 pr-4">
-                <div className="font-semibold">{request.name}</div>
-                <div className="text-slate-400 text-xs">
-                    {request.category} - {request.delivery}
+                <div className="font-semibold text-white">{request.name}</div>
+                <div className="mt-1 text-xs text-slate-500">{request.requestNumber}</div>
+                <div className="mt-2 text-xs text-slate-400">
+                    {request.category} · {request.delivery}
+                </div>
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/60 px-3 py-1 text-[11px] font-semibold text-slate-300 md:hidden">
+                    <span className={`${confidenceColor(request.confidence)}`}>{request.confidence}%</span>
+                    Request signal
+                </div>
+                <div className="mt-3 lg:hidden">
+                    <div className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${workflow.chipClassName}`}>
+                        {workflow.label}
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-slate-400">{workflow.detail}</p>
                 </div>
             </td>
-            <td className="py-4 px-4">
-                <div className={`text-base font-semibold ${confidenceColor(request.confidence)}`}>{request.confidence}%</div>
-                <div className="mt-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <td className="hidden py-4 px-4 md:table-cell">
+                <div className={`text-lg font-semibold ${confidenceColor(request.confidence)}`}>{request.confidence}%</div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-900">
                     <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-emerald-500"
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-emerald-500"
                         style={{ width: `${request.confidence}%` }}
                     />
                 </div>
+                <div className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-500">Request signal</div>
             </td>
             <td className="py-4 px-4">
-                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${riskBadgeStyles[riskLevel]}`}>
-                    <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                    {riskLevel}
-                </span>
-            </td>
-            <td className="py-4 px-4">
-                <span className={`px-3 py-1 rounded-full border text-xs font-medium ${statusStyles[request.status]}`}>
+                <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${statusStyles[request.status]}`}>
                     {requestStatusLabel(request.status)}
                 </span>
             </td>
-            <td className="py-4 px-4 text-slate-300">{request.lastUpdated}</td>
+            <td className="hidden py-4 px-4 lg:table-cell">
+                <div className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${workflow.chipClassName}`}>
+                    {workflow.label}
+                </div>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">{workflow.detail}</p>
+            </td>
+            <td className="hidden py-4 px-4 xl:table-cell">
+                <div className="text-sm text-slate-200">{request.lastUpdated}</div>
+                <div className="mt-2 text-xs text-slate-500">{request.submittedDate}</div>
+            </td>
             <td className="py-4 pl-4 text-right">
-<Link
-                     to={`/access-requests/${request.id}`}
-                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors transition-transform duration-100 active:scale-95"
-                     onClick={e => e.stopPropagation()}
-                 >
-                    Request Details
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Link
+                    to={`/access-requests/${request.id}`}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors transition-transform duration-100 hover:border-cyan-400/40 hover:text-white active:scale-95"
+                >
+                    {workflow.actionLabel}
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                 </Link>
             </td>
         </tr>
-    )
-}
-
-function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
-    const toneClass =
-        riskLevel === 'High Risk'
-            ? 'text-rose-200 bg-rose-500/10 border-rose-500/30'
-            : riskLevel === 'Medium Risk'
-              ? 'text-amber-200 bg-amber-500/10 border-amber-500/30'
-              : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/30'
-
-    const highlightEscalate = selectedRequest?.id === 'med-441'
-    const currentReviewState = selectedRequest?.status ?? 'REVIEW_IN_PROGRESS'
-    const approveGuardrail = canPerformReviewerAction('approve_with_conditions', currentReviewState)
-    const escalateGuardrail = canPerformReviewerAction('escalate_dual_approval', currentReviewState)
-    const rejectGuardrail = canPerformReviewerAction('reject_request', currentReviewState)
-
-    return (
-        <aside className="rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-xl min-h-[420px]">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Risk Assessment</p>
-                    <h3 className="text-xl font-semibold text-white">Access Request Risk Assessment</h3>
-                </div>
-                <span className="text-xs text-slate-500">Live</span>
-            </div>
-
-            {!selectedRequest ? (
-                <div className="mt-6 text-sm text-slate-400">Select a request to view detailed risk scoring.</div>
-            ) : (
-                <>
-                    <div className="mt-6 flex items-center gap-3">
-                        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${toneClass}`}>
-                            <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                            {riskLevel}
-                        </span>
-                        <span className="text-lg font-bold text-white">{riskScore}/100</span>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">
-                        {selectedRequest.name} • {selectedRequest.category}
-                    </p>
-
-                    <div className="mt-4">
-                        <LifecycleGuidancePanel role="admin" state={selectedRequest.status} compact title="Reviewer Workflow" />
-                    </div>
-                    <div className="mt-4">
-                        <ContractHealthPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            compact
-                            title="Review Integrity Monitor"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <TransitionImpactPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Decision Impact Simulator"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <ControlTowerPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Reviewer Control Tower"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <PolicyAttestationPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Reviewer Policy Attestation"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <DecisionGatePanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Reviewer Decision Gate"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <AlertCenterPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Reviewer Alert Center"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <ExecutionRunbookPanel
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            role="reviewer"
-                            compact
-                            title="Decision Runbook"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <SecurityAuditTimeline
-                            contractId={`REQ-${selectedRequest.id}`}
-                            state={currentReviewState}
-                            compact
-                            title="Review Audit Trail"
-                        />
-                    </div>
-
-                    <div className="mt-6 space-y-3">
-                        {[
-                            { title: 'Data Sensitivity', detail: 'High — PHI involved', impact: '+25', tone: 'alert' },
-                            { title: 'Requester Trust Score', detail: '84/100', impact: '-15', tone: 'ok' },
-                            { title: 'Purpose Clarity', detail: 'Research — well defined', impact: '-10', tone: 'ok' },
-                            { title: 'Geographic Residency', detail: 'EU → US transfer', impact: '+20', tone: 'warn' }
-                        ].map((item, idx) => (
-                            <div
-                                key={idx}
-                                className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3"
-                            >
-                                <div>
-                                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                                    <p
-                                        className={`text-xs ${
-                                            item.tone === 'alert'
-                                                ? 'text-rose-200'
-                                                : item.tone === 'warn'
-                                                  ? 'text-amber-200'
-                                                  : 'text-emerald-200'
-                                        }`}
-                                    >
-                                        {item.detail}
-                                    </p>
-                                </div>
-                                <span className="text-sm font-semibold text-slate-200">{item.impact}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-6">
-                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500 mb-2">Suggested conditions</p>
-                        <ul className="space-y-2 text-sm text-slate-200">
-                            {[
-                                'Limit access to 90 days',
-                                'Aggregated data only — no raw export',
-                                'Require monthly usage report'
-                            ].map((item, idx) => (
-                                <li key={idx} className="flex items-start gap-2">
-                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                        <button
-                            disabled={!approveGuardrail.allowed}
-                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                                approveGuardrail.allowed
-                                    ? 'bg-blue-600 text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)] hover:bg-blue-500'
-                                    : 'cursor-not-allowed border border-slate-700 bg-slate-900/70 text-slate-500'
-                            }`}
-                        >
-                            Approve with Conditions
-                        </button>
-                        <button
-                            disabled={!escalateGuardrail.allowed}
-                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-                                !escalateGuardrail.allowed
-                                    ? 'cursor-not-allowed border-slate-700 bg-slate-900/70 text-slate-500'
-                                    : highlightEscalate
-                                    ? 'border-amber-400 text-amber-100 bg-amber-500/15 shadow-[0_0_20px_rgba(245,158,11,0.35)]'
-                                    : 'border-amber-400 text-amber-200 hover:bg-amber-500/10'
-                            }`}
-                        >
-                            Escalate for Dual Approval
-                        </button>
-                        <button
-                            disabled={!rejectGuardrail.allowed}
-                            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-                                rejectGuardrail.allowed
-                                    ? 'border-rose-500 text-rose-200 hover:bg-rose-500/10'
-                                    : 'cursor-not-allowed border-slate-700 bg-slate-900/70 text-slate-500'
-                            }`}
-                        >
-                            Reject
-                        </button>
-                    </div>
-                    {!approveGuardrail.allowed && (
-                        <p className="mt-2 text-[11px] text-amber-300">Approve: {approveGuardrail.reason}</p>
-                    )}
-                    {!escalateGuardrail.allowed && (
-                        <p className="mt-1 text-[11px] text-amber-300">Escalate: {escalateGuardrail.reason}</p>
-                    )}
-                    {!rejectGuardrail.allowed && (
-                        <p className="mt-1 text-[11px] text-amber-300">Reject: {rejectGuardrail.reason}</p>
-                    )}
-
-                    <p className="mt-3 text-xs text-slate-500">
-                        High risk requests require dual approval from 2 platform admins
-                    </p>
-                </>
-            )}
-        </aside>
     )
 }

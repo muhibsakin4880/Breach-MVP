@@ -7,9 +7,9 @@ export type UsageSummaryStat = {
 export type UsageDatasetRow = {
     dataset: string
     queries: string
-    participants: number
-    confidence: string
-    revenue: string
+    lastActive: string
+    quota: string
+    chargeback: string
 }
 
 export type UsageTrendPoint = {
@@ -18,7 +18,7 @@ export type UsageTrendPoint = {
 }
 
 export type UsageAnomaly = {
-    id: string
+    title: string
     detail: string
     action: string
     status: string
@@ -59,41 +59,58 @@ export type PolicyEventItem = {
 }
 
 export const usageSummaryStats: UsageSummaryStat[] = [
-    { label: 'Total API Calls This Month', value: '48,291', hint: 'Month-to-date' },
-    { label: 'Active Participants', value: '89', hint: 'Signed-in uniques' },
-    { label: 'Datasets Queried', value: '24', hint: 'Distinct datasets' },
-    { label: 'Anomalous Queries Flagged', value: '3', hint: 'Requires review' }
+    { label: 'API Calls This Month', value: '12,847', hint: 'Month-to-date for this participant workspace' },
+    { label: 'Datasets With Live Usage', value: '4', hint: 'Approved routes generating traffic right now' },
+    { label: 'Projected Chargeback', value: '$8,420', hint: 'Current billing window before settlement fees' },
+    { label: 'Policy Events Requiring Review', value: '2', hint: 'Export and quota controls still need attention' }
 ]
 
 export const usageDatasetRows: UsageDatasetRow[] = [
-    { dataset: 'Global Climate 2020-2024', queries: '12,847', participants: 34, confidence: '96%', revenue: '$9,847' },
-    { dataset: 'Financial Tick Data', queries: '9,234', participants: 21, confidence: '94%', revenue: '$7,234' },
-    { dataset: 'Consumer Behavior Analytics', queries: '7,891', participants: 18, confidence: '89%', revenue: '$5,891' },
-    { dataset: 'Clinical Outcomes Delta', queries: '4,234', participants: 9, confidence: '92%', revenue: '$3,234' },
-    { dataset: 'Genomics Research Dataset', queries: '2,891', participants: 7, confidence: '91%', revenue: '$2,891' }
+    { dataset: 'Financial Market Tick Data', queries: '5,842', lastActive: '2h ago', quota: '61% of daily call cap', chargeback: '$4,180' },
+    { dataset: 'Urban Traffic Flow Patterns', queries: '3,904', lastActive: '4h ago', quota: '48% of streaming quota', chargeback: '$2,930' },
+    { dataset: 'Consumer Behavior Analytics', queries: '1,921', lastActive: 'Yesterday', quota: '33% of daily call cap', chargeback: '$1,310' },
+    { dataset: 'Clinical Outcomes Delta', queries: '1,180', lastActive: 'Today · 07:34', quota: '22% of daily call cap', chargeback: '$890' }
 ]
 
 export const usageTrendData: UsageTrendPoint[] = [
-    { label: 'Mon', value: 6200 },
-    { label: 'Tue', value: 7100 },
-    { label: 'Wed', value: 6800 },
-    { label: 'Thu', value: 7400 },
-    { label: 'Fri', value: 8200 },
-    { label: 'Sat', value: 5900 },
-    { label: 'Sun', value: 6691 }
+    { label: 'Mon', value: 1620 },
+    { label: 'Tue', value: 1780 },
+    { label: 'Wed', value: 1650 },
+    { label: 'Thu', value: 1890 },
+    { label: 'Fri', value: 2120 },
+    { label: 'Sat', value: 1740 },
+    { label: 'Sun', value: 2047 }
 ]
 
 export const usageAnomalies: UsageAnomaly[] = [
-    { id: 'part_anon_031', detail: '847 calls in 10 minutes', action: 'Rate limit triggered', status: 'Flagged', tone: 'alert' },
-    { id: 'part_anon_067', detail: 'Unusual geographic access pattern', action: 'Under review', status: 'Under review', tone: 'warn' },
-    { id: 'part_anon_012', detail: 'Repeated failed auth attempts', action: 'Resolved', status: 'Resolved', tone: 'resolved' }
+    {
+        title: 'Burst usage nearing daily cap',
+        detail: 'Financial Market Tick Data consumed 82% of its daily allowance during the last six-hour window.',
+        action: 'Review batching or cap non-essential queries before soft throttles engage.',
+        status: 'Needs review',
+        tone: 'warn'
+    },
+    {
+        title: 'Raw export guardrail stayed blocked',
+        detail: 'A raw export request remained blocked until manual approval is completed.',
+        action: 'Open Audit Trail or Compliance Passport for the related policy event.',
+        status: 'Waiting on approval',
+        tone: 'alert'
+    },
+    {
+        title: 'Credential rotation completed cleanly',
+        detail: 'Production traffic continued without failed calls after the latest key rotation.',
+        action: 'No further action required.',
+        status: 'Stable',
+        tone: 'resolved'
+    }
 ]
 
 export const participantApiCredential: ParticipantApiCredential = {
     maskedKey: 'br_live_••••••••••••••••••••••',
     statusLabel: '1 active production key',
     environment: 'Northbridge Research Labs / Production',
-    metrics: ['1,247 calls', '8 datasets', 'Last used 2h ago'],
+    metrics: ['12,847 calls this month', '4 datasets with live usage', 'Last used 2h ago'],
     scopes: ['datasets:read', 'access-requests:write', 'audit:read'],
     lastRotated: 'Feb 18, 2026',
     residencyNote: 'Key material is hashed at rest and aligned to your current residency controls.'
@@ -101,15 +118,15 @@ export const participantApiCredential: ParticipantApiCredential = {
 
 export const credentialHistory: CredentialHistoryItem[] = [
     { label: 'Rotated production key for research workspace', timestamp: 'Feb 18, 2026 - 14:10', status: 'current' },
-    { label: 'Removed legacy staging key after review', timestamp: 'Feb 12, 2026 - 11:42', status: 'success' },
-    { label: 'Expanded scope to include audit trail reads', timestamp: 'Feb 08, 2026 - 09:18', status: 'info' }
+    { label: 'Expanded scope to include audit trail reads', timestamp: 'Feb 08, 2026 - 09:18', status: 'info' },
+    { label: 'Removed legacy staging key after review', timestamp: 'Feb 12, 2026 - 11:42', status: 'success' }
 ]
 
 export const recentApiActivity: RecentApiActivityItem[] = [
     {
         id: 'api-1',
         route: 'GET /v1/datasets',
-        dataset: 'Global Climate 2020-2024',
+        dataset: 'Financial Market Tick Data',
         result: '200 OK · 240 records returned',
         timestamp: '09:14:02',
         tone: 'success'
@@ -117,8 +134,8 @@ export const recentApiActivity: RecentApiActivityItem[] = [
     {
         id: 'api-2',
         route: 'POST /v1/access-requests',
-        dataset: 'Financial Tick Data',
-        result: 'Request updated with reviewer feedback',
+        dataset: 'Global Climate Observations 2020-2024',
+        result: 'Reviewer clarification note received',
         timestamp: '08:47:15',
         tone: 'pending'
     },
@@ -157,7 +174,7 @@ export const policyEvents: PolicyEventItem[] = [
 ]
 
 export const chargebackSummary = {
-    totalBillableUsage: '$29,097',
-    settlementFee: '$4,365',
-    providerPayouts: '$24,732'
+    totalBillableUsage: '$8,420',
+    settlementFee: '$1,263',
+    providerPayouts: '$7,157'
 }
