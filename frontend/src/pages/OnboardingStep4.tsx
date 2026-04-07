@@ -106,7 +106,7 @@ export default function OnboardingStep4() {
     const [verificationCode, setVerificationCode] = useState('')
     const [rightsPackage, setRightsPackage] = useState<RightsPackage>(snapshot.rightsPackage ?? { ...emptyRightsPackage })
     const [newFieldName, setNewFieldName] = useState('')
-    const [showAdvancedDrawer, setShowAdvancedDrawer] = useState(false)
+    const [showAdvancedControls, setShowAdvancedControls] = useState(false)
 
     useEffect(() => {
         if (!verificationCode) {
@@ -240,6 +240,14 @@ export default function OnboardingStep4() {
                 attributionRequired: true,
                 auditLoggingMandatory: true,
                 noRedistribution: true
+            },
+            advancedConditions: {
+                redistributionRights: 'not_allowed',
+                auditLoggingRequirement: 'mandatory',
+                attributionRequirement: 'required',
+                volumeBasedPricing: false,
+                volumePricingAdjustment: 0,
+                volumePricingUnit: 'tb'
             }
         })
     }
@@ -939,8 +947,8 @@ export default function OnboardingStep4() {
                                 <div className="pt-4">
                                     <button
                                         type="button"
-                                        onClick={() => setShowAdvancedDrawer(true)}
-                                        className="w-full rounded-xl border border-purple-500/40 bg-gradient-to-r from-purple-500/10 to-slate-900/80 px-5 py-4 text-left hover:border-purple-400/60 hover:from-purple-500/15 hover:to-slate-900/90 transition-all group"
+                                        onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+                                        className="w-full group rounded-xl border border-purple-500/40 bg-gradient-to-r from-purple-500/10 to-slate-900/80 px-5 py-4 text-left hover:border-purple-400/60 hover:from-purple-500/15 hover:to-slate-900/90 transition-all group"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
@@ -951,13 +959,124 @@ export default function OnboardingStep4() {
                                                     Legal, audit, redistribution and governance controls
                                                 </div>
                                             </div>
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 group-hover:bg-purple-500/20 group-hover:border-purple-400/60 transition-all">
+                                            <div className={`flex h-8 w-8 items-center justify-center rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 group-hover:bg-purple-500/20 group-hover:border-purple-400/60 transition-all duration-300 ${showAdvancedControls ? 'rotate-180' : ''}`}>
                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                             </div>
                                         </div>
                                     </button>
+
+                                    {showAdvancedControls && (
+                                        <div className="mt-4 rounded-xl border border-purple-500/30 bg-slate-800/40 p-5">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="text-sm font-semibold text-purple-200">
+                                                    Advanced Configuration
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAdvancedControls(false)}
+                                                    className="text-xs text-purple-400 hover:text-purple-300"
+                                                >
+                                                    Hide
+                                                </button>
+                                            </div>
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div>
+                                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                                                        Redistribution Rights
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {[
+                                                            { value: 'allowed' as const, label: 'Allowed' },
+                                                            { value: 'not_allowed' as const, label: 'Not Allowed' }
+                                                        ].map(option => (
+                                                            <button
+                                                                key={option.value}
+                                                                onClick={() => updateAdvancedCondition('redistributionRights', option.value)}
+                                                                className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                                    rightsPackage.advancedConditions.redistributionRights === option.value
+                                                                        ? 'border-purple-500/60 bg-purple-500/15 text-purple-200'
+                                                                        : 'border-slate-600 bg-slate-700 text-slate-300 hover:border-slate-500'
+                                                                }`}
+                                                            >
+                                                                {option.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                                                        Audit Logging
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {[
+                                                            { value: 'mandatory' as const, label: 'Mandatory' },
+                                                            { value: 'optional' as const, label: 'Optional' }
+                                                        ].map(option => (
+                                                            <button
+                                                                key={option.value}
+                                                                onClick={() => updateAdvancedCondition('auditLoggingRequirement', option.value)}
+                                                                className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                                    rightsPackage.advancedConditions.auditLoggingRequirement === option.value
+                                                                        ? 'border-purple-500/60 bg-purple-500/15 text-purple-200'
+                                                                        : 'border-slate-600 bg-slate-700 text-slate-300 hover:border-slate-500'
+                                                                }`}
+                                                            >
+                                                                {option.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                                                        Attribution
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {[
+                                                            { value: 'required' as const, label: 'Required' },
+                                                            { value: 'not_required' as const, label: 'Not Required' }
+                                                        ].map(option => (
+                                                            <button
+                                                                key={option.value}
+                                                                onClick={() => updateAdvancedCondition('attributionRequirement', option.value)}
+                                                                className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                                    rightsPackage.advancedConditions.attributionRequirement === option.value
+                                                                        ? 'border-purple-500/60 bg-purple-500/15 text-purple-200'
+                                                                        : 'border-slate-600 bg-slate-700 text-slate-300 hover:border-slate-500'
+                                                                }`}
+                                                            >
+                                                                {option.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                                                        Volume Pricing
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm text-slate-300">Enable</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateAdvancedCondition('volumeBasedPricing', !rightsPackage.advancedConditions.volumeBasedPricing)}
+                                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                                rightsPackage.advancedConditions.volumeBasedPricing
+                                                                    ? 'bg-purple-500'
+                                                                    : 'bg-slate-700'
+                                                            }`}
+                                                        >
+                                                            <span
+                                                                className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${
+                                                                    rightsPackage.advancedConditions.volumeBasedPricing ? 'translate-x-6' : 'translate-x-1'
+                                                                }`}
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -984,154 +1103,6 @@ export default function OnboardingStep4() {
                         </div>
                     </article>
 
-                    {showAdvancedDrawer && (
-                        <div className="fixed inset-0 z-50 flex justify-end">
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdvancedDrawer(false)} />
-                            <div className="relative w-full max-w-md bg-slate-900 border-l border-slate-700 shadow-2xl overflow-y-auto">
-                                <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-white">Advanced Rights & Conditions</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">Legal & Governance Controls</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowAdvancedDrawer(false)}
-                                        className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <div className="p-6 space-y-6">
-                                    <div>
-                                        <div className="text-sm font-medium text-white mb-3">Redistribution Rights</div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[
-                                                { value: 'allowed' as const, label: 'Allowed' },
-                                                { value: 'not_allowed' as const, label: 'Not Allowed' }
-                                            ].map(option => (
-                                                <button
-                                                    key={option.value}
-                                                    onClick={() => updateAdvancedCondition('redistributionRights', option.value)}
-                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-                                                        rightsPackage.advancedConditions.redistributionRights === option.value
-                                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
-                                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                                                    }`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="text-sm font-medium text-white mb-3">Audit Logging Requirement</div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[
-                                                { value: 'mandatory' as const, label: 'Mandatory' },
-                                                { value: 'optional' as const, label: 'Optional' }
-                                            ].map(option => (
-                                                <button
-                                                    key={option.value}
-                                                    onClick={() => updateAdvancedCondition('auditLoggingRequirement', option.value)}
-                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-                                                        rightsPackage.advancedConditions.auditLoggingRequirement === option.value
-                                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
-                                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                                                    }`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="text-sm font-medium text-white mb-3">Attribution Requirement</div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[
-                                                { value: 'required' as const, label: 'Required' },
-                                                { value: 'not_required' as const, label: 'Not Required' }
-                                            ].map(option => (
-                                                <button
-                                                    key={option.value}
-                                                    onClick={() => updateAdvancedCondition('attributionRequirement', option.value)}
-                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-                                                        rightsPackage.advancedConditions.attributionRequirement === option.value
-                                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
-                                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                                                    }`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="border-t border-slate-700 pt-6">
-                                        <div className="text-sm font-medium text-white mb-4">Data Volume Scaling</div>
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm text-slate-300">Enable volume-based pricing</span>
-                                                <button
-                                                    type="button"
-                                                    aria-pressed={rightsPackage.advancedConditions.volumeBasedPricing}
-                                                    onClick={() => updateAdvancedCondition('volumeBasedPricing', !rightsPackage.advancedConditions.volumeBasedPricing)}
-                                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                                        rightsPackage.advancedConditions.volumeBasedPricing
-                                                            ? 'bg-purple-500 ring-1 ring-purple-300/40'
-                                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                                            rightsPackage.advancedConditions.volumeBasedPricing ? 'translate-x-5' : 'translate-x-1'
-                                                        }`}
-                                                    />
-                                                </button>
-                                            </div>
-
-                                            {rightsPackage.advancedConditions.volumeBasedPricing && (
-                                                <div className="space-y-3 p-4 rounded-xl bg-slate-800/30 border border-slate-700">
-                                                    <div>
-                                                        <label className="text-xs text-slate-400 mb-1.5 block">Base price adjustment</label>
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="number"
-                                                                value={rightsPackage.advancedConditions.volumePricingAdjustment}
-                                                                onChange={(e) => updateAdvancedCondition('volumePricingAdjustment', parseFloat(e.target.value) || 0)}
-                                                                className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
-                                                                placeholder="0"
-                                                            />
-                                                            <select
-                                                                value={rightsPackage.advancedConditions.volumePricingUnit}
-                                                                onChange={(e) => updateAdvancedCondition('volumePricingUnit', e.target.value as 'tb' | 'million_records')}
-                                                                className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
-                                                            >
-                                                                <option value="tb">per TB</option>
-                                                                <option value="million_records">per million records</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="sticky bottom-0 bg-slate-900 border-t border-slate-700 px-6 py-4">
-                                    <button
-                                        onClick={() => setShowAdvancedDrawer(false)}
-                                        className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-sm font-semibold text-white transition-colors"
-                                    >
-                                        Done
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {showError && !stepReady && (
                         <div className="text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
