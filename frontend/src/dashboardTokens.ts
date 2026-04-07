@@ -37,7 +37,7 @@ export const dashboardShadowTokens = {
 } as const
 
 export const dashboardTypographyTokens = {
-    'text-eyebrow': 'text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500',
+    'text-eyebrow': 'text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400',
     'text-hero-eyebrow': 'text-[11px] font-medium uppercase tracking-[0.18em] text-cyan-200/80',
     'text-hero-title': 'text-4xl font-bold tracking-tight text-white',
     'text-section-title': 'text-xl font-semibold tracking-tight text-white',
@@ -45,7 +45,7 @@ export const dashboardTypographyTokens = {
     'text-item-title': 'text-sm font-semibold text-white',
     'text-body': 'text-sm leading-5 text-slate-400',
     'text-body-strong': 'text-sm leading-5 text-slate-300',
-    'text-muted': 'text-xs leading-4 text-slate-500',
+    'text-muted': 'text-xs leading-4 text-slate-400',
     'text-muted-strong': 'text-xs font-medium leading-4 text-slate-300',
     'text-value': 'text-3xl font-semibold tracking-tight text-white'
 } as const
@@ -88,7 +88,7 @@ export const dashboardComponentTokens = {
     'status-badge': 'border border-emerald-500/30 bg-emerald-500/10 text-xs font-medium text-emerald-100',
     'metric-chip': 'border border-white/10 bg-slate-950/45',
     'action-button':
-        'bg-cyan-500 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400',
+        'bg-cyan-500 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
     'floating-rail': 'pointer-events-auto border border-white/10 bg-slate-950/85 p-3 backdrop-blur-xl',
     'card-soft': 'border border-white/10 bg-slate-800/35 px-4 py-3',
     tooltip:

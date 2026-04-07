@@ -75,11 +75,20 @@ const navGroups: NavGroup[] = [
 ]
 
 export default function AppLayout() {
+    const consoleFocusRingClass =
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+
     return (
         <div className="min-h-screen bg-slate-900 text-white flex">
+            <a
+                href="#app-main-content"
+                className={`absolute left-4 top-4 z-50 -translate-y-16 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-transform focus:translate-y-0 ${consoleFocusRingClass}`}
+            >
+                Skip to main content
+            </a>
             <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
                 <div className="px-5 py-5 border-b border-slate-800">
-                    <Link to="/dashboard" className="flex items-center gap-3">
+                    <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`}>
                         <svg
                             className="w-10 h-10 overflow-visible"
                             viewBox="0 0 240 300"
@@ -136,19 +145,19 @@ export default function AppLayout() {
                         </svg>
                         <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
                     </Link>
-                    <p className="text-xs text-slate-400 mt-1 ml-11">Participant Console</p>
+                    <p className="text-xs text-slate-300 mt-1 ml-11">Participant Console</p>
                 </div>
                 <nav className="p-4 space-y-4">
                     {navGroups.map((group, groupIndex) => (
                         <div key={group.title} className={`${groupIndex > 0 ? 'border-t border-slate-800/80 pt-3' : ''} space-y-2`}>
-                            <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group.title}</p>
+                            <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{group.title}</p>
                             <div className="space-y-1">
                                 {group.items.map(item => (
                                     <NavLink
                                         key={item.to}
                                         to={item.to}
                                         className={({ isActive }) =>
-                                            `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
+                                            `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${consoleFocusRingClass} ${
                                                 isActive
                                                     ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
                                                     : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
@@ -168,7 +177,7 @@ export default function AppLayout() {
                 <header className="h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl">
                     <div className="flex h-full items-center justify-between px-6">
                         <div className="flex items-center gap-4">
-                            <Link to="/dashboard" className="flex items-center gap-3" aria-label="Open participant dashboard">
+                            <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`} aria-label="Open participant dashboard">
                                 <span className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
@@ -186,7 +195,7 @@ export default function AppLayout() {
                         <nav className="flex items-center gap-3" aria-label="Participant console tools">
                             <button
                                 type="button"
-                                className="relative rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                className={`relative rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
                                 aria-label="Open notifications"
                             >
                                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
@@ -196,7 +205,7 @@ export default function AppLayout() {
                             </button>
                             <button
                                 type="button"
-                                className="rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                className={`rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
                                 aria-label="Open help and guidance"
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -207,7 +216,7 @@ export default function AppLayout() {
                             </button>
                             <Link
                                 to="/profile"
-                                className="flex items-center gap-3 rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                className={`flex items-center gap-3 rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white ${consoleFocusRingClass}`}
                                 aria-label="Open profile settings"
                             >
                                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-slate-950">
@@ -222,7 +231,7 @@ export default function AppLayout() {
                     </div>
                 </header>
 
-                <main className="min-h-[calc(100vh-4rem)]">
+                <main id="app-main-content" tabIndex={-1} className="min-h-[calc(100vh-4rem)]">
                     <Outlet />
                 </main>
             </div>
