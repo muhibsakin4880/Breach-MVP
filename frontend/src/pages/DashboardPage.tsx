@@ -20,6 +20,17 @@ import {
     dashboardUpcomingSessions
 } from '../data/dashboardPanelsData'
 
+const dashboardSparklinePoints = [
+    { x: 18, y: 60 },
+    { x: 62, y: 54 },
+    { x: 106, y: 58 },
+    { x: 150, y: 42 },
+    { x: 194, y: 46 },
+    { x: 238, y: 26 },
+    { x: 282, y: 32 },
+    { x: 322, y: 18 }
+] as const
+
 const dashboardText = {
     eyebrow: dashboardTypographyTokens['text-eyebrow'],
     heroEyebrow: dashboardTypographyTokens['text-hero-eyebrow'],
@@ -341,9 +352,9 @@ export default function DashboardPage() {
                                                     <span className={dashboardText.itemTitle}>Readiness bars</span>
                                                 </div>
                                                 <div className="mt-4 space-y-4">
-                                                    <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
-                                                    <ProgressBarPlaceholder label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
-                                                    <ProgressBarPlaceholder label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
+                                                    <ProgressBarVisual label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
+                                                    <ProgressBarVisual label="Reviewer feedback loop" widthClassName="w-[64%]" toneClassName="bg-cyan-400" />
+                                                    <ProgressBarVisual label="Settlement preparation" widthClassName="w-[71%]" toneClassName="bg-amber-400" />
                                                 </div>
                                             </div>
 
@@ -353,17 +364,7 @@ export default function DashboardPage() {
                                                     <span className={dashboardText.meta}>Last 7 checkpoints</span>
                                                 </div>
                                                 <div className="mt-4 rounded-2xl border border-[#22304D] bg-[#0C1527]/72 px-3 py-3">
-                                                    <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
-                                                        <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-                                                        <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
-                                                        <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18L320 96L0 96Z" fill="url(#sparkFill)" opacity="0.22" />
-                                                        <defs>
-                                                            <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
-                                                                <stop offset="0%" stopColor="rgb(34 211 238)" />
-                                                                <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
-                                                            </linearGradient>
-                                                        </defs>
-                                                    </svg>
+                                                    <ReadinessSparkline />
                                                 </div>
                                             </div>
                                         </div>
@@ -503,11 +504,12 @@ export default function DashboardPage() {
                                                             className={`flex h-9 w-9 items-center justify-center rounded-full border ${timelineState.markerClassName}`}
                                                             aria-hidden="true"
                                                         >
-                                                            {timelineState.icon}
+                                                            <TimelineMarkerIcon state={item.state} />
                                                         </span>
-                                                        {index < dashboardActivityTimeline.length - 1 && <span className="mt-2 h-full w-px bg-slate-800" />}
+                                                        {index < dashboardActivityTimeline.length - 1 && <span className={`mt-2 h-full w-px ${timelineState.connectorClassName}`} />}
                                                     </div>
-                                                    <article className={`flex-1 ${dashboardItemCardClass}`}>
+                                                    <article className={`relative flex-1 ${dashboardItemCardClass}`}>
+                                                        <span className={`pointer-events-none absolute inset-y-5 left-0 w-px ${timelineState.connectorClassName}`} aria-hidden="true" />
                                                         <div className={`flex items-start justify-between ${dashboardCompactGapClass}`}>
                                                             <div className={dashboardText.itemTitle}>{item.title}</div>
                                                             <span className={`rounded-full px-3 py-2 text-[11px] font-medium leading-none ${timelineState.badgeClassName}`}>
@@ -554,7 +556,7 @@ function DashboardPanel({
     )
 }
 
-function ProgressBarPlaceholder({
+function ProgressBarVisual({
     label,
     widthClassName,
     toneClassName
@@ -564,12 +566,14 @@ function ProgressBarPlaceholder({
     toneClassName: string
 }) {
     return (
-        <div>
-            <div className="mb-2">
+        <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${toneClassName} shadow-[0_0_18px_rgba(34,211,238,0.22)]`} aria-hidden="true" />
                 <span className={dashboardText.itemTitle}>{label}</span>
             </div>
-            <div className="h-2.5 rounded-full bg-[#0A1324]">
-                <div className={`h-2.5 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.12)] ${widthClassName} ${toneClassName}`} />
+            <div className="relative h-2.5 overflow-hidden rounded-full bg-[#0A1324]">
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.03),transparent_45%,rgba(255,255,255,0.03))]" />
+                <div className={`relative h-2.5 rounded-full shadow-[0_0_24px_rgba(34,211,238,0.12)] ${widthClassName} ${toneClassName}`} />
             </div>
         </div>
     )
@@ -582,23 +586,72 @@ function getTimelineStateMeta(state: 'completed' | 'in_progress' | 'upcoming') {
                 label: 'Completed',
                 badgeClassName: dashboardColorTokens['state-completed-badge'],
                 markerClassName: dashboardColorTokens['state-completed-marker'],
-                icon: '✓'
+                connectorClassName: 'bg-gradient-to-b from-emerald-400/60 to-slate-800'
             }
         case 'in_progress':
             return {
                 label: 'In progress',
                 badgeClassName: dashboardColorTokens['state-progress-badge'],
                 markerClassName: dashboardColorTokens['state-progress-marker'],
-                icon: '↻'
+                connectorClassName: 'bg-gradient-to-b from-cyan-400/60 to-slate-800'
             }
         default:
             return {
                 label: 'Upcoming',
                 badgeClassName: dashboardColorTokens['state-upcoming-badge'],
                 markerClassName: dashboardColorTokens['state-upcoming-marker'],
-                icon: '•'
+                connectorClassName: 'bg-gradient-to-b from-amber-300/60 to-slate-800'
             }
     }
+}
+
+function TimelineMarkerIcon({ state }: { state: 'completed' | 'in_progress' | 'upcoming' }) {
+    if (state === 'completed') {
+        return (
+            <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path d="M3.5 8.25 6.5 11l6-6.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+        )
+    }
+
+    if (state === 'in_progress') {
+        return (
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeOpacity="0.28" strokeWidth="1.8" />
+                <path d="M8 2.5a5.5 5.5 0 0 1 5.5 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+        )
+    }
+
+    return <span className="h-2.5 w-2.5 rounded-full bg-current" aria-hidden="true" />
+}
+
+function ReadinessSparkline() {
+    const linePath = dashboardSparklinePoints.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`).join(' ')
+    const areaPath = `${linePath} L322 96 L18 96 Z`
+
+    return (
+        <svg className="h-24 w-full" viewBox="0 0 340 96" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(34 211 238)" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="sparkStroke" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stopColor="rgb(125 211 252)" />
+                    <stop offset="100%" stopColor="rgb(34 211 238)" />
+                </linearGradient>
+            </defs>
+            <path d="M18 78H322" stroke="rgba(148,163,184,0.16)" strokeWidth="1" />
+            <path d="M18 56H322" stroke="rgba(148,163,184,0.1)" strokeDasharray="3 5" strokeWidth="1" />
+            <path d="M18 34H322" stroke="rgba(148,163,184,0.1)" strokeDasharray="3 5" strokeWidth="1" />
+            <path d={areaPath} fill="url(#sparkFill)" />
+            <path d={linePath} fill="none" stroke="url(#sparkStroke)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            {dashboardSparklinePoints.map(point => (
+                <circle key={`${point.x}-${point.y}`} cx={point.x} cy={point.y} r="3.25" fill="rgb(34 211 238)" stroke="#0C1527" strokeWidth="2" />
+            ))}
+        </svg>
+    )
 }
 
 function DashboardStateRenderer({
