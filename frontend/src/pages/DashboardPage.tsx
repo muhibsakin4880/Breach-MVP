@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { participantTrust } from '../data/workspaceData'
+import { dashboardAtAGlanceCards } from '../data/dashboardAtAGlanceData'
 
 export default function DashboardPage() {
     const { accessStatus, applicantEmail } = useAuth()
@@ -54,6 +54,27 @@ export default function DashboardPage() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <section className="mb-8" aria-labelledby="today-at-a-glance">
+                    <div className="mb-4 flex items-center justify-between">
+                        <div>
+                            <h2 id="today-at-a-glance" className="text-xl font-bold text-white">Today at a Glance</h2>
+                            <p className="mt-1 text-sm text-slate-500">Fast-read operating signals for the current participant session.</p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-3">
+                        {dashboardAtAGlanceCards.map(card => (
+                            <article
+                                key={card.label}
+                                className="flex min-h-[96px] flex-col justify-between rounded-xl border border-white/10 bg-slate-800/35 px-4 py-3 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.95)]"
+                            >
+                                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">{card.label}</div>
+                                <div className="mt-2 text-3xl font-semibold tracking-tight text-white">{card.value}</div>
+                                <div className={`mt-2 text-xs font-medium ${card.toneClassName}`}>{card.trend}</div>
+                            </article>
+                        ))}
                     </div>
                 </section>
 
