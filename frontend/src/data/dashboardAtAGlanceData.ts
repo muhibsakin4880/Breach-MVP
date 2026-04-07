@@ -1,5 +1,3 @@
-import { getParticipantNetTrustScore, participantTrust, trustLevel } from './workspaceData'
-
 export type DashboardAtAGlanceCard = {
     label: string
     value: string
@@ -7,44 +5,37 @@ export type DashboardAtAGlanceCard = {
     toneClassName: string
 }
 
-const staticDashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
+const dashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
     {
-        label: 'Sessions today',
+        label: 'TRUST SCORE',
+        value: '80',
+        trend: '+6 since the last attestation cycle',
+        toneClassName: 'text-cyan-300'
+    },
+    {
+        label: 'SESSIONS TODAY',
         value: '14',
         trend: '+3 from yesterday',
         toneClassName: 'text-emerald-300'
     },
     {
-        label: 'Pending tasks',
+        label: 'PENDING TASKS',
         value: '06',
         trend: '2 need action this hour',
         toneClassName: 'text-amber-300'
     },
     {
-        label: 'Unread messages',
+        label: 'UNREAD MESSAGES',
         value: '09',
         trend: '4 from reviewers',
         toneClassName: 'text-violet-300'
     },
     {
-        label: 'Next deadline',
+        label: 'NEXT DEADLINE',
         value: '18 Apr',
         trend: 'Compliance packet due',
         toneClassName: 'text-rose-300'
     }
 ]
 
-export const getDashboardAtAGlanceCards = (): DashboardAtAGlanceCard[] => {
-    const netTrustScore = getParticipantNetTrustScore()
-    const trustMeta = trustLevel(netTrustScore)
-
-    return [
-        {
-            label: 'Trust Score',
-            value: String(netTrustScore),
-            trend: participantTrust.scoreDeltaLabel,
-            toneClassName: trustMeta.toneClassName
-        },
-        ...staticDashboardAtAGlanceCards
-    ]
-}
+export const getDashboardAtAGlanceCards = (): DashboardAtAGlanceCard[] => dashboardAtAGlanceCards

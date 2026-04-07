@@ -89,24 +89,24 @@ export const dashboardPriorityActions: DashboardPriorityAction[] = [
 export const dashboardUpcomingSessions: DashboardUpcomingSession[] = [
     {
         title: 'Provider policy review',
-        time: 'Today · 2:30 PM',
+        time: 'Today - 2:30 PM',
         detail: 'Review the redistribution controls on the restricted healthcare package.',
         status: 'Confirmed',
         statusClassName: 'text-emerald-300'
     },
     {
         title: 'Escrow release checkpoint',
-        time: 'Tomorrow · 10:00 AM',
+        time: 'Tomorrow - 10:00 AM',
         detail: 'Verify final release conditions for the financial tick batch settlement.',
         status: 'Upcoming',
         statusClassName: 'text-cyan-300'
     },
     {
         title: 'Compliance office hours',
-        time: 'Apr 12 · 4:00 PM',
+        time: 'Apr 17 - 4:00 PM',
         detail: 'Optional walkthrough for participant passport renewals and evidence packs.',
         status: 'Open seats',
-        statusClassName: 'text-violet-300'
+        statusClassName: 'text-cyan-300'
     }
 ]
 
@@ -167,7 +167,7 @@ export const dashboardQuickLinks: DashboardQuickLink[] = [
 export const dashboardSupportContact: DashboardSupportContact = {
     name: 'Maya Chen',
     role: 'Participant Success Lead',
-    availability: 'Mon-Fri · 09:00-18:00 UTC',
+    availability: 'Mon-Fri • 09:00-18:00 UTC',
     responseTime: 'Average response: under 2 hours',
     email: 'support@redoubt.io'
 }
@@ -194,19 +194,19 @@ export const dashboardActivityTimeline: DashboardActivityTimelineItem[] = [
     {
         title: 'Compliance packet uploaded',
         detail: 'The latest evidence bundle cleared automated checks and is ready for reviewer context.',
-        timing: 'Completed · Today 09:10',
+        timing: 'Completed - Today 09:10',
         state: 'completed'
     },
     {
         title: 'Restricted review package validation',
         detail: 'Legal redistribution controls are being verified before buyer release can continue.',
-        timing: 'In progress · Today 12:30',
+        timing: 'In progress - Today 12:30',
         state: 'in_progress'
     },
     {
         title: 'Escrow release confirmation',
         detail: 'Final participant confirmation is scheduled for the next settlement window.',
-        timing: 'Upcoming · Tomorrow 10:00',
+        timing: 'Upcoming - Tomorrow 10:00',
         state: 'upcoming'
     }
 ]

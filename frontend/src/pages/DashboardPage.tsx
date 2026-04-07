@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import {
     dashboardColorTokens,
     dashboardComponentTokens,
@@ -71,10 +70,6 @@ const dashboardModuleFlags = {
 } as const
 
 export default function DashboardPage() {
-    const { accessStatus, applicantEmail } = useAuth()
-    const participantName = formatParticipantName(applicantEmail)
-    const programStatusLabel = accessStatus === 'approved' ? 'Approved participant' : accessStatus === 'pending' ? 'Application pending' : 'Getting started'
-    const nextMilestoneDate = accessStatus === 'approved' ? 'Apr 18, 2026' : accessStatus === 'pending' ? 'Apr 12, 2026' : 'Apr 09, 2026'
     const dashboardAtAGlanceCards = getDashboardAtAGlanceCards()
     const completedChecklistItems = dashboardChecklistItems.filter(item => item.done).length
     const checklistProgress = Math.round((completedChecklistItems / dashboardChecklistItems.length) * 100)
@@ -88,10 +83,7 @@ export default function DashboardPage() {
                     <div className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
                         <div className={`flex min-h-[88px] items-center justify-between ${dashboardGridGapClass}`}>
                             <div>
-                                <p className={dashboardText.heroEyebrow}>Participant Workspace</p>
-                                <h1 id="dashboard-intro-banner" className={`mt-2 ${dashboardText.heroTitle}`}>
-                                    Welcome back, {participantName}
-                                </h1>
+                                <h1 id="dashboard-intro-banner" className={dashboardText.heroTitle}>Welcome back, Demo</h1>
                                 <p className={`mt-2 ${dashboardText.bodyStrong}`}>
                                     Continue managing trust, access, and escrow milestones from the same governed workspace.
                                 </p>
@@ -99,11 +91,10 @@ export default function DashboardPage() {
 
                             <div className={`flex shrink-0 items-center ${dashboardCompactGapClass}`}>
                                 <span className={`${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['status-badge']} ${dashboardSpacingTokens['chip-padding']}`}>
-                                    {programStatusLabel}
+                                    Approved participant
                                 </span>
                                 <div className={`${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-overlay-soft']} ${dashboardSpacingTokens['card-padding-compact']}`}>
-                                    <div className={dashboardText.eyebrow}>Next milestone date</div>
-                                    <div className={`mt-2 ${dashboardText.itemTitle} ${dashboardColorTokens['text-strong']}`}>{nextMilestoneDate}</div>
+                                    <div className={dashboardText.eyebrow}>NEXT MILESTONE DATE: Apr 10, 2026</div>
                                 </div>
                                 <button
                                     type="button"
@@ -365,8 +356,7 @@ export default function DashboardPage() {
                                     <div className={dashboardAccentCardClass}>
                                         <div className={dashboardText.panelTitle}>{dashboardSupportContact.name}</div>
                                         <div className={`mt-2 ${dashboardText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dashboardSupportContact.role}</div>
-                                        <div className={`mt-4 ${dashboardText.meta}`}>{dashboardSupportContact.availability}</div>
-                                        <div className={`mt-2 ${dashboardText.meta}`}>{dashboardSupportContact.responseTime}</div>
+                                        <div className={`mt-4 ${dashboardText.meta}`}>{`${dashboardSupportContact.availability} / ${dashboardSupportContact.responseTime}`}</div>
                                         <a
                                             href={`mailto:${dashboardSupportContact.email}`}
                                             className={`mt-4 inline-flex ${dashboardActionButtonClass}`}
@@ -583,22 +573,6 @@ function DashboardPanel({
             <div className="mt-4">{children}</div>
         </section>
     )
-}
-
-function formatParticipantName(email: string) {
-    if (!email) return 'Participant'
-
-    const localPart = email.split('@')[0] ?? ''
-    const segments = localPart
-        .split(/[._-]+/)
-        .map(segment => segment.trim())
-        .filter(Boolean)
-
-    if (segments.length === 0) return 'Participant'
-
-    return segments
-        .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
-        .join(' ')
 }
 
 function ProgressBarPlaceholder({
