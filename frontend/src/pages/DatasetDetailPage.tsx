@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
+import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
 import DealProgressTracker from '../components/DealProgressTracker'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
@@ -65,6 +66,7 @@ export default function DatasetDetailPage() {
     const location = useLocation()
     const navigate = useNavigate()
     const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
+    const accessPackage = getAccessPackageForDataset(dataset.id)
     const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
     const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
     const latestSavedQuote = useMemo(() => loadRightsQuotes(dataset.id)[0] ?? null, [dataset.id, location.key])
@@ -164,6 +166,29 @@ export default function DatasetDetailPage() {
         ],
         [dataset.id, escrowLifecycleState]
     )
+    const accessDeliverySummaryItems = [
+        { label: 'Access method', value: accessPackage.accessMethod.label },
+        { label: 'Delivery detail', value: accessPackage.deliveryDetail.label },
+        { label: 'Field access', value: accessPackage.fieldAccess.label },
+        { label: 'Usage rights', value: accessPackage.usageRights.label },
+        { label: 'Term', value: accessPackage.term.label },
+        { label: 'Geography', value: accessPackage.geography.label },
+        { label: 'Exclusivity', value: accessPackage.exclusivity.label }
+    ]
+    const securityGovernanceSummaryItems = [
+        { label: 'Encryption', value: accessPackage.security.encryption },
+        { label: 'Masking', value: accessPackage.security.masking },
+        { label: 'Watermarking', value: accessPackage.security.watermarking },
+        { label: 'Revocation rights', value: accessPackage.security.revocation },
+        { label: 'Audit logging', value: accessPackage.advancedRights.auditLogging },
+        { label: 'Attribution', value: accessPackage.advancedRights.attribution },
+        { label: 'Redistribution', value: accessPackage.advancedRights.redistribution },
+        { label: 'Volume pricing', value: accessPackage.advancedRights.volumePricing }
+    ]
+    const accessPackageBuyerOverview = [
+        accessPackage.accessMethod.buyerSummary,
+        accessPackage.deliveryDetail.buyerSummary
+    ].filter(Boolean).join(' ')
 
     if (showRiskAssessment) {
         return (
@@ -550,6 +575,21 @@ export default function DatasetDetailPage() {
                                     >
                                         Escrow-Native Checkout
                                     </Link>
+                                </div>
+
+                                <div className="mt-7 grid gap-4 xl:grid-cols-2">
+                                    <DetailSummaryCard
+                                        eyebrow="Offer Summary"
+                                        title="Access & Delivery Profile"
+                                        description={accessPackageBuyerOverview}
+                                        items={accessDeliverySummaryItems}
+                                    />
+                                    <DetailSummaryCard
+                                        eyebrow="Governance"
+                                        title="Security & Governance"
+                                        description="Encryption, masking, watermarking, and commercial controls applied to approved buyer sessions."
+                                        items={securityGovernanceSummaryItems}
+                                    />
                                 </div>
                             </div>
 
@@ -1070,6 +1110,39 @@ function DecisionValue({ label, value }: { label: string; value: string }) {
         <div className="rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
             <div className="mt-2 text-sm font-semibold text-white">{value}</div>
+        </div>
+    )
+}
+
+type DetailSummaryItem = {
+    label: string
+    value: string
+}
+
+function DetailSummaryCard({
+    eyebrow,
+    title,
+    description,
+    items
+}: {
+    eyebrow: string
+    title: string
+    description: string
+    items: DetailSummaryItem[]
+}) {
+    return (
+        <div className="rounded-2xl border border-slate-700/80 bg-slate-950/45 p-5">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">{eyebrow}</div>
+            <h4 className="mt-2 text-lg font-semibold text-white">{title}</h4>
+            <p className="mt-2 text-sm leading-6 text-slate-300">{description}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {items.map(item => (
+                    <div key={item.label} className="rounded-xl border border-white/8 bg-slate-900/70 px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{item.label}</div>
+                        <div className="mt-2 text-sm font-medium text-slate-100">{item.value}</div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
