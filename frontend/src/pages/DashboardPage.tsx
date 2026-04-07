@@ -9,7 +9,7 @@ import {
     dashboardSpacingTokens,
     dashboardTypographyTokens
 } from '../dashboardTokens'
-import { dashboardAtAGlanceCards } from '../data/dashboardAtAGlanceData'
+import { getDashboardAtAGlanceCards } from '../data/dashboardAtAGlanceData'
 import {
     dashboardActivityTimeline,
     dashboardAnnouncements,
@@ -75,6 +75,7 @@ export default function DashboardPage() {
     const participantName = formatParticipantName(applicantEmail)
     const programStatusLabel = accessStatus === 'approved' ? 'Approved participant' : accessStatus === 'pending' ? 'Application pending' : 'Getting started'
     const nextMilestoneDate = accessStatus === 'approved' ? 'Apr 18, 2026' : accessStatus === 'pending' ? 'Apr 12, 2026' : 'Apr 09, 2026'
+    const dashboardAtAGlanceCards = getDashboardAtAGlanceCards()
     const completedChecklistItems = dashboardChecklistItems.filter(item => item.done).length
     const checklistProgress = Math.round((completedChecklistItems / dashboardChecklistItems.length) * 100)
 

@@ -1,3 +1,5 @@
+import { getParticipantNetTrustScore, participantTrust, trustLevel } from './workspaceData'
+
 export type DashboardAtAGlanceCard = {
     label: string
     value: string
@@ -5,7 +7,7 @@ export type DashboardAtAGlanceCard = {
     toneClassName: string
 }
 
-export const dashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
+const staticDashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
     {
         label: 'Sessions today',
         value: '14',
@@ -17,12 +19,6 @@ export const dashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
         value: '06',
         trend: '2 need action this hour',
         toneClassName: 'text-amber-300'
-    },
-    {
-        label: 'Completion %',
-        value: '78%',
-        trend: 'Up 12% this week',
-        toneClassName: 'text-cyan-300'
     },
     {
         label: 'Unread messages',
@@ -37,3 +33,18 @@ export const dashboardAtAGlanceCards: DashboardAtAGlanceCard[] = [
         toneClassName: 'text-rose-300'
     }
 ]
+
+export const getDashboardAtAGlanceCards = (): DashboardAtAGlanceCard[] => {
+    const netTrustScore = getParticipantNetTrustScore()
+    const trustMeta = trustLevel(netTrustScore)
+
+    return [
+        {
+            label: 'Trust Score',
+            value: String(netTrustScore),
+            trend: participantTrust.scoreDeltaLabel,
+            toneClassName: trustMeta.toneClassName
+        },
+        ...staticDashboardAtAGlanceCards
+    ]
+}

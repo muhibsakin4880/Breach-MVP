@@ -163,6 +163,8 @@ export const recentActivity: RecentActivityItem[] = [
 
 export const participantTrust = {
     score: 92,
+    scoreDelta: 6,
+    scoreDeltaLabel: '+6 since the last attestation cycle',
     misusePenalty: 12,
     level: 'Verified Participant',
     misuseWarning: 'Misuse flagged: export attempt outside approved scope',
@@ -238,9 +240,33 @@ export const confidenceColor = (score: number) => {
     return 'text-rose-300'
 }
 
+export const getParticipantNetTrustScore = (trust = participantTrust) => Math.max(trust.score - (trust.misuseWarning ? trust.misusePenalty : 0), 0)
+
 export const trustLevel = (score: number) => {
-    if (score >= 95) return { label: 'High Confidence Participant', classes: 'bg-emerald-500/15 border-emerald-400 text-emerald-200' }
-    if (score >= 90) return { label: 'Verified Participant', classes: 'bg-green-500/15 border-green-400 text-green-200' }
-    if (score >= 80) return { label: 'Trusted Participant', classes: 'bg-cyan-500/15 border-cyan-400 text-cyan-200' }
-    return { label: 'New Participant', classes: 'bg-slate-700 border-slate-500 text-slate-200' }
+    if (score >= 95) {
+        return {
+            label: 'High Confidence Participant',
+            classes: 'bg-emerald-500/15 border-emerald-400 text-emerald-200',
+            toneClassName: 'text-emerald-300'
+        }
+    }
+    if (score >= 90) {
+        return {
+            label: 'Verified Participant',
+            classes: 'bg-green-500/15 border-green-400 text-green-200',
+            toneClassName: 'text-green-300'
+        }
+    }
+    if (score >= 80) {
+        return {
+            label: 'Trusted Participant',
+            classes: 'bg-cyan-500/15 border-cyan-400 text-cyan-200',
+            toneClassName: 'text-cyan-300'
+        }
+    }
+    return {
+        label: 'New Participant',
+        classes: 'bg-slate-700 border-slate-500 text-slate-200',
+        toneClassName: 'text-slate-300'
+    }
 }
