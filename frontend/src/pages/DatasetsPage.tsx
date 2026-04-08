@@ -141,6 +141,10 @@ const metricPillGridStyle = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))'
 } as const
 
+const decisionStatGridStyle = {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 10rem), 1fr))'
+} as const
+
 export default function DatasetsPage() {
     const [filters, setFilters] = useState<FilterState>(defaultFilters)
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
@@ -307,7 +311,7 @@ export default function DatasetsPage() {
                                 description="Track what you have shortlisted, what is queued for compare, and the most useful next move for this buyer workflow."
                                 className="border-cyan-400/20 bg-[linear-gradient(180deg,rgba(14,23,41,0.92),rgba(10,17,31,0.86))]"
                             >
-                                <div className="grid gap-4 sm:grid-cols-3">
+                                <div className="grid gap-4" style={decisionStatGridStyle}>
                                     <DecisionStat label="Shortlisted" value={`${shortlistDatasets.length}`} />
                                     <DecisionStat label="In compare" value={`${compareDatasets.length}`} />
                                     <DecisionStat label="Visible results" value={`${filteredDatasets.length}`} />
@@ -643,7 +647,7 @@ export default function DatasetsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                                    <div className="mt-6 grid gap-4" style={decisionStatGridStyle}>
                                         <DecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
                                         <DecisionStat label="Verified" value={`${shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Verified').length}`} />
                                         <DecisionStat
@@ -726,8 +730,10 @@ function HeroMetricChip({ label, value }: HeroMetric) {
 
 function DecisionStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-[24px] border border-white/10 bg-white/[0.045] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
-            <div className={discoveryText.eyebrow}>{label}</div>
+        <div className="min-w-0 rounded-[24px] border border-white/10 bg-white/[0.045] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
+            <div className="max-w-full break-words text-[9px] font-semibold uppercase leading-4 tracking-[0.1em] text-slate-500 whitespace-normal sm:text-[10px]">
+                {label}
+            </div>
             <div className={`mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-50`}>{value}</div>
         </div>
     )
