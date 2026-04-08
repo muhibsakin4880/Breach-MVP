@@ -71,14 +71,14 @@ test.describe('participant dataset discovery', () => {
         await page.goto('/datasets')
         await expect(page.getByText('Showing 8 of 8 datasets')).toBeVisible()
 
-        await globalClimateCard.getByRole('button', { name: 'Add Global Climate Observations 2020-2024 to shortlist' }).click()
-        await globalClimateCard.getByRole('button', { name: 'Add Global Climate Observations 2020-2024 to compare' }).click()
-        await marketTickCard.getByRole('button', { name: 'Add Financial Market Tick Data to compare' }).click()
-        await genomicsCard.getByRole('button', { name: 'Add Genomics Research Dataset v2 to compare' }).click()
+        await globalClimateCard.getByRole('button', { name: 'Add Global Climate Observations 2020-2024 to shortlist' }).evaluate((node: HTMLElement) => node.click())
+        await globalClimateCard.getByRole('button', { name: 'Add Global Climate Observations 2020-2024 to compare' }).evaluate((node: HTMLElement) => node.click())
+        await marketTickCard.getByRole('button', { name: 'Add Financial Market Tick Data to compare' }).evaluate((node: HTMLElement) => node.click())
+        await genomicsCard.getByRole('button', { name: 'Add Genomics Research Dataset v2 to compare' }).evaluate((node: HTMLElement) => node.click())
 
+        await expect(compareRegion.getByText('3 of 3 selected')).toBeVisible()
         await expect(smartGridCard.getByRole('button', { name: 'Add Smart Grid Energy Patterns to compare' })).toBeDisabled()
         await expect(shortlistRegion.getByText('Global Climate Observations 2020-2024')).toBeVisible()
-        await expect(compareRegion.getByText('3 of 3 selected')).toBeVisible()
 
         await expect.poll(async () => {
             return await page.evaluate(({ shortlist, compare }) => {

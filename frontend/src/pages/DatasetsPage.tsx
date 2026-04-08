@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
-import { DatasetCardSkeleton } from '../components/LoadingSkeleton'
 import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
 import {
     dashboardColorTokens,
@@ -47,11 +46,6 @@ type FilterState = {
     minConfidence: number
 }
 
-type HeroMetric = {
-    label: string
-    value: string
-}
-
 type ActiveFilterChip = {
     key: keyof FilterState
     label: string
@@ -74,10 +68,25 @@ type RequestReadiness = {
     primaryHref?: string
     secondaryLabel: string
     secondaryTo?: string
+    secondaryHref?: string
 }
+
+type SidebarSectionKey =
+    | 'priorityDomains'
+    | 'dataType'
+    | 'geography'
+    | 'freshness'
+    | 'verification'
+    | 'minConfidence'
+
+type SidebarSectionState = Record<SidebarSectionKey, boolean>
+
+type RailSectionKey = 'shortlist' | 'compare' | 'requestReadiness'
+type RailSectionState = Record<RailSectionKey, boolean>
 
 const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
+const MAX_COMPARE_ITEMS = 3
 
 const DATASETS: Dataset[] = DATASET_DISCOVERY_SUMMARIES
 
@@ -89,6 +98,21 @@ const defaultFilters: FilterState = {
     verificationStatus: 'All',
     freshnessBucket: 'All',
     minConfidence: 0
+}
+
+const defaultSidebarSections: SidebarSectionState = {
+    priorityDomains: true,
+    dataType: true,
+    geography: true,
+    freshness: true,
+    verification: true,
+    minConfidence: true
+}
+
+const defaultRailSections: RailSectionState = {
+    shortlist: true,
+    compare: true,
+    requestReadiness: true
 }
 
 const sortOptions: Array<{ value: SortOption; label: string }> = [
@@ -103,46 +127,52 @@ const dataTypes = ['All', ...new Set(DATASETS.map(dataset => dataset.dataType))]
 const geographies = ['All', ...new Set(DATASETS.map(dataset => dataset.geography))]
 const verificationStates: FilterState['verificationStatus'][] = ['All', 'Verified', 'Under Review']
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
+const minConfidenceOptions = [0, 85, 90, 95]
+
+const focusRingClass =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]'
 
 const discoveryPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const discoveryPageShellClass = 'relative mx-auto max-w-[2080px] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-12 2xl:px-16'
-const discoverySectionClass = 'mb-10 sm:mb-14 xl:mb-16 2xl:mb-20'
-const discoveryPanelClass =
-    "relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,27,47,0.9),rgba(10,17,31,0.82))] p-6 sm:p-7 xl:p-8 shadow-[0_28px_90px_-42px_rgba(2,6,23,0.98),0_18px_40px_-26px_rgba(15,23,42,0.72)] ring-1 ring-inset ring-white/6 backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-28 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.055),transparent)] before:content-['']"
-const discoveryCardClass =
-    "relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,27,45,0.88),rgba(10,17,31,0.8))] px-6 py-6 sm:px-7 sm:py-7 xl:px-8 xl:py-8 shadow-[0_26px_84px_-40px_rgba(2,6,23,0.98),0_16px_36px_-22px_rgba(8,145,178,0.16)] ring-1 ring-inset ring-white/6 backdrop-blur-xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-20 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)] before:content-['']"
-const discoveryHeroClass =
-    'relative overflow-hidden rounded-[36px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(7,13,24,0.98),rgba(17,27,47,0.94)_44%,rgba(13,21,38,0.98))] px-6 py-7 sm:px-8 sm:py-8 xl:px-10 xl:py-10 shadow-[0_38px_120px_-54px_rgba(34,211,238,0.28),0_26px_70px_-42px_rgba(2,6,23,0.98)] ring-1 ring-inset ring-white/6'
-const discoveryActionButtonClass =
-    'inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold tracking-[-0.01em] text-[#04101d] shadow-[0_22px_48px_-28px_rgba(34,211,238,0.82)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
-const discoverySecondaryButtonClass =
-    'inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30 hover:bg-cyan-400/8 hover:text-cyan-100'
-const discoveryFieldClass =
-    'mt-3 w-full rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-4 text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_18px_38px_-32px_rgba(2,6,23,0.9)] backdrop-blur-xl placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/15'
+const discoveryShellClass = 'relative mx-auto max-w-[1920px] px-4 py-5 xl:px-6 xl:py-6 2xl:px-8'
+const topStripClass =
+    'sticky top-0 z-40 mb-6 rounded-[24px] border border-white/10 bg-[#101723]/90 shadow-[0_18px_50px_-30px_rgba(0,0,0,0.8)] backdrop-blur-2xl'
+const panelSurfaceClass =
+    'overflow-hidden rounded-[24px] border border-white/10 bg-[#161b22]/92 shadow-[0_24px_64px_-36px_rgba(0,0,0,0.7)] backdrop-blur-xl'
+const flatPanelClass =
+    'rounded-[18px] border border-white/10 bg-[#0f1621]/95 shadow-[0_14px_32px_-24px_rgba(0,0,0,0.72)]'
+const insetPanelClass =
+    'rounded-[16px] border border-white/8 bg-[#0d1117]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+const actionButtonClass =
+    `inline-flex items-center justify-center rounded-[14px] border border-cyan-400/30 bg-[#0f2a33] px-4 py-2.5 text-sm font-medium text-cyan-100 transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-500/15 ${focusRingClass}`
+const secondaryButtonClass =
+    `inline-flex items-center justify-center rounded-[14px] border border-white/10 bg-[#161b22] px-4 py-2.5 text-sm font-medium text-slate-200 transition-all duration-200 hover:border-cyan-400/30 hover:text-white ${focusRingClass}`
+const filterOptionBaseClass =
+    `flex w-full items-center justify-between rounded-[14px] border px-3 py-3 text-left text-sm transition-all duration-200 ${focusRingClass}`
+const catalogRowGridClass =
+    'grid min-w-[1420px] gap-0 xl:grid-cols-[64px_minmax(380px,2.45fr)_minmax(148px,0.95fr)_minmax(118px,0.72fr)_minmax(118px,0.72fr)_minmax(132px,0.82fr)_minmax(132px,0.82fr)_minmax(132px,0.82fr)_minmax(166px,0.95fr)_132px]'
+const heroSurfaceClass =
+    'relative overflow-hidden rounded-[34px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(8,15,29,0.98),rgba(17,27,47,0.95)_44%,rgba(12,20,36,0.98))] p-6 shadow-[0_40px_120px_-56px_rgba(34,211,238,0.22),0_24px_64px_-38px_rgba(2,6,23,0.94)] sm:p-8 xl:p-10'
+const cardSurfaceClass =
+    'relative flex h-full flex-col overflow-hidden rounded-[28px] border border-[#253550] bg-[linear-gradient(180deg,rgba(17,26,44,0.96),rgba(12,19,34,0.94))] p-6 shadow-[0_28px_70px_-48px_rgba(2,6,23,0.95)] sm:p-7 xl:p-8'
+const subCardSurfaceClass =
+    'rounded-[24px] border border-white/10 bg-[#10192e]/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+const controlSurfaceClass =
+    'rounded-[24px] border border-white/10 bg-[#10192e]/82 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+const fieldClass =
+    `mt-3 w-full rounded-[18px] border border-white/10 bg-[#0d162a]/95 px-4 py-3.5 text-sm text-slate-100 placeholder:text-slate-500 ${focusRingClass}`
+const primaryButtonClass =
+    `inline-flex items-center justify-center rounded-[16px] bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#04101d] shadow-[0_18px_44px_-24px_rgba(34,211,238,0.75)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300 ${focusRingClass}`
 const discoveryText = {
     eyebrow: 'text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500/90',
-    heroEyebrow: 'text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/75',
-    heroTitle: 'text-[2.55rem] font-semibold tracking-[-0.055em] text-slate-50 sm:text-[3rem] xl:text-[3.55rem] xl:leading-[1.02]',
-    sectionTitle: 'text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-50',
-    panelTitle: 'text-[1.22rem] font-semibold tracking-[-0.03em] text-slate-50',
-    itemTitle: 'text-[1.12rem] font-semibold tracking-[-0.025em] text-slate-50',
-    body: 'text-[15px] leading-7 text-slate-400',
+    heroEyebrow: 'text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200/75',
+    heroTitle: 'text-[2.7rem] font-semibold tracking-[-0.055em] text-slate-50 sm:text-[3.15rem] xl:text-[3.55rem] xl:leading-[1.02]',
+    panelTitle: 'text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-50 sm:text-[1.6rem]',
+    railTitle: 'text-[1.18rem] font-semibold tracking-[-0.03em] text-slate-50',
+    itemTitle: 'text-[1.4rem] font-semibold tracking-[-0.04em] text-slate-50',
+    body: 'text-sm leading-7 text-slate-400',
     bodyStrong: 'text-[15px] leading-7 text-slate-200',
     meta: 'text-[13px] leading-6 text-slate-500',
-    metaStrong: 'text-[13px] font-medium leading-6 text-slate-300',
-    value: 'text-[2.25rem] font-semibold tracking-[-0.065em] text-slate-50'
-} as const
-
-const matchedDatasetCardGridStyle = {
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 38rem), 1fr))'
-} as const
-
-const metricPillGridStyle = {
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))'
-} as const
-
-const decisionStatGridStyle = {
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 10rem), 1fr))'
+    metaStrong: 'text-[13px] font-medium leading-6 text-slate-300'
 } as const
 
 export default function DatasetsPage() {
@@ -150,22 +180,15 @@ export default function DatasetsPage() {
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
     const [compareIds, setCompareIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_COMPARE))
-    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setIsLoading(false)
-        }, 1200)
-
-        return () => window.clearTimeout(timer)
-    }, [])
-
-    useEffect(() => {
-        localStorage.setItem(STORAGE_DATASET_SHORTLIST, JSON.stringify(shortlistIds))
+        if (typeof window === 'undefined') return
+        window.localStorage.setItem(STORAGE_DATASET_SHORTLIST, JSON.stringify(shortlistIds))
     }, [shortlistIds])
 
     useEffect(() => {
-        localStorage.setItem(STORAGE_DATASET_COMPARE, JSON.stringify(compareIds))
+        if (typeof window === 'undefined') return
+        window.localStorage.setItem(STORAGE_DATASET_COMPARE, JSON.stringify(compareIds))
     }, [compareIds])
 
     const filteredDatasets = useMemo(() => {
@@ -212,44 +235,15 @@ export default function DatasetsPage() {
         .map(id => DATASETS.find(dataset => dataset.id === id))
         .filter((dataset): dataset is Dataset => Boolean(dataset))
 
+    const decisionAction = getDecisionAction(shortlistDatasets, compareDatasets, filteredDatasets)
+    const requestReadiness = getRequestReadiness(shortlistDatasets, compareDatasets)
+    const firstShortlistedDataset = shortlistDatasets[0] ?? null
+    const compareLimitReached = compareIds.length >= MAX_COMPARE_ITEMS
+    const activeFilters = buildActiveFilters(filters)
     const verifiedCount = DATASETS.filter(dataset => dataset.verificationStatus === 'Verified').length
     const highConfidenceCount = DATASETS.filter(dataset => dataset.confidenceScore >= 92).length
     const domainCoverageCount = new Set(DATASETS.map(dataset => dataset.domain)).size
     const restrictedCount = DATASETS.filter(dataset => dataset.accessType === 'Restricted').length
-    const activeFilters = buildActiveFilters(filters)
-    const decisionAction = getDecisionAction(shortlistDatasets, compareDatasets, filteredDatasets)
-    const requestReadiness = getRequestReadiness(shortlistDatasets, compareDatasets)
-    const firstShortlistedDataset = shortlistDatasets[0] ?? null
-    const compareLimitReached = compareIds.length >= 3
-
-    const heroMetrics: HeroMetric[] = [
-        { label: 'Verified datasets', value: `${verifiedCount}` },
-        { label: 'High confidence', value: `${highConfidenceCount}` },
-        { label: 'Domains covered', value: `${domainCoverageCount}` },
-        { label: 'Restricted access', value: `${restrictedCount}` }
-    ]
-
-    const toggleShortlist = (datasetId: number) => {
-        setShortlistIds(current =>
-            current.includes(datasetId)
-                ? current.filter(id => id !== datasetId)
-                : [...current, datasetId]
-        )
-    }
-
-    const toggleCompare = (datasetId: number) => {
-        setCompareIds(current => {
-            if (current.includes(datasetId)) {
-                return current.filter(id => id !== datasetId)
-            }
-
-            if (current.length >= 3) {
-                return current
-            }
-
-            return [...current, datasetId]
-        })
-    }
 
     const updateFilter = <Key extends keyof FilterState>(key: Key, value: FilterState[Key]) => {
         setFilters(current => ({
@@ -267,88 +261,122 @@ export default function DatasetsPage() {
         setSortOption('best-match')
     }
 
+    const toggleShortlist = (datasetId: number) => {
+        setShortlistIds(current =>
+            current.includes(datasetId)
+                ? current.filter(id => id !== datasetId)
+                : [...current, datasetId]
+        )
+    }
+
+    const toggleCompare = (datasetId: number) => {
+        setCompareIds(current => {
+            if (current.includes(datasetId)) {
+                return current.filter(id => id !== datasetId)
+            }
+
+            if (current.length >= MAX_COMPARE_ITEMS) {
+                return current
+            }
+
+            return [...current, datasetId]
+        })
+    }
+
+    const verifiedShortlistCount = shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Verified').length
+    const shortlistAverageConfidence =
+        shortlistDatasets.length > 0
+            ? `${Math.round(shortlistDatasets.reduce((sum, dataset) => sum + dataset.confidenceScore, 0) / shortlistDatasets.length)}%`
+            : '0%'
+
     return (
         <div className={discoveryPageClass}>
             <div className={dashboardComponentTokens['page-background']} />
 
-            <div className={discoveryPageShellClass}>
-                <section className={discoverySectionClass} aria-labelledby="dataset-discovery-hero">
-                    <div className={discoveryHeroClass}>
-                        <div className="pointer-events-none absolute -left-12 bottom-0 h-48 w-48 rounded-full bg-teal-400/12 blur-3xl" />
-                        <div className="pointer-events-none absolute right-4 top-2 h-56 w-56 rounded-full bg-cyan-300/12 blur-3xl" />
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-[38%] bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.14),transparent_64%)]" />
+            <div className={`${discoveryShellClass} space-y-8 xl:space-y-10`}>
+                <section aria-labelledby="dataset-discovery-hero">
+                    <div className={heroSurfaceClass}>
+                        <div className="pointer-events-none absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-cyan-400/10 blur-3xl" />
+                        <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
 
-                        <div className="relative grid items-start gap-8 xl:grid-cols-[minmax(0,1.38fr)_minmax(420px,0.94fr)] 2xl:grid-cols-[minmax(0,1.44fr)_minmax(460px,0.96fr)]">
-                            <div>
+                        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.68fr)_minmax(380px,0.96fr)] xl:items-start">
+                            <div className="min-w-0">
                                 <div className={discoveryText.heroEyebrow}>Buyer discovery workspace</div>
                                 <h1 id="dataset-discovery-hero" className={`mt-2 ${discoveryText.heroTitle}`}>
                                     Dataset Discovery
                                 </h1>
-                                <p className={`mt-3 max-w-3xl ${discoveryText.bodyStrong}`}>
+                                <p className={`mt-4 max-w-3xl ${discoveryText.bodyStrong}`}>
                                     Move from browsing into buyer-ready decision making. Shortlist governed datasets, compare trust and access signals, and figure out whether
                                     you should keep researching or move toward request preparation.
                                 </p>
 
-                                <div className="mt-7 flex flex-wrap gap-4">
-                                    {heroMetrics.map(metric => (
-                                        <HeroMetricChip key={metric.label} label={metric.label} value={metric.value} />
-                                    ))}
+                                <div className="mt-7 flex flex-wrap gap-3.5">
+                                    <HeroMetricChip label="Verified datasets" value={`${verifiedCount}`} />
+                                    <HeroMetricChip label="High confidence" value={`${highConfidenceCount}`} />
+                                    <HeroMetricChip label="Domains covered" value={`${domainCoverageCount}`} />
+                                    <HeroMetricChip label="Restricted access" value={`${restrictedCount}`} />
                                 </div>
 
                                 <div className="mt-8 flex flex-wrap gap-3.5">
-                                    <a href="#shortlist-panel" className={discoveryActionButtonClass}>
+                                    <a href="#shortlist-panel" className={primaryButtonClass}>
                                         Review shortlist
                                     </a>
-                                    <a href="#compare-panel" className={discoverySecondaryButtonClass}>
+                                    <a href="#compare-panel" className={secondaryButtonClass}>
                                         Compare datasets
                                     </a>
                                 </div>
                             </div>
 
-                            <DiscoveryPanel
-                                eyebrow="Decision state"
-                                title="Turn discovery into the next action"
-                                description="Track what you have shortlisted, what is queued for compare, and the most useful next move for this buyer workflow."
-                                className="border-cyan-400/20 bg-[linear-gradient(180deg,rgba(14,23,41,0.92),rgba(10,17,31,0.86))]"
-                            >
-                                <div className="grid gap-4" style={decisionStatGridStyle}>
+                            <div className={`${subCardSurfaceClass} px-5 py-5 sm:px-6 sm:py-6`}>
+                                <div className={discoveryText.eyebrow}>Decision state</div>
+                                <h2 className="mt-3 text-[1.3rem] font-semibold tracking-[-0.03em] text-slate-50">
+                                    Turn discovery into the next action
+                                </h2>
+                                <p className={`mt-3 ${discoveryText.body}`}>
+                                    Track what you have shortlisted, what is queued for compare, and the most useful next move for this buyer workflow.
+                                </p>
+
+                                <div className="mt-6 grid gap-3 sm:grid-cols-3">
                                     <DecisionStat label="Shortlisted" value={`${shortlistDatasets.length}`} />
                                     <DecisionStat label="In compare" value={`${compareDatasets.length}`} />
                                     <DecisionStat label="Visible results" value={`${filteredDatasets.length}`} />
                                 </div>
 
-                                <div className={`mt-6 rounded-[26px] border px-5 py-5 shadow-[0_22px_48px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
+                                <div className={`mt-6 rounded-[22px] border px-5 py-5 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
                                     <div className="flex items-start gap-3">
-                                        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(decisionAction.tone).dotClassName}`} aria-hidden="true" />
-                                        <div>
-                                            <div className={discoveryText.itemTitle}>{decisionAction.label}</div>
+                                        <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(decisionAction.tone).dotClassName}`} aria-hidden="true" />
+                                        <div className="min-w-0">
+                                            <div className="text-base font-semibold text-slate-50">{decisionAction.label}</div>
                                             <p className={`mt-2 ${discoveryText.body}`}>{decisionAction.detail}</p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-5 flex flex-wrap gap-3">
-                                        <ActionLink
+                                    <div className="mt-5">
+                                        <ActionLinkButton
                                             label={decisionAction.label}
                                             to={decisionAction.to}
                                             href={decisionAction.href}
-                                            className={discoveryActionButtonClass}
+                                            className={primaryButtonClass}
                                         />
                                     </div>
                                 </div>
-                            </DiscoveryPanel>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section className={discoverySectionClass} aria-labelledby="dataset-filter-panel">
-                    <DiscoveryPanel
-                        eyebrow="Search, filter, and sort"
-                        title="Narrow the catalog with buyer-relevant signals"
-                        description="Search datasets, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow."
-                        id="dataset-filter-panel"
-                    >
-                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.32fr)_minmax(320px,0.72fr)]">
-                            <label className="block">
+                <section className={panelSurfaceClass} aria-labelledby="dataset-filter-panel">
+                    <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
+                        <div className={discoveryText.eyebrow}>Search, filter, and sort</div>
+                        <h2 id="dataset-filter-panel" className={`mt-3 ${discoveryText.panelTitle}`}>
+                            Narrow the catalog with buyer-relevant signals
+                        </h2>
+                        <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
+                            Search datasets, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow.
+                        </p>
+
+                        <div className="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.82fr)]">
+                            <label className={controlSurfaceClass}>
                                 <span className={discoveryText.eyebrow}>Search datasets</span>
                                 <input
                                     id="dataset-search"
@@ -356,30 +384,22 @@ export default function DatasetsPage() {
                                     value={filters.searchTerm}
                                     onChange={event => updateFilter('searchTerm', event.target.value)}
                                     placeholder="Search by title, use case, domain, or confidence summary"
-                                    className={discoveryFieldClass}
+                                    className={fieldClass}
                                 />
                             </label>
 
-                            <label className="block">
-                                <span className={discoveryText.eyebrow}>Sort datasets</span>
-                                <select
-                                    aria-label="Sort datasets"
-                                    value={sortOption}
-                                    onChange={event => setSortOption(event.target.value as SortOption)}
-                                    className={discoveryFieldClass}
-                                >
-                                    {sortOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                            <FilterSelect
+                                label="Sort datasets"
+                                value={sortOption}
+                                onChange={value => setSortOption(value as SortOption)}
+                                options={sortOptions.map(option => option.value)}
+                                renderLabel={value => sortOptions.find(option => option.value === value)?.label ?? value}
+                            />
                         </div>
 
                         <div className="mt-8">
                             <div className={discoveryText.eyebrow}>Priority domains</div>
-                            <div className="mt-4 flex flex-wrap gap-3">
+                            <div className="mt-4 flex flex-wrap gap-2.5">
                                 {domains.map(domain => (
                                     <button
                                         key={domain}
@@ -387,10 +407,10 @@ export default function DatasetsPage() {
                                         aria-label={`Filter domain ${domain}`}
                                         aria-pressed={filters.domain === domain}
                                         onClick={() => updateFilter('domain', domain)}
-                                        className={`rounded-full border px-4 py-2.5 text-xs font-semibold shadow-[0_14px_32px_-26px_rgba(2,6,23,0.92)] transition-all duration-200 ${
+                                        className={`rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 ${focusRingClass} ${
                                             filters.domain === domain
-                                                ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100'
-                                                : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-slate-100'
+                                                ? 'border-cyan-400/35 bg-cyan-500/12 text-cyan-100'
+                                                : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-cyan-400/25 hover:text-slate-100'
                                         }`}
                                     >
                                         {domain}
@@ -399,7 +419,7 @@ export default function DatasetsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+                        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
                             <FilterSelect
                                 label="Data type"
                                 value={filters.dataType}
@@ -428,7 +448,7 @@ export default function DatasetsPage() {
                                 label="Minimum confidence"
                                 value={String(filters.minConfidence)}
                                 onChange={value => updateFilter('minConfidence', Number(value))}
-                                options={['0', '85', '90', '95']}
+                                options={minConfidenceOptions.map(option => String(option))}
                                 renderLabel={value => (value === '0' ? 'Any' : `${value}+`)}
                             />
                         </div>
@@ -442,7 +462,7 @@ export default function DatasetsPage() {
                                             type="button"
                                             onClick={() => clearFilter(filter.key)}
                                             aria-label={`Clear filter ${filter.label}`}
-                                            className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-100 shadow-[0_14px_30px_-24px_rgba(34,211,238,0.38)] transition-colors hover:border-cyan-300"
+                                            className={`rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:border-cyan-300 ${focusRingClass}`}
                                         >
                                             {filter.label} ×
                                         </button>
@@ -452,41 +472,36 @@ export default function DatasetsPage() {
                                 )}
                             </div>
 
-                            <button type="button" onClick={resetFilters} className={discoverySecondaryButtonClass}>
+                            <button type="button" onClick={resetFilters} className={secondaryButtonClass}>
                                 Reset filters
                             </button>
                         </div>
-                    </DiscoveryPanel>
+                    </div>
                 </section>
 
-                <section className={discoverySectionClass} aria-labelledby="matched-datasets">
-                    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,2.18fr)_minmax(360px,0.72fr)] 2xl:grid-cols-[minmax(0,2.34fr)_minmax(390px,0.76fr)]">
-                        <DiscoveryPanel
-                            eyebrow="Matched datasets"
-                            title="Decision-ready results"
-                            description="Cards are organized for buyer evaluation: trust, access path, freshness, and reasons to shortlist come before deeper workflow actions."
-                            id="matched-datasets"
-                        >
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div className={discoveryText.metaStrong}>
-                                    {isLoading ? 'Loading datasets...' : `Showing ${filteredDatasets.length} of ${DATASETS.length} datasets`}
+                <section className="grid gap-8 xl:grid-cols-[minmax(0,1.85fr)_minmax(390px,0.88fr)] 2xl:grid-cols-[minmax(0,1.94fr)_minmax(420px,0.9fr)] xl:items-start">
+
+                    <section className={`${panelSurfaceClass} min-w-0`} aria-labelledby="matched-datasets">
+                        <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
+                            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                                <div className="min-w-0">
+                                    <div className={discoveryText.eyebrow}>Matched datasets</div>
+                                    <h2 id="matched-datasets" className={`mt-3 ${discoveryText.panelTitle}`}>
+                                        Decision-ready results
+                                    </h2>
+                                    <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
+                                        Cards are organized for buyer evaluation: trust, access path, freshness, and reasons to shortlist come before deeper workflow actions.
+                                    </p>
                                 </div>
-                                <div className={discoveryText.meta}>Sorted by {sortOptions.find(option => option.value === sortOption)?.label}</div>
+
+                                <div className="flex flex-col gap-1 text-left xl:items-end xl:text-right">
+                                    <div className={discoveryText.metaStrong}>Showing {filteredDatasets.length} of {DATASETS.length} datasets</div>
+                                    <div className={discoveryText.meta}>Sorted by {sortOptions.find(option => option.value === sortOption)?.label}</div>
+                                </div>
                             </div>
 
-                            {isLoading ? (
-                                <div
-                                    className="mt-8 grid gap-6 xl:gap-7 2xl:gap-8"
-                                    style={matchedDatasetCardGridStyle}
-                                    aria-busy="true"
-                                    aria-label="Loading datasets"
-                                >
-                                    {Array.from({ length: 6 }).map((_, index) => (
-                                        <DatasetCardSkeleton key={index} />
-                                    ))}
-                                </div>
-                            ) : filteredDatasets.length > 0 ? (
-                                <div className="mt-8 grid gap-6 xl:gap-7 2xl:gap-8" style={matchedDatasetCardGridStyle}>
+                            {filteredDatasets.length > 0 ? (
+                                <div className="mt-8 grid gap-8 xl:grid-cols-2">
                                     {filteredDatasets.map(dataset => (
                                         <DatasetDecisionCard
                                             key={dataset.id}
@@ -500,193 +515,206 @@ export default function DatasetsPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <EmptyResultsState activeFilters={activeFilters} onReset={resetFilters} />
+                                <EmptyResultsState onReset={resetFilters} />
                             )}
-                        </DiscoveryPanel>
-
-                        <div className="space-y-8 self-start xl:sticky xl:top-[104px]">
-                            <DiscoveryPanel
-                                eyebrow="Shortlist"
-                                title="Review shortlist"
-                                description="Build a lightweight candidate list before you move into detail review, quote building, or access preparation."
-                                id="shortlist-panel"
-                            >
-                                {shortlistDatasets.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {shortlistDatasets.map(dataset => (
-                                            <article key={dataset.id} className={discoveryCardClass}>
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div>
-                                                        <div className={discoveryText.itemTitle}>{dataset.title}</div>
-                                                        <p className={`mt-2 ${discoveryText.body}`}>{dataset.bestFor}</p>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleShortlist(dataset.id)}
-                                                        aria-label={`Remove ${dataset.title} from shortlist`}
-                                                        className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-
-                                                <div className="mt-5 flex flex-wrap gap-2.5">
-                                                    <InlineBadge label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
-                                                    <InlineBadge label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
-                                                </div>
-
-                                                <div className="mt-6 flex flex-wrap gap-3.5">
-                                                    <Link to={`/datasets/${dataset.id}`} className={discoveryActionButtonClass}>
-                                                        Open detail
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleCompare(dataset.id)}
-                                                        aria-label={
-                                                            compareIds.includes(dataset.id)
-                                                                ? `Remove ${dataset.title} from compare`
-                                                                : `Add ${dataset.title} to compare`
-                                                        }
-                                                        disabled={compareLimitReached && !compareIds.includes(dataset.id)}
-                                                        className={`inline-flex items-center justify-center rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
-                                                            compareIds.includes(dataset.id)
-                                                                ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
-                                                                : 'border-slate-700 bg-slate-950/70 text-slate-200 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
-                                                        }`}
-                                                    >
-                                                        {compareIds.includes(dataset.id) ? 'In compare' : 'Add to compare'}
-                                                    </button>
-                                                </div>
-                                            </article>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
-                                        <div className={discoveryText.itemTitle}>No shortlisted datasets yet</div>
-                                        <p className={`mt-2 ${discoveryText.body}`}>
-                                            Start with verified, high-confidence candidates and use shortlist to keep the strongest options together.
-                                        </p>
-                                        <Link to="/guided-tour" className={`mt-5 inline-flex ${discoverySecondaryButtonClass}`}>
-                                            Open guided tour
-                                        </Link>
-                                    </div>
-                                )}
-                            </DiscoveryPanel>
-
-                            <DiscoveryPanel
-                                eyebrow="Compare"
-                                title="Compare datasets"
-                                description="Queue up to three datasets to compare trust, freshness, geography, and access path without leaving discovery."
-                                id="compare-panel"
-                            >
-                                <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/[0.06] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(8,145,178,0.34)]">
-                                    <div className={discoveryText.itemTitle}>Compare queue</div>
-                                    <p className={`mt-2 ${discoveryText.body}`}>Add up to three datasets. Once the queue is full, compare buttons stay disabled until you remove one.</p>
-                                </div>
-
-                                {compareDatasets.length > 0 ? (
-                                    <div className="mt-5 space-y-4">
-                                        <div className="flex flex-wrap items-center justify-between gap-3">
-                                            <span className={discoveryText.metaStrong}>{compareDatasets.length} of 3 selected</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setCompareIds([])}
-                                                className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
-                                            >
-                                                Clear compare
-                                            </button>
-                                        </div>
-
-                                        {compareDatasets.map(dataset => (
-                                            <div key={dataset.id} className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <div className={discoveryText.itemTitle}>{dataset.title}</div>
-                                                        <div className={`mt-2 ${discoveryText.meta}`}>{dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}</div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => toggleCompare(dataset.id)}
-                                                        aria-label={`Remove ${dataset.title} from compare`}
-                                                        className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        {compareDatasets.length >= 2 ? (
-                                            <CompareTable datasets={compareDatasets} />
-                                        ) : (
-                                            <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
-                                                <div className={discoveryText.itemTitle}>Add one more dataset to compare</div>
-                                                <p className={`mt-2 ${discoveryText.body}`}>Comparison becomes useful once at least two candidates are in the queue.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
-                                        <div className={discoveryText.itemTitle}>No datasets in compare</div>
-                                        <p className={`mt-2 ${discoveryText.body}`}>Use compare when the shortlist has more than one viable option and you need a fast trust and access readout.</p>
-                                    </div>
-                                )}
-                            </DiscoveryPanel>
-
-                            <DiscoveryPanel
-                                eyebrow="Request readiness"
-                                title="Buyer guidance"
-                                description="Use the shortlist and compare state to decide whether to keep researching, inspect details, or move closer to request prep."
-                            >
-                                <div className={`rounded-[26px] border px-5 py-5 shadow-[0_22px_48px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(requestReadiness.tone).surfaceClassName}`}>
-                                    <div className="flex items-start gap-3">
-                                        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(requestReadiness.tone).dotClassName}`} aria-hidden="true" />
-                                        <div>
-                                            <div className={discoveryText.itemTitle}>{requestReadiness.title}</div>
-                                            <p className={`mt-2 ${discoveryText.body}`}>{requestReadiness.detail}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 grid gap-4" style={decisionStatGridStyle}>
-                                        <DecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
-                                        <DecisionStat label="Verified" value={`${shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Verified').length}`} />
-                                        <DecisionStat
-                                            label="Average confidence"
-                                            value={shortlistDatasets.length > 0 ? `${Math.round(shortlistDatasets.reduce((sum, dataset) => sum + dataset.confidenceScore, 0) / shortlistDatasets.length)}%` : '0%'}
-                                        />
-                                    </div>
-
-                                    <div className="mt-6 flex flex-wrap gap-3.5">
-                                        <ActionLink
-                                            label={requestReadiness.primaryLabel}
-                                            to={requestReadiness.primaryTo}
-                                            href={requestReadiness.primaryHref}
-                                            className={discoveryActionButtonClass}
-                                        />
-                                        <ActionLink
-                                            label={requestReadiness.secondaryLabel}
-                                            to={requestReadiness.secondaryTo}
-                                            className={discoverySecondaryButtonClass}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                                    <Link to="/guided-tour" className={`block ${discoveryCardClass} transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
-                                        <div className={discoveryText.itemTitle}>Guided Tour</div>
-                                        <p className={`mt-2 ${discoveryText.body}`}>Use the buyer workflow if you want help moving from shortlist into access preparation.</p>
-                                    </Link>
-                                    <Link to={firstShortlistedDataset ? `/datasets/${firstShortlistedDataset.id}` : '/trust-profile'} className={`block ${discoveryCardClass} transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
-                                        <div className={discoveryText.itemTitle}>{firstShortlistedDataset ? 'Top shortlist candidate' : 'Trust Profile'}</div>
-                                        <p className={`mt-2 ${discoveryText.body}`}>
-                                            {firstShortlistedDataset
-                                                ? `Open ${firstShortlistedDataset.title} to inspect request rules, rights, and access workflow detail.`
-                                                : 'If you are still unsure which datasets to trust, review the trust surface before requesting access.'}
-                                        </p>
-                                    </Link>
-                                </div>
-                            </DiscoveryPanel>
                         </div>
+                    </section>
+
+                    <div className="space-y-6 xl:sticky xl:top-[104px]">
+                        <RailSection
+                            eyebrow="Shortlist"
+                            title="Review shortlist"
+                            description="Build a lightweight candidate list before you move into detail review, quote building, or access preparation."
+                            id="shortlist-panel"
+                        >
+                            {shortlistDatasets.length > 0 ? (
+                                <div className="space-y-4">
+                                    {shortlistDatasets.map(dataset => (
+                                        <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="min-w-0">
+                                                    <div className="text-[1.08rem] font-semibold tracking-[-0.03em] text-slate-50">{dataset.title}</div>
+                                                    <p className={`mt-2 ${discoveryText.body}`}>{dataset.bestFor}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleShortlist(dataset.id)}
+                                                    aria-label={`Remove ${dataset.title} from shortlist`}
+                                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 flex flex-wrap gap-2.5">
+                                                <StatusChip label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
+                                                <StatusChip label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
+                                            </div>
+
+                                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                                <CompactSignal label="Confidence" value={`${dataset.confidenceScore}%`} />
+                                                <CompactSignal label="Trust" value={`${dataset.providerTrustScore}%`} />
+                                            </div>
+
+                                            <div className="mt-5 flex flex-wrap gap-3">
+                                                <Link to={`/datasets/${dataset.id}`} className={primaryButtonClass}>
+                                                    Open detail
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleCompare(dataset.id)}
+                                                    aria-label={compareIds.includes(dataset.id) ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
+                                                    disabled={compareLimitReached && !compareIds.includes(dataset.id)}
+                                                    className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
+                                                        compareIds.includes(dataset.id)
+                                                            ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
+                                                            : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
+                                                    }`}
+                                                >
+                                                    {compareIds.includes(dataset.id) ? 'In compare' : 'Add to compare'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyRailState
+                                    title="No shortlisted datasets yet"
+                                    detail="Start with verified, high-confidence candidates and use shortlist to keep the strongest options together."
+                                    actionLabel="Open guided tour"
+                                    actionTo="/guided-tour"
+                                />
+                            )}
+                        </RailSection>
+
+                        <RailSection
+                            eyebrow="Compare"
+                            title="Compare datasets"
+                            description="Queue up to three datasets to compare trust, freshness, geography, and access path without leaving discovery."
+                            id="compare-panel"
+                            action={
+                                compareDatasets.length > 0 ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCompareIds([])}
+                                        className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                    >
+                                        Clear compare
+                                    </button>
+                                ) : undefined
+                            }
+                        >
+                            <div className={`${subCardSurfaceClass} px-5 py-5`}>
+                                <div className="text-base font-semibold text-slate-50">Compare queue</div>
+                                <p className={`mt-2 ${discoveryText.body}`}>
+                                    Add up to three datasets. Once the queue is full, compare buttons stay disabled until you remove one.
+                                </p>
+                            </div>
+
+                            {compareDatasets.length > 0 ? (
+                                <div className="mt-5 space-y-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className={discoveryText.metaStrong}>{compareDatasets.length} of {MAX_COMPARE_ITEMS} selected</span>
+                                    </div>
+
+                                    {compareDatasets.map(dataset => (
+                                        <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="min-w-0">
+                                                    <div className="text-base font-semibold text-slate-50">{dataset.title}</div>
+                                                    <div className={`mt-2 ${discoveryText.meta}`}>
+                                                        {dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleCompare(dataset.id)}
+                                                    aria-label={`Remove ${dataset.title} from compare`}
+                                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {compareDatasets.length >= 2 ? (
+                                        <CompareTable datasets={compareDatasets} />
+                                    ) : (
+                                        <div className={`${subCardSurfaceClass} px-5 py-5`}>
+                                            <div className="text-base font-semibold text-slate-50">Add one more dataset to compare</div>
+                                            <p className={`mt-2 ${discoveryText.body}`}>Comparison becomes useful once at least two candidates are in the queue.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="mt-5">
+                                    <EmptyRailState
+                                        title="No datasets in compare"
+                                        detail="Use compare when the shortlist has more than one viable option and you need a fast trust and access readout."
+                                    />
+                                </div>
+                            )}
+                        </RailSection>
+
+                        <RailSection
+                            eyebrow="Request readiness"
+                            title="Buyer guidance"
+                            description="Use the shortlist and compare state to decide whether to keep researching, inspect details, or move closer to request prep."
+                        >
+                            <div className={`rounded-[24px] border px-5 py-5 ${getSignalToneMeta(requestReadiness.tone).surfaceClassName}`}>
+                                <div className="flex items-start gap-3">
+                                    <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(requestReadiness.tone).dotClassName}`} aria-hidden="true" />
+                                    <div className="min-w-0">
+                                        <div className="text-base font-semibold text-slate-50">{requestReadiness.title}</div>
+                                        <p className={`mt-2 ${discoveryText.body}`}>{requestReadiness.detail}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                                <CompactDecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
+                                <CompactDecisionStat label="Verified" value={`${verifiedShortlistCount}`} />
+                                <CompactDecisionStat label="Average confidence" value={shortlistAverageConfidence} />
+                            </div>
+
+                            <div className="mt-5 flex flex-col gap-3">
+                                <ActionLinkButton
+                                    label={requestReadiness.primaryLabel}
+                                    to={requestReadiness.primaryTo}
+                                    href={requestReadiness.primaryHref}
+                                    className={primaryButtonClass}
+                                />
+                                <ActionLinkButton
+                                    label={requestReadiness.secondaryLabel}
+                                    to={requestReadiness.secondaryTo}
+                                    href={requestReadiness.secondaryHref}
+                                    className={secondaryButtonClass}
+                                />
+                            </div>
+
+                            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                                <Link to="/guided-tour" className={`${subCardSurfaceClass} block px-5 py-5 transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
+                                    <div className="text-base font-semibold text-slate-50">Guided Tour</div>
+                                    <p className={`mt-2 ${discoveryText.body}`}>
+                                        Use the buyer workflow if you want help moving from shortlist into access preparation.
+                                    </p>
+                                </Link>
+                                <Link
+                                    to={firstShortlistedDataset ? `/datasets/${firstShortlistedDataset.id}` : '/trust-profile'}
+                                    className={`${subCardSurfaceClass} block px-5 py-5 transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}
+                                >
+                                    <div className="text-base font-semibold text-slate-50">
+                                        {firstShortlistedDataset ? 'Top shortlist candidate' : 'Trust Profile'}
+                                    </div>
+                                    <p className={`mt-2 ${discoveryText.body}`}>
+                                        {firstShortlistedDataset
+                                            ? `Open ${firstShortlistedDataset.title} to inspect request rules, rights, and access workflow detail.`
+                                            : 'If you are still unsure which datasets to trust, review the trust surface before requesting access.'}
+                                    </p>
+                                </Link>
+                            </div>
+                        </RailSection>
                     </div>
                 </section>
             </div>
@@ -694,34 +722,9 @@ export default function DatasetsPage() {
     )
 }
 
-function DiscoveryPanel({
-    eyebrow,
-    title,
-    description,
-    children,
-    id,
-    className = ''
-}: {
-    eyebrow: string
-    title: string
-    description: string
-    children: ReactNode
-    id?: string
-    className?: string
-}) {
+function HeroMetricChip({ label, value }: { label: string; value: string }) {
     return (
-        <section className={`${discoveryPanelClass} ${className}`.trim()} aria-labelledby={id}>
-            <div className={discoveryText.eyebrow}>{eyebrow}</div>
-            <h2 id={id} className={`mt-3 ${discoveryText.panelTitle}`}>{title}</h2>
-            <p className={`mt-3 max-w-3xl ${discoveryText.body}`}>{description}</p>
-            <div className="mt-6">{children}</div>
-        </section>
-    )
-}
-
-function HeroMetricChip({ label, value }: HeroMetric) {
-    return (
-        <span className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.045] px-4 py-3 text-sm font-medium text-slate-200 shadow-[0_16px_36px_-28px_rgba(2,6,23,0.92)] backdrop-blur-xl">
+        <span className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-slate-200 shadow-[0_14px_32px_-24px_rgba(2,6,23,0.92)] backdrop-blur-xl">
             <span className="uppercase tracking-[0.16em] text-slate-500">{label}</span>
             <span className="text-base font-semibold text-slate-100">{value}</span>
         </span>
@@ -730,11 +733,11 @@ function HeroMetricChip({ label, value }: HeroMetric) {
 
 function DecisionStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className="min-w-0 rounded-[24px] border border-white/10 bg-white/[0.045] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
-            <div className="max-w-full break-words text-[9px] font-semibold uppercase leading-4 tracking-[0.1em] text-slate-500 whitespace-normal sm:text-[10px]">
+        <div className={`${subCardSurfaceClass} min-w-0 px-4 py-4`}>
+            <div className="max-w-full break-words text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {label}
             </div>
-            <div className={`mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-50`}>{value}</div>
+            <div className="mt-3 text-[1.4rem] font-semibold tracking-[-0.04em] text-slate-50">{value}</div>
         </div>
     )
 }
@@ -753,13 +756,13 @@ function FilterSelect({
     renderLabel?: (value: string) => string
 }) {
     return (
-        <label className="block rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
+        <label className={controlSurfaceClass}>
             <span className={discoveryText.eyebrow}>{label}</span>
             <select
                 aria-label={label}
                 value={value}
                 onChange={event => onChange(event.target.value)}
-                className={`${discoveryFieldClass} mt-3`}
+                className={fieldClass}
             >
                 {options.map(option => (
                     <option key={option} value={option}>
@@ -768,32 +771,6 @@ function FilterSelect({
                 ))}
             </select>
         </label>
-    )
-}
-
-function ActionLink({
-    label,
-    to,
-    href,
-    className
-}: {
-    label: string
-    to?: string
-    href?: string
-    className: string
-}) {
-    if (to) {
-        return (
-            <Link to={to} className={className}>
-                {label}
-            </Link>
-        )
-    }
-
-    return (
-        <a href={href} className={className}>
-            {label}
-        </a>
     )
 }
 
@@ -813,89 +790,97 @@ function DatasetDecisionCard({
     onToggleCompare: () => void
 }) {
     const compareDisabled = compareLimitReached && !compared
-    const confidenceTone = dataset.confidenceScore >= 90 ? 'healthy' : dataset.confidenceScore >= 85 ? 'scheduled' : 'monitoring'
-    const providerTone = dataset.providerTrustScore >= 90 ? 'healthy' : dataset.providerTrustScore >= 82 ? 'scheduled' : 'monitoring'
+    const confidenceTone = dataset.confidenceScore >= 95 ? 'healthy' : dataset.confidenceScore >= 90 ? 'scheduled' : 'monitoring'
+    const providerTone = dataset.providerTrustScore >= 95 ? 'healthy' : dataset.providerTrustScore >= 90 ? 'scheduled' : 'monitoring'
+    const completenessTone = dataset.completeness >= 95 ? 'healthy' : dataset.completeness >= 90 ? 'scheduled' : 'monitoring'
+    const freshnessTone = dataset.freshness >= 93 ? 'healthy' : dataset.freshness >= 88 ? 'scheduled' : 'monitoring'
+    const consistencyTone = dataset.consistency >= 95 ? 'healthy' : dataset.consistency >= 90 ? 'scheduled' : 'monitoring'
 
     return (
-        <article aria-label={`Dataset card for ${dataset.title}`} className={`${discoveryCardClass} flex h-full min-h-[540px] flex-col`}>
+        <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px]`}>
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                    <div className={discoveryText.eyebrow}>Best for</div>
-                    <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.035em] text-slate-50">{dataset.title}</h3>
-                    <p className={`mt-3 ${discoveryText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dataset.bestFor}</p>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Best for</div>
+                    <h3 className={`mt-4 ${discoveryText.itemTitle}`}>{dataset.title}</h3>
+                    <p className={`mt-4 ${discoveryText.bodyStrong}`}>{dataset.bestFor}</p>
                 </div>
+
                 <div className="flex shrink-0 flex-col items-end gap-2.5">
-                    <InlineBadge label={dataset.verificationStatus} tone={dataset.verificationStatus === 'Verified' ? 'healthy' : 'monitoring'} />
-                    <InlineBadge label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
+                    <StatusBadge label={dataset.verificationStatus} kind="verification" />
+                    <StatusBadge label={dataset.accessType} kind="access" />
                 </div>
             </div>
 
-            <p className={`mt-4 ${discoveryText.body}`}>{dataset.description}</p>
+            <p className={`mt-5 ${discoveryText.body}`}>{dataset.description}</p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
                 <SignalCard label="Confidence score" value={`${dataset.confidenceScore}%`} detail={dataset.coverage} tone={confidenceTone} />
                 <SignalCard label="Provider trust" value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} tone={providerTone} />
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2.5">
+            <div className="mt-5 flex flex-wrap gap-2.5">
                 <InlineNeutralChip label={dataset.domain} />
                 <InlineNeutralChip label={dataset.dataType} />
                 <InlineNeutralChip label={dataset.geography} />
                 <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
             </div>
 
-            <div className="mt-6 grid gap-4 xl:gap-5" style={metricPillGridStyle}>
-                <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone="healthy" />
-                <MetricPill label="Freshness" value={`${dataset.freshness}%`} tone="scheduled" />
-                <MetricPill label="Consistency" value={`${dataset.consistency}%`} tone="healthy" />
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone={completenessTone} />
+                <MetricPill label="Freshness" value={`${dataset.freshness}%`} tone={freshnessTone} />
+                <MetricPill label="Consistency" value={`${dataset.consistency}%`} tone={consistencyTone} />
             </div>
 
-            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
-                <div className={discoveryText.eyebrow}>Why consider it</div>
-                <div className={`mt-3 ${discoveryText.bodyStrong}`}>{dataset.confidenceSummary}</div>
-                <div className={`mt-4 ${discoveryText.meta}`}>Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}</div>
-            </div>
-
-            <div className="mt-auto pt-8">
-                <div className="flex flex-wrap gap-3.5">
-                <button
-                    type="button"
-                    onClick={onToggleShortlist}
-                    aria-label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
-                    className={`inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-[0_18px_40px_-28px_rgba(2,6,23,0.92)] transition-all duration-200 ${
-                        shortlisted
-                            ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100 hover:border-emerald-400'
-                            : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-cyan-100'
-                    }`}
-                >
-                    {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onToggleCompare}
-                    aria-label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
-                    disabled={compareDisabled}
-                    className={`inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-[0_18px_40px_-28px_rgba(2,6,23,0.92)] transition-all duration-200 ${
-                        compared
-                            ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
-                            : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
-                    }`}
-                >
-                    {compared ? 'In compare' : 'Add to compare'}
-                </button>
-                <Link
-                    to={`/datasets/${dataset.id}`}
-                    className={discoveryActionButtonClass}
-                    aria-label={`View details for ${dataset.title}`}
-                >
-                    View details
-                </Link>
+            <div className={`${subCardSurfaceClass} mt-6 px-5 py-5`}>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Why consider it</div>
+                <div className={`mt-4 ${discoveryText.bodyStrong}`}>{dataset.confidenceSummary}</div>
+                <div className={`mt-4 ${discoveryText.meta}`}>
+                    Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}
                 </div>
             </div>
 
-            {compareDisabled ? (
-                <p className={`mt-4 ${discoveryText.meta}`}>Compare queue is full. Remove one candidate from compare to add another.</p>
-            ) : null}
+            <div className="mt-auto pt-7">
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        onClick={onToggleShortlist}
+                        aria-label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
+                        className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
+                            shortlisted
+                                ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100 hover:border-emerald-400'
+                                : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100'
+                        }`}
+                    >
+                        {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onToggleCompare}
+                        aria-label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
+                        disabled={compareDisabled}
+                        className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
+                            compared
+                                ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
+                                : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
+                        }`}
+                    >
+                        {compared ? 'In compare' : 'Add to compare'}
+                    </button>
+                    <Link
+                        to={`/datasets/${dataset.id}`}
+                        className={primaryButtonClass}
+                        aria-label={`View details for ${dataset.title}`}
+                    >
+                        View details
+                    </Link>
+                </div>
+
+                {compareDisabled ? (
+                    <p className={`mt-4 ${discoveryText.meta}`}>
+                        Compare queue is full. Remove one candidate from compare to add another.
+                    </p>
+                ) : null}
+            </div>
         </article>
     )
 }
@@ -912,9 +897,9 @@ function SignalCard({
     tone: SignalTone
 }) {
     return (
-        <div className={`rounded-[22px] border px-5 py-4 shadow-[0_18px_40px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(tone).surfaceClassName}`}>
-            <div className={discoveryText.eyebrow}>{label}</div>
-            <div className="mt-3 text-[1.08rem] font-semibold tracking-[-0.025em] text-slate-50">{value}</div>
+        <div className={`rounded-[22px] border px-5 py-5 ${getSignalToneMeta(tone).surfaceClassName}`}>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</div>
+            <div className="mt-4 text-[1.75rem] font-semibold tracking-[-0.05em] text-slate-50">{value}</div>
             <div className={`mt-3 ${discoveryText.meta}`}>{detail}</div>
         </div>
     )
@@ -930,19 +915,23 @@ function MetricPill({
     tone: SignalTone
 }) {
     return (
-        <div className={`min-w-0 rounded-[20px] border px-4 py-4 shadow-[0_16px_34px_-28px_rgba(2,6,23,0.88)] ${getSignalToneMeta(tone).surfaceClassName}`}>
-            <div className="max-w-full break-words text-[9px] font-semibold uppercase leading-4 tracking-[0.1em] text-slate-500 whitespace-normal sm:text-[10px]">
-                {label}
-            </div>
-            <div className="mt-3 text-base font-semibold text-slate-100">{value}</div>
+        <div className={`rounded-[20px] border px-4 py-4 ${getSignalToneMeta(tone).surfaceClassName}`}>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+            <div className="mt-3 text-[1.1rem] font-semibold text-slate-50">{value}</div>
         </div>
     )
 }
 
-function InlineBadge({ label, tone }: { label: string; tone: SignalTone }) {
+function StatusChip({
+    label,
+    tone
+}: {
+    label: string
+    tone: SignalTone
+}) {
     return (
-        <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] ${getSignalToneMeta(tone).badgeClassName}`}>
-            <span className={`h-2 w-2 rounded-full ${getSignalToneMeta(tone).dotClassName}`} />
+        <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold ${getSignalToneMeta(tone).badgeClassName}`}>
+            <span className={`h-2 w-2 rounded-full ${getSignalToneMeta(tone).dotClassName}`} aria-hidden="true" />
             {label}
         </span>
     )
@@ -950,9 +939,378 @@ function InlineBadge({ label, tone }: { label: string; tone: SignalTone }) {
 
 function InlineNeutralChip({ label }: { label: string }) {
     return (
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-300 shadow-[0_12px_28px_-22px_rgba(2,6,23,0.9)]">
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-300">
             {label}
         </span>
+    )
+}
+
+function CommandStripStat({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="bg-[#101723] px-4 py-4 xl:px-5">
+            <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">{label}</div>
+            <div className="mt-2 text-[1.15rem] font-semibold text-slate-50">{value}</div>
+        </div>
+    )
+}
+
+function DecisionChip({
+    label,
+    detail,
+    to,
+    href,
+    tone
+}: {
+    label: string
+    detail: string
+    to?: string
+    href?: string
+    tone: SignalTone
+}) {
+    const toneMeta = getSignalToneMeta(tone)
+    const className = `group flex h-full min-h-[96px] items-center justify-between gap-4 bg-[#101723] px-5 py-4 transition-all duration-200 hover:bg-[#131c29] ${focusRingClass}`
+    const content = (
+        <>
+            <div className="min-w-0">
+                <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">Decision State</div>
+                <div className="mt-2 flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${toneMeta.dotClassName}`} aria-hidden="true" />
+                    <span className="text-sm font-semibold text-slate-50">{label}</span>
+                </div>
+                <div className="mt-2 text-xs leading-5 text-slate-400">{detail}</div>
+            </div>
+            <ArrowTopRightIcon className="h-4 w-4 shrink-0 text-cyan-200 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </>
+    )
+
+    if (to) {
+        return <Link to={to} className={className}>{content}</Link>
+    }
+
+    return <a href={href} className={className}>{content}</a>
+}
+
+function QuickJumpLink({ href, label }: { href: string; label: string }) {
+    return (
+        <a href={href} className={`inline-flex items-center rounded-full border border-white/10 bg-[#0d1117] px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-cyan-400/30 hover:text-white ${focusRingClass}`}>
+            {label}
+        </a>
+    )
+}
+
+function SidebarFilterGroup({
+    title,
+    open,
+    onToggle,
+    children
+}: {
+    title: string
+    open: boolean
+    onToggle: () => void
+    children: ReactNode
+}) {
+    return (
+        <section className="border-b border-white/6 pb-5">
+            <button type="button" onClick={onToggle} aria-expanded={open} className={`flex w-full items-center justify-between text-left ${focusRingClass}`}>
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-500">{title}</span>
+                <ChevronIcon className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open ? <div className="mt-4">{children}</div> : null}
+        </section>
+    )
+}
+
+function FilterToggleButton({
+    active,
+    label,
+    ariaLabel,
+    onClick
+}: {
+    active: boolean
+    label: string
+    ariaLabel: string
+    onClick: () => void
+}) {
+    return (
+        <button
+            type="button"
+            aria-label={ariaLabel}
+            aria-pressed={active}
+            onClick={onClick}
+            className={`${filterOptionBaseClass} ${
+                active
+                    ? 'border-cyan-400/35 bg-[#0f2a33] text-cyan-100'
+                    : 'border-white/10 bg-[#0d1117] text-slate-300 hover:border-cyan-400/25 hover:text-white'
+            }`}
+        >
+            <span>{label}</span>
+            {active ? <CheckCircleIcon className="h-4 w-4 text-cyan-200" /> : null}
+        </button>
+    )
+}
+
+function RailSection({
+    eyebrow,
+    title,
+    description,
+    id,
+    action,
+    children
+}: {
+    eyebrow: string
+    title: string
+    description: string
+    id?: string
+    action?: ReactNode
+    children: ReactNode
+}) {
+    return (
+        <section className={panelSurfaceClass} aria-labelledby={id}>
+            <div className="px-5 py-5 sm:px-6 sm:py-6">
+                <div className={discoveryText.eyebrow}>{eyebrow}</div>
+                <div className="mt-3 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                        <h3 id={id} className={discoveryText.railTitle}>{title}</h3>
+                        <p className={`mt-3 ${discoveryText.body}`}>{description}</p>
+                    </div>
+                    {action}
+                </div>
+                <div className="mt-6">{children}</div>
+            </div>
+        </section>
+    )
+}
+
+function DatasetCatalogRow({
+    dataset,
+    shortlisted,
+    compared,
+    expanded,
+    compareLimitReached,
+    onToggleShortlist,
+    onToggleCompare,
+    onToggleExpanded
+}: {
+    dataset: Dataset
+    shortlisted: boolean
+    compared: boolean
+    expanded: boolean
+    compareLimitReached: boolean
+    onToggleShortlist: () => void
+    onToggleCompare: () => void
+    onToggleExpanded: () => void
+}) {
+    const compareDisabled = compareLimitReached && !compared
+
+    return (
+        <article aria-label={`Dataset card for ${dataset.title}`} className="group scroll-mt-[176px]">
+            <div className={`${catalogRowGridClass} items-start px-5 py-4 xl:px-6 xl:py-5`}>
+                <div className="flex justify-center pt-1">
+                    <button
+                        type="button"
+                        aria-label={`${expanded ? 'Collapse' : 'Expand'} details for ${dataset.title}`}
+                        aria-expanded={expanded}
+                        onClick={onToggleExpanded}
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-[12px] border border-white/10 bg-[#101723] text-slate-300 transition-colors hover:border-cyan-400/30 hover:text-white ${focusRingClass}`}
+                    >
+                        <ChevronIcon className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+                    </button>
+                </div>
+
+                <div className="min-w-0 pr-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                            <button type="button" onClick={onToggleExpanded} className={`text-left ${focusRingClass}`}>
+                                <div className="text-[1rem] font-semibold tracking-[-0.02em] text-slate-50">{dataset.title}</div>
+                            </button>
+                            <div className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-500">
+                                Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}
+                            </div>
+                        </div>
+
+                        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                            <StatusBadge label={dataset.verificationStatus} kind="verification" />
+                            <StatusBadge label={dataset.accessType} kind="access" />
+                        </div>
+                    </div>
+
+                    <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-400">{dataset.description}</p>
+                    <div className="mt-3 text-sm text-slate-200">{dataset.bestFor}</div>
+                </div>
+
+                <CatalogMetric value={dataset.domain} detail={dataset.dataType} />
+                <CatalogMetric value={`${dataset.confidenceScore}%`} detail={dataset.coverage} highlight={dataset.confidenceScore} />
+                <CatalogMetric value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} highlight={dataset.providerTrustScore} />
+                <CatalogMetric value={`${dataset.completeness}%`} detail="Schema coverage" highlight={dataset.completeness} />
+                <CatalogMetric value={`${dataset.freshness}%`} detail={bucketFreshness(dataset.freshness)} highlight={dataset.freshness} />
+                <CatalogMetric value={`${dataset.consistency}%`} detail="Cross-source match" highlight={dataset.consistency} />
+                <CatalogMetric value={dataset.accessType} detail={dataset.geography} />
+
+                <div className="flex min-h-[96px] items-center justify-end">
+                    <div className="flex items-center gap-2">
+                        <ActionIconButton
+                            label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
+                            active={shortlisted}
+                            onClick={onToggleShortlist}
+                        >
+                            <BookmarkIcon className="h-4 w-4" />
+                        </ActionIconButton>
+                        <ActionIconButton
+                            label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
+                            active={compared}
+                            disabled={compareDisabled}
+                            onClick={onToggleCompare}
+                        >
+                            <CompareIcon className="h-4 w-4" />
+                        </ActionIconButton>
+                        <ActionIconButton label={`View details for ${dataset.title}`} to={`/datasets/${dataset.id}`}>
+                            <ArrowTopRightIcon className="h-4 w-4" />
+                        </ActionIconButton>
+                    </div>
+                </div>
+            </div>
+
+            {expanded ? (
+                <div className="border-t border-white/6 bg-[#0f1621]/95 px-5 py-5 xl:px-6">
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.95fr)_minmax(0,0.85fr)]">
+                        <DetailPanel title="Dataset profile">
+                            <DetailPair label="Description" value={dataset.description} />
+                            <DetailPair label="Best for" value={dataset.bestFor} />
+                            <DetailPair label="Coverage" value={dataset.coverage} />
+                        </DetailPanel>
+
+                        <DetailPanel title="Trust and provenance">
+                            <DetailPair label="Confidence summary" value={dataset.confidenceSummary} />
+                            <DetailPair label="Contributor trust" value={dataset.contributorTrust} />
+                            <DetailPair label="Contribution history" value={dataset.contributionHistory} />
+                        </DetailPanel>
+
+                        <DetailPanel title="Schema preview">
+                            <div className="space-y-2">
+                                {dataset.sampleSchema.slice(0, 4).map(field => (
+                                    <div key={`${dataset.id}-${field.field}`} className="flex items-center justify-between gap-4 rounded-[12px] border border-white/6 bg-[#0b1119] px-3 py-2.5">
+                                        <span className="min-w-0 truncate text-sm text-slate-200">{field.field}</span>
+                                        <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-slate-500">{field.type}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </DetailPanel>
+                    </div>
+                </div>
+            ) : null}
+        </article>
+    )
+}
+
+function CatalogMetric({
+    value,
+    detail,
+    highlight
+}: {
+    value: string
+    detail: string
+    highlight?: number
+}) {
+    return (
+        <div className="min-w-0 px-3 py-2">
+            <div className={`text-sm font-semibold ${highlight === undefined ? 'text-slate-50' : getMetricValueTone(highlight)}`}>{value}</div>
+            <div className="mt-2 text-xs leading-5 text-slate-500">{detail}</div>
+        </div>
+    )
+}
+
+function StatusBadge({
+    label,
+    kind
+}: {
+    label: string
+    kind: 'verification' | 'access'
+}) {
+    const meta = getStatusBadgeMeta(label, kind)
+    return (
+        <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold ${meta.className}`}>
+            <span className={`h-2 w-2 rounded-full ${meta.dotClassName}`} aria-hidden="true" />
+            {label}
+        </span>
+    )
+}
+
+function ActionIconButton({
+    label,
+    to,
+    active = false,
+    disabled = false,
+    onClick,
+    children
+}: {
+    label: string
+    to?: string
+    active?: boolean
+    disabled?: boolean
+    onClick?: () => void
+    children: ReactNode
+}) {
+    const className = `group relative inline-flex h-10 w-10 scroll-mt-[176px] items-center justify-center rounded-[12px] border transition-all duration-200 ${focusRingClass} ${
+        active
+            ? 'border-cyan-400/35 bg-[#0f2a33] text-cyan-100'
+            : 'border-white/10 bg-[#161b22] text-slate-300 hover:border-cyan-400/30 hover:text-white'
+    } ${disabled ? 'cursor-not-allowed border-slate-800 text-slate-600' : ''}`
+    const tooltip = (
+        <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-[10px] border border-white/10 bg-[#161b22] px-2 py-1 text-[11px] font-semibold text-slate-100 opacity-0 shadow-[0_12px_28px_-20px_rgba(0,0,0,0.65)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+            {label}
+        </span>
+    )
+
+    if (to) {
+        return (
+            <Link to={to} aria-label={label} className={className}>
+                {tooltip}
+                {children}
+            </Link>
+        )
+    }
+
+    return (
+        <button type="button" aria-label={label} disabled={disabled} onClick={onClick} className={className}>
+            {tooltip}
+            {children}
+        </button>
+    )
+}
+
+function DetailPanel({ title, children }: { title: string; children: ReactNode }) {
+    return (
+        <section className={`${insetPanelClass} px-4 py-4`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</div>
+            <div className="mt-4 space-y-4">{children}</div>
+        </section>
+    )
+}
+
+function DetailPair({ label, value }: { label: string; value: string }) {
+    return (
+        <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className="mt-2 text-sm leading-6 text-slate-300">{value}</div>
+        </div>
+    )
+}
+
+function CompactSignal({ label, value }: { label: string; value: string }) {
+    return (
+        <div className={`${subCardSurfaceClass} px-4 py-4`}>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+            <div className="mt-3 text-base font-semibold text-slate-50">{value}</div>
+        </div>
+    )
+}
+
+function CompactDecisionStat({ label, value }: { label: string; value: string }) {
+    return (
+        <div className={`${subCardSurfaceClass} flex min-h-[108px] flex-col justify-between px-4 py-4`}>
+            <div className="break-words text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+            <div className="mt-4 text-[1.75rem] font-semibold tracking-[-0.05em] text-slate-50">{value}</div>
+        </div>
     )
 }
 
@@ -967,14 +1325,14 @@ function CompareTable({ datasets }: { datasets: Dataset[] }) {
     ] as const
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-[18px] border border-white/10">
             <div
-                className="grid min-w-[700px] gap-px rounded-[28px] border border-white/10 bg-[#22304D]/70 shadow-[0_20px_44px_-30px_rgba(2,6,23,0.92)]"
+                className="grid min-w-[680px] gap-px bg-[#1c2333]"
                 style={{ gridTemplateColumns: `180px repeat(${datasets.length}, minmax(180px, 1fr))` }}
             >
-                <div className="bg-[#0B1221] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Attribute</div>
+                <div className="bg-[#161b22] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Attribute</div>
                 {datasets.map(dataset => (
-                    <div key={dataset.id} className="bg-[#0B1221] px-5 py-4 text-sm font-semibold leading-6 text-slate-100">
+                    <div key={dataset.id} className="bg-[#161b22] px-4 py-3 text-sm font-semibold text-slate-100">
                         {dataset.title}
                     </div>
                 ))}
@@ -998,9 +1356,9 @@ function CompareRow({
 }) {
     return (
         <>
-            <div className="bg-[#10192E] px-5 py-4 text-xs font-semibold text-slate-400">{label}</div>
+            <div className="bg-[#0d1117] px-4 py-3 text-xs font-semibold text-slate-400">{label}</div>
             {datasets.map(dataset => (
-                <div key={`${label}-${dataset.id}`} className="bg-[#10192E] px-5 py-4 text-sm text-slate-100">
+                <div key={`${label}-${dataset.id}`} className="bg-[#0d1117] px-4 py-3 text-sm text-slate-100">
                     {getValue(dataset)}
                 </div>
             ))}
@@ -1008,38 +1366,58 @@ function CompareRow({
     )
 }
 
-function EmptyResultsState({
-    activeFilters,
-    onReset
+function EmptyRailState({
+    title,
+    detail,
+    actionLabel,
+    actionTo
 }: {
-    activeFilters: ActiveFilterChip[]
-    onReset: () => void
+    title: string
+    detail: string
+    actionLabel?: string
+    actionTo?: string
 }) {
     return (
-        <div className={`mt-8 ${discoveryCardClass}`}>
-            <div className={discoveryText.itemTitle}>No datasets match these filters</div>
-            <p className={`mt-2 ${discoveryText.body}`}>
-                Clear the current filters and try a broader buyer workflow. Metadata stays visible here, but access still requires governed approval in the next step.
-            </p>
-
-            {activeFilters.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-2.5">
-                    {activeFilters.map(filter => (
-                        <span key={filter.label} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-100 shadow-[0_14px_30px_-24px_rgba(34,211,238,0.38)]">
-                            {filter.label}
-                        </span>
-                    ))}
-                </div>
-            ) : null}
-
-            <div className="mt-6 flex flex-wrap gap-3.5">
-                <button type="button" onClick={onReset} className={discoveryActionButtonClass}>
-                    Reset filters
-                </button>
-                <Link to="/guided-tour" className={discoverySecondaryButtonClass}>
-                    Open guided tour
+        <div className={`${subCardSurfaceClass} px-5 py-5`}>
+            <div className="text-base font-semibold text-slate-50">{title}</div>
+            <p className={`mt-2 ${discoveryText.body}`}>{detail}</p>
+            {actionLabel && actionTo ? (
+                <Link to={actionTo} className={`mt-5 inline-flex ${secondaryButtonClass}`}>
+                    {actionLabel}
                 </Link>
-            </div>
+            ) : null}
+        </div>
+    )
+}
+
+function ActionLinkButton({
+    label,
+    to,
+    href,
+    className
+}: {
+    label: string
+    to?: string
+    href?: string
+    className: string
+}) {
+    if (to) {
+        return <Link to={to} className={className}>{label}</Link>
+    }
+
+    return <a href={href ?? '#'} className={className}>{label}</a>
+}
+
+function EmptyResultsState({ onReset }: { onReset: () => void }) {
+    return (
+        <div className="mt-8 rounded-[28px] border border-dashed border-white/10 bg-[#0d162a]/88 px-6 py-12 text-center">
+            <div className="text-lg font-semibold text-slate-50">No datasets match these filters</div>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-400">
+                    Clear the current filters and try a broader buyer workflow. Metadata stays visible here, but access still requires governed approval in the next step.
+            </p>
+            <button type="button" onClick={onReset} className={`mt-6 ${primaryButtonClass}`}>
+                Reset filters
+            </button>
         </div>
     )
 }
@@ -1075,7 +1453,8 @@ function getBestMatchScore(dataset: Dataset) {
 }
 
 function parseStoredIdList(storageKey: string) {
-    const stored = localStorage.getItem(storageKey)
+    if (typeof window === 'undefined') return []
+    const stored = window.localStorage.getItem(storageKey)
     if (!stored) return []
 
     try {
@@ -1122,7 +1501,7 @@ function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Datase
 
     if (filteredDatasets.length > 0) {
         return {
-            label: 'Start a shortlist',
+            label: 'Build a shortlist',
             detail: 'Add one or two strong candidates to shortlist first so the decision surface becomes more useful.',
             href: '#matched-datasets',
             tone: 'scheduled'
@@ -1146,7 +1525,7 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
             primaryLabel: 'Open guided tour',
             primaryTo: '/guided-tour',
             secondaryLabel: 'Review discovery results',
-            secondaryTo: '/datasets'
+            secondaryHref: '#matched-datasets'
         }
     }
 
@@ -1158,7 +1537,7 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
             primaryLabel: `Open ${shortlistDatasets[0].title}`,
             primaryTo: `/datasets/${shortlistDatasets[0].id}`,
             secondaryLabel: 'Compare shortlisted datasets',
-            secondaryTo: '/datasets'
+            secondaryHref: '#compare-panel'
         }
     }
 
@@ -1196,25 +1575,140 @@ function formatDatasetDate(value: string) {
     }).format(new Date(timestamp))
 }
 
+function getMetricValueTone(score: number) {
+    if (score >= 95) return 'text-cyan-100'
+    if (score >= 90) return 'text-slate-100'
+    return 'text-slate-300'
+}
+
+function getStatusBadgeMeta(label: string, kind: 'verification' | 'access') {
+    if (kind === 'verification') {
+        if (label === 'Verified') {
+            return {
+                className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100',
+                dotClassName: 'bg-emerald-300'
+            }
+        }
+
+        return {
+            className: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+            dotClassName: 'bg-amber-300'
+        }
+    }
+
+    if (label === 'Restricted') {
+        return {
+            className: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+            dotClassName: 'bg-amber-300'
+        }
+    }
+
+    return {
+        className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100',
+        dotClassName: 'bg-emerald-300'
+    }
+}
+
 function getSignalToneMeta(tone: SignalTone) {
     switch (tone) {
         case 'monitoring':
             return {
-                badgeClassName: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
+                badgeClassName: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
                 dotClassName: 'bg-amber-300',
-                surfaceClassName: 'border-amber-500/25 bg-amber-500/8'
+                surfaceClassName: 'border-amber-500/20 bg-amber-500/8 text-amber-50'
             }
         case 'scheduled':
             return {
-                badgeClassName: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+                badgeClassName: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100',
                 dotClassName: 'bg-cyan-300',
-                surfaceClassName: 'border-cyan-500/25 bg-cyan-500/8'
+                surfaceClassName: 'border-cyan-500/20 bg-cyan-500/8 text-cyan-50'
             }
         default:
             return {
-                badgeClassName: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+                badgeClassName: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100',
                 dotClassName: 'bg-emerald-300',
-                surfaceClassName: 'border-emerald-500/25 bg-emerald-500/8'
+                surfaceClassName: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-50'
             }
     }
+}
+
+function SearchIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M12.5 12.5 17 17" strokeLinecap="round" />
+        </svg>
+    )
+}
+
+function ChevronIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <path d="m5 7 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function BookmarkIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <path d="M6 3.5h8a1 1 0 0 1 1 1V17l-5-3-5 3V4.5a1 1 0 0 1 1-1Z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function CompareIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <path d="M4 5h12M4 10h12M4 15h12" strokeLinecap="round" />
+            <circle cx="7" cy="5" r="1.5" fill="currentColor" stroke="none" />
+            <circle cx="12.5" cy="10" r="1.5" fill="currentColor" stroke="none" />
+            <circle cx="9.5" cy="15" r="1.5" fill="currentColor" stroke="none" />
+        </svg>
+    )
+}
+
+function ArrowTopRightIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <path d="M7 13 13 7" strokeLinecap="round" />
+            <path d="M8 7h5v5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function ShieldCheckIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <path d="M10 2.5c2 1.5 4.4 2.2 6 2.4V9c0 4-2.4 6.6-6 8-3.6-1.4-6-4-6-8V4.9c1.6-.2 4-.9 6-2.4Z" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="m7.6 9.9 1.7 1.7 3.4-3.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function CheckCircleIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <circle cx="10" cy="10" r="7" />
+            <path d="m7 10 2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function LockIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <rect x="4.5" y="9" width="11" height="7" rx="2" />
+            <path d="M7 9V7.2a3 3 0 1 1 6 0V9" strokeLinecap="round" />
+        </svg>
+    )
+}
+
+function ClockIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+            <circle cx="10" cy="10" r="7" />
+            <path d="M10 6.5v4l2.6 1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
 }
