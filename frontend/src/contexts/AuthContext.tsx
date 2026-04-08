@@ -48,6 +48,7 @@ const STORAGE_ACCESS_STATUS = 'Redoubt:accessStatus'
 const STORAGE_ONBOARDING_INITIATED = 'Redoubt:onboardingInitiated'
 const STORAGE_APPLICANT_EMAIL = 'Redoubt:applicantEmail'
 const STORAGE_IS_ADMIN = 'Redoubt:isAdmin'
+const STORAGE_WORKSPACE_ROLE = 'Redoubt:workspaceRole'
 
 // Enable a fully client-side experience when there is no backend.
 // Default is ON for development; set VITE_MOCK_AUTH=false to restore strict gating.
@@ -55,6 +56,9 @@ const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
 const isAccessStatus = (value: string | null): value is AccessApplicationStatus =>
     value === 'not_started' || value === 'pending' || value === 'approved'
+
+const isWorkspaceRole = (value: string | null): value is WorkspaceRole =>
+    value === 'buyer' || value === 'provider' || value === 'hybrid'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -86,7 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (stored !== null) return stored === 'true'
         return false
     })
-    const [workspaceRole, setRole] = useState<WorkspaceRole>('buyer')
+    const [workspaceRole, setRole] = useState<WorkspaceRole>(() => {
+        const stored = localStorage.getItem(STORAGE_WORKSPACE_ROLE)
+        if (isWorkspaceRole(stored)) return stored
+        return 'buyer'
+    })
     const [providerAccount, setProviderAccount] = useState<ProviderAccountState>(defaultProviderState)
 
     useEffect(() => {
@@ -108,6 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         localStorage.setItem(STORAGE_IS_ADMIN, String(isAdmin))
     }, [isAdmin])
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_WORKSPACE_ROLE, workspaceRole)
+    }, [workspaceRole])
 
     const signIn = () => {
         const canAccessWorkspace =
@@ -135,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole('buyer')
         localStorage.removeItem(STORAGE_AUTH)
         localStorage.removeItem(STORAGE_IS_ADMIN)
+        localStorage.removeItem(STORAGE_WORKSPACE_ROLE)
     }
 
     const updateWorkspaceRole = (role: WorkspaceRole) => {
