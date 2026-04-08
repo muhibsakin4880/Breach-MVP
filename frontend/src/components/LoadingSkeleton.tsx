@@ -22,55 +22,57 @@ export function Skeleton({ className = '', variant = 'rectangular', width, heigh
 
 export function DatasetCardSkeleton() {
     return (
-        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#22304D]/90 bg-[#10192E]/92 px-4 py-4 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.95)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-16 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']">
+        <div className="relative flex h-full min-h-[540px] flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,27,45,0.88),rgba(10,17,31,0.8))] px-6 py-6 shadow-[0_26px_84px_-40px_rgba(2,6,23,0.98),0_16px_36px_-22px_rgba(8,145,178,0.16)] ring-1 ring-inset ring-white/6 backdrop-blur-xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-20 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)] before:content-[''] sm:px-7 sm:py-7 xl:px-8 xl:py-8">
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1 space-y-2">
                     <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-5 w-4/5" />
-                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-7 w-4/5" />
+                    <Skeleton className="h-5 w-full" />
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                    <Skeleton className="h-6 w-24 rounded-full" />
-                    <Skeleton className="h-6 w-28 rounded-full" />
+                    <Skeleton className="h-8 w-24 rounded-full" />
+                    <Skeleton className="h-8 w-28 rounded-full" />
                 </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[22px] border border-emerald-500/25 bg-emerald-500/8 px-5 py-4 shadow-[0_18px_40px_-32px_rgba(2,6,23,0.92)]">
                     <Skeleton className="h-3 w-20" />
-                    <Skeleton className="mt-3 h-6 w-16" />
-                    <Skeleton className="mt-2 h-3 w-24" />
+                    <Skeleton className="mt-3 h-7 w-20" />
+                    <Skeleton className="mt-3 h-4 w-28" />
                 </div>
-                <div className="rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+                <div className="rounded-[22px] border border-cyan-500/25 bg-cyan-500/8 px-5 py-4 shadow-[0_18px_40px_-32px_rgba(2,6,23,0.92)]">
                     <Skeleton className="h-3 w-24" />
-                    <Skeleton className="mt-3 h-6 w-16" />
-                    <Skeleton className="mt-2 h-3 w-20" />
+                    <Skeleton className="mt-3 h-7 w-20" />
+                    <Skeleton className="mt-3 h-4 w-24" />
                 </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-                <Skeleton className="h-6 w-28 rounded-full" />
+            <div className="mt-6 flex flex-wrap gap-2.5">
+                <Skeleton className="h-8 w-20 rounded-full" />
+                <Skeleton className="h-8 w-24 rounded-full" />
+                <Skeleton className="h-8 w-28 rounded-full" />
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <Skeleton className="h-16 rounded-[18px]" />
-                <Skeleton className="h-16 rounded-[18px]" />
-                <Skeleton className="h-16 rounded-[18px]" />
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <Skeleton className="h-20 rounded-[20px]" />
+                <Skeleton className="h-20 rounded-[20px]" />
+                <Skeleton className="h-20 rounded-[20px]" />
             </div>
 
-            <div className="mt-4 rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                 <Skeleton className="h-3 w-24" />
-                <Skeleton className="mt-3 h-4 w-full" />
-                <Skeleton className="mt-2 h-4 w-4/5" />
-                <Skeleton className="mt-3 h-3 w-2/3" />
+                <Skeleton className="mt-4 h-5 w-full" />
+                <Skeleton className="mt-3 h-5 w-4/5" />
+                <Skeleton className="mt-4 h-4 w-2/3" />
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-                <Skeleton className="h-11 w-32 rounded-2xl" />
-                <Skeleton className="h-11 w-32 rounded-2xl" />
-                <Skeleton className="h-11 flex-1 rounded-2xl" />
+            <div className="mt-auto pt-8">
+                <div className="flex flex-wrap gap-3.5">
+                    <Skeleton className="h-12 w-36 rounded-2xl" />
+                    <Skeleton className="h-12 w-36 rounded-2xl" />
+                    <Skeleton className="h-12 flex-1 rounded-2xl" />
+                </div>
             </div>
         </div>
     )

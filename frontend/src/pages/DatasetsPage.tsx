@@ -4,11 +4,7 @@ import { DatasetCardSkeleton } from '../components/LoadingSkeleton'
 import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
 import {
     dashboardColorTokens,
-    dashboardComponentTokens,
-    dashboardRadiusTokens,
-    dashboardShadowTokens,
-    dashboardSpacingTokens,
-    dashboardTypographyTokens
+    dashboardComponentTokens
 } from '../dashboardTokens'
 
 type VerificationStatus = 'Verified' | 'Under Review'
@@ -109,25 +105,32 @@ const verificationStates: FilterState['verificationStatus'][] = ['All', 'Verifie
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
 
 const discoveryPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const discoveryPageShellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
-const discoverySectionClass = dashboardSpacingTokens['section-gap']
-const discoveryPanelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-24 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] before:content-['']`
-const discoveryCardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding']} ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-16 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']`
-const discoveryHeroClass = `${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`
-const discoveryActionButtonClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding']}`
-const discoverySecondaryButtonClass = `inline-flex items-center justify-center ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-2.5 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-cyan-100`
+const discoveryPageShellClass = 'relative mx-auto max-w-[1920px] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-12 2xl:px-16'
+const discoverySectionClass = 'mb-10 sm:mb-14 xl:mb-16 2xl:mb-20'
+const discoveryPanelClass =
+    "relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,27,47,0.9),rgba(10,17,31,0.82))] p-6 sm:p-7 xl:p-8 shadow-[0_28px_90px_-42px_rgba(2,6,23,0.98),0_18px_40px_-26px_rgba(15,23,42,0.72)] ring-1 ring-inset ring-white/6 backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-28 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.055),transparent)] before:content-['']"
+const discoveryCardClass =
+    "relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,27,45,0.88),rgba(10,17,31,0.8))] px-6 py-6 sm:px-7 sm:py-7 xl:px-8 xl:py-8 shadow-[0_26px_84px_-40px_rgba(2,6,23,0.98),0_16px_36px_-22px_rgba(8,145,178,0.16)] ring-1 ring-inset ring-white/6 backdrop-blur-xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-20 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)] before:content-['']"
+const discoveryHeroClass =
+    'relative overflow-hidden rounded-[36px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(7,13,24,0.98),rgba(17,27,47,0.94)_44%,rgba(13,21,38,0.98))] px-6 py-7 sm:px-8 sm:py-8 xl:px-10 xl:py-10 shadow-[0_38px_120px_-54px_rgba(34,211,238,0.28),0_26px_70px_-42px_rgba(2,6,23,0.98)] ring-1 ring-inset ring-white/6'
+const discoveryActionButtonClass =
+    'inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold tracking-[-0.01em] text-[#04101d] shadow-[0_22px_48px_-28px_rgba(34,211,238,0.82)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+const discoverySecondaryButtonClass =
+    'inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30 hover:bg-cyan-400/8 hover:text-cyan-100'
+const discoveryFieldClass =
+    'mt-3 w-full rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-4 text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_18px_38px_-32px_rgba(2,6,23,0.9)] backdrop-blur-xl placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/15'
 const discoveryText = {
-    eyebrow: dashboardTypographyTokens['text-eyebrow'],
-    heroEyebrow: dashboardTypographyTokens['text-hero-eyebrow'],
-    heroTitle: dashboardTypographyTokens['text-hero-title'],
-    sectionTitle: dashboardTypographyTokens['text-section-title'],
-    panelTitle: dashboardTypographyTokens['text-panel-title'],
-    itemTitle: dashboardTypographyTokens['text-item-title'],
-    body: dashboardTypographyTokens['text-body'],
-    bodyStrong: dashboardTypographyTokens['text-body-strong'],
-    meta: dashboardTypographyTokens['text-muted'],
-    metaStrong: dashboardTypographyTokens['text-muted-strong'],
-    value: dashboardTypographyTokens['text-value']
+    eyebrow: 'text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500/90',
+    heroEyebrow: 'text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/75',
+    heroTitle: 'text-[2.55rem] font-semibold tracking-[-0.055em] text-slate-50 sm:text-[3rem] xl:text-[3.55rem] xl:leading-[1.02]',
+    sectionTitle: 'text-[1.6rem] font-semibold tracking-[-0.04em] text-slate-50',
+    panelTitle: 'text-[1.22rem] font-semibold tracking-[-0.03em] text-slate-50',
+    itemTitle: 'text-[1.12rem] font-semibold tracking-[-0.025em] text-slate-50',
+    body: 'text-[15px] leading-7 text-slate-400',
+    bodyStrong: 'text-[15px] leading-7 text-slate-200',
+    meta: 'text-[13px] leading-6 text-slate-500',
+    metaStrong: 'text-[13px] font-medium leading-6 text-slate-300',
+    value: 'text-[2.25rem] font-semibold tracking-[-0.065em] text-slate-50'
 } as const
 
 export default function DatasetsPage() {
@@ -259,11 +262,11 @@ export default function DatasetsPage() {
             <div className={discoveryPageShellClass}>
                 <section className={discoverySectionClass} aria-labelledby="dataset-discovery-hero">
                     <div className={discoveryHeroClass}>
-                        <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-teal-400/12 blur-3xl" />
-                        <div className="pointer-events-none absolute right-6 top-4 h-44 w-44 rounded-full bg-cyan-300/12 blur-3xl" />
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-[36%] bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.16),transparent_62%)]" />
+                        <div className="pointer-events-none absolute -left-12 bottom-0 h-48 w-48 rounded-full bg-teal-400/12 blur-3xl" />
+                        <div className="pointer-events-none absolute right-4 top-2 h-56 w-56 rounded-full bg-cyan-300/12 blur-3xl" />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-[38%] bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.14),transparent_64%)]" />
 
-                        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+                        <div className="relative grid items-start gap-8 xl:grid-cols-[minmax(0,1.38fr)_minmax(420px,0.94fr)] 2xl:grid-cols-[minmax(0,1.44fr)_minmax(460px,0.96fr)]">
                             <div>
                                 <div className={discoveryText.heroEyebrow}>Buyer discovery workspace</div>
                                 <h1 id="dataset-discovery-hero" className={`mt-2 ${discoveryText.heroTitle}`}>
@@ -274,13 +277,13 @@ export default function DatasetsPage() {
                                     you should keep researching or move toward request preparation.
                                 </p>
 
-                                <div className="mt-5 flex flex-wrap gap-3">
+                                <div className="mt-7 flex flex-wrap gap-4">
                                     {heroMetrics.map(metric => (
                                         <HeroMetricChip key={metric.label} label={metric.label} value={metric.value} />
                                     ))}
                                 </div>
 
-                                <div className="mt-6 flex flex-wrap gap-3">
+                                <div className="mt-8 flex flex-wrap gap-3.5">
                                     <a href="#shortlist-panel" className={discoveryActionButtonClass}>
                                         Review shortlist
                                     </a>
@@ -294,15 +297,15 @@ export default function DatasetsPage() {
                                 eyebrow="Decision state"
                                 title="Turn discovery into the next action"
                                 description="Track what you have shortlisted, what is queued for compare, and the most useful next move for this buyer workflow."
-                                className="border-cyan-400/20 bg-[#0E1729]/88"
+                                className="border-cyan-400/20 bg-[linear-gradient(180deg,rgba(14,23,41,0.92),rgba(10,17,31,0.86))]"
                             >
-                                <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="grid gap-4 sm:grid-cols-3">
                                     <DecisionStat label="Shortlisted" value={`${shortlistDatasets.length}`} />
                                     <DecisionStat label="In compare" value={`${compareDatasets.length}`} />
                                     <DecisionStat label="Visible results" value={`${filteredDatasets.length}`} />
                                 </div>
 
-                                <div className={`mt-4 rounded-[24px] border px-4 py-4 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
+                                <div className={`mt-6 rounded-[26px] border px-5 py-5 shadow-[0_22px_48px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
                                     <div className="flex items-start gap-3">
                                         <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(decisionAction.tone).dotClassName}`} aria-hidden="true" />
                                         <div>
@@ -311,7 +314,7 @@ export default function DatasetsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 flex flex-wrap gap-3">
+                                    <div className="mt-5 flex flex-wrap gap-3">
                                         <ActionLink
                                             label={decisionAction.label}
                                             to={decisionAction.to}
@@ -332,7 +335,7 @@ export default function DatasetsPage() {
                         description="Search datasets, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow."
                         id="dataset-filter-panel"
                     >
-                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.55fr)_280px]">
+                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.32fr)_minmax(320px,0.72fr)]">
                             <label className="block">
                                 <span className={discoveryText.eyebrow}>Search datasets</span>
                                 <input
@@ -341,7 +344,7 @@ export default function DatasetsPage() {
                                     value={filters.searchTerm}
                                     onChange={event => updateFilter('searchTerm', event.target.value)}
                                     placeholder="Search by title, use case, domain, or confidence summary"
-                                    className={`mt-2 w-full ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/55 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20`}
+                                    className={discoveryFieldClass}
                                 />
                             </label>
 
@@ -351,7 +354,7 @@ export default function DatasetsPage() {
                                     aria-label="Sort datasets"
                                     value={sortOption}
                                     onChange={event => setSortOption(event.target.value as SortOption)}
-                                    className={`mt-2 w-full ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/55 px-4 py-3 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20`}
+                                    className={discoveryFieldClass}
                                 >
                                     {sortOptions.map(option => (
                                         <option key={option.value} value={option.value}>
@@ -362,9 +365,9 @@ export default function DatasetsPage() {
                             </label>
                         </div>
 
-                        <div className="mt-5">
+                        <div className="mt-8">
                             <div className={discoveryText.eyebrow}>Priority domains</div>
-                            <div className="mt-3 flex flex-wrap gap-2.5">
+                            <div className="mt-4 flex flex-wrap gap-3">
                                 {domains.map(domain => (
                                     <button
                                         key={domain}
@@ -372,10 +375,10 @@ export default function DatasetsPage() {
                                         aria-label={`Filter domain ${domain}`}
                                         aria-pressed={filters.domain === domain}
                                         onClick={() => updateFilter('domain', domain)}
-                                        className={`rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${
+                                        className={`rounded-full border px-4 py-2.5 text-xs font-semibold shadow-[0_14px_32px_-26px_rgba(2,6,23,0.92)] transition-all duration-200 ${
                                             filters.domain === domain
                                                 ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100'
-                                                : 'border-slate-700 bg-slate-950/70 text-slate-300 hover:border-cyan-400/30 hover:text-slate-100'
+                                                : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-slate-100'
                                         }`}
                                     >
                                         {domain}
@@ -384,7 +387,7 @@ export default function DatasetsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
                             <FilterSelect
                                 label="Data type"
                                 value={filters.dataType}
@@ -418,8 +421,8 @@ export default function DatasetsPage() {
                             />
                         </div>
 
-                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex flex-wrap gap-2">
+                        <div className="mt-8 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                            <div className="flex flex-wrap gap-2.5">
                                 {activeFilters.length > 0 ? (
                                     activeFilters.map(filter => (
                                         <button
@@ -427,7 +430,7 @@ export default function DatasetsPage() {
                                             type="button"
                                             onClick={() => clearFilter(filter.key)}
                                             aria-label={`Clear filter ${filter.label}`}
-                                            className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition-colors hover:border-cyan-300"
+                                            className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-100 shadow-[0_14px_30px_-24px_rgba(34,211,238,0.38)] transition-colors hover:border-cyan-300"
                                         >
                                             {filter.label} ×
                                         </button>
@@ -445,7 +448,7 @@ export default function DatasetsPage() {
                 </section>
 
                 <section className={discoverySectionClass} aria-labelledby="matched-datasets">
-                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.82fr)]">
+                    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,1.78fr)_minmax(360px,0.68fr)] 2xl:grid-cols-[minmax(0,1.9fr)_minmax(400px,0.74fr)]">
                         <DiscoveryPanel
                             eyebrow="Matched datasets"
                             title="Decision-ready results"
@@ -460,13 +463,13 @@ export default function DatasetsPage() {
                             </div>
 
                             {isLoading ? (
-                                <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Loading datasets">
+                                <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2 2xl:gap-8" aria-busy="true" aria-label="Loading datasets">
                                     {Array.from({ length: 6 }).map((_, index) => (
                                         <DatasetCardSkeleton key={index} />
                                     ))}
                                 </div>
                             ) : filteredDatasets.length > 0 ? (
-                                <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2 2xl:gap-8">
                                     {filteredDatasets.map(dataset => (
                                         <DatasetDecisionCard
                                             key={dataset.id}
@@ -484,7 +487,7 @@ export default function DatasetsPage() {
                             )}
                         </DiscoveryPanel>
 
-                        <div className="space-y-6 xl:sticky xl:top-[92px] self-start">
+                        <div className="space-y-8 self-start xl:sticky xl:top-[104px]">
                             <DiscoveryPanel
                                 eyebrow="Shortlist"
                                 title="Review shortlist"
@@ -492,7 +495,7 @@ export default function DatasetsPage() {
                                 id="shortlist-panel"
                             >
                                 {shortlistDatasets.length > 0 ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         {shortlistDatasets.map(dataset => (
                                             <article key={dataset.id} className={discoveryCardClass}>
                                                 <div className="flex items-start justify-between gap-4">
@@ -510,12 +513,12 @@ export default function DatasetsPage() {
                                                     </button>
                                                 </div>
 
-                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                <div className="mt-5 flex flex-wrap gap-2.5">
                                                     <InlineBadge label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
                                                     <InlineBadge label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
                                                 </div>
 
-                                                <div className="mt-4 flex flex-wrap gap-3">
+                                                <div className="mt-6 flex flex-wrap gap-3.5">
                                                     <Link to={`/datasets/${dataset.id}`} className={discoveryActionButtonClass}>
                                                         Open detail
                                                     </Link>
@@ -541,12 +544,12 @@ export default function DatasetsPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className={`rounded-[24px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-4`}>
+                                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                                         <div className={discoveryText.itemTitle}>No shortlisted datasets yet</div>
                                         <p className={`mt-2 ${discoveryText.body}`}>
                                             Start with verified, high-confidence candidates and use shortlist to keep the strongest options together.
                                         </p>
-                                        <Link to="/guided-tour" className={`mt-4 inline-flex ${discoverySecondaryButtonClass}`}>
+                                        <Link to="/guided-tour" className={`mt-5 inline-flex ${discoverySecondaryButtonClass}`}>
                                             Open guided tour
                                         </Link>
                                     </div>
@@ -559,26 +562,26 @@ export default function DatasetsPage() {
                                 description="Queue up to three datasets to compare trust, freshness, geography, and access path without leaving discovery."
                                 id="compare-panel"
                             >
-                                <div className="rounded-[20px] border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-3">
+                                <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/[0.06] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(8,145,178,0.34)]">
                                     <div className={discoveryText.itemTitle}>Compare queue</div>
                                     <p className={`mt-2 ${discoveryText.body}`}>Add up to three datasets. Once the queue is full, compare buttons stay disabled until you remove one.</p>
                                 </div>
 
                                 {compareDatasets.length > 0 ? (
-                                    <div className="mt-4 space-y-3">
+                                    <div className="mt-5 space-y-4">
                                         <div className="flex flex-wrap items-center justify-between gap-3">
                                             <span className={discoveryText.metaStrong}>{compareDatasets.length} of 3 selected</span>
                                             <button
                                                 type="button"
                                                 onClick={() => setCompareIds([])}
-                                                className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
+                                                className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
                                             >
                                                 Clear compare
                                             </button>
                                         </div>
 
                                         {compareDatasets.map(dataset => (
-                                            <div key={dataset.id} className={`rounded-[20px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-3`}>
+                                            <div key={dataset.id} className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div>
                                                         <div className={discoveryText.itemTitle}>{dataset.title}</div>
@@ -588,7 +591,7 @@ export default function DatasetsPage() {
                                                         type="button"
                                                         onClick={() => toggleCompare(dataset.id)}
                                                         aria-label={`Remove ${dataset.title} from compare`}
-                                                        className="rounded-full border border-slate-700 bg-slate-950/70 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
+                                                        className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-200 shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] transition-colors hover:border-cyan-400/30 hover:text-cyan-100"
                                                     >
                                                         Remove
                                                     </button>
@@ -599,14 +602,14 @@ export default function DatasetsPage() {
                                         {compareDatasets.length >= 2 ? (
                                             <CompareTable datasets={compareDatasets} />
                                         ) : (
-                                            <div className={`rounded-[20px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-4`}>
+                                            <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                                                 <div className={discoveryText.itemTitle}>Add one more dataset to compare</div>
                                                 <p className={`mt-2 ${discoveryText.body}`}>Comparison becomes useful once at least two candidates are in the queue.</p>
                                             </div>
                                         )}
                                     </div>
                                 ) : (
-                                    <div className={`mt-4 rounded-[24px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-4`}>
+                                    <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                                         <div className={discoveryText.itemTitle}>No datasets in compare</div>
                                         <p className={`mt-2 ${discoveryText.body}`}>Use compare when the shortlist has more than one viable option and you need a fast trust and access readout.</p>
                                     </div>
@@ -618,7 +621,7 @@ export default function DatasetsPage() {
                                 title="Buyer guidance"
                                 description="Use the shortlist and compare state to decide whether to keep researching, inspect details, or move closer to request prep."
                             >
-                                <div className={`rounded-[24px] border px-4 py-4 ${getSignalToneMeta(requestReadiness.tone).surfaceClassName}`}>
+                                <div className={`rounded-[26px] border px-5 py-5 shadow-[0_22px_48px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(requestReadiness.tone).surfaceClassName}`}>
                                     <div className="flex items-start gap-3">
                                         <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(requestReadiness.tone).dotClassName}`} aria-hidden="true" />
                                         <div>
@@ -627,7 +630,7 @@ export default function DatasetsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
                                         <DecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
                                         <DecisionStat label="Verified" value={`${shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Verified').length}`} />
                                         <DecisionStat
@@ -636,7 +639,7 @@ export default function DatasetsPage() {
                                         />
                                     </div>
 
-                                    <div className="mt-4 flex flex-wrap gap-3">
+                                    <div className="mt-6 flex flex-wrap gap-3.5">
                                         <ActionLink
                                             label={requestReadiness.primaryLabel}
                                             to={requestReadiness.primaryTo}
@@ -651,12 +654,12 @@ export default function DatasetsPage() {
                                     </div>
                                 </div>
 
-                                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                    <Link to="/guided-tour" className={`block ${discoveryCardClass} transition-colors duration-200 hover:border-cyan-400/30`}>
+                                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                                    <Link to="/guided-tour" className={`block ${discoveryCardClass} transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
                                         <div className={discoveryText.itemTitle}>Guided Tour</div>
                                         <p className={`mt-2 ${discoveryText.body}`}>Use the buyer workflow if you want help moving from shortlist into access preparation.</p>
                                     </Link>
-                                    <Link to={firstShortlistedDataset ? `/datasets/${firstShortlistedDataset.id}` : '/trust-profile'} className={`block ${discoveryCardClass} transition-colors duration-200 hover:border-cyan-400/30`}>
+                                    <Link to={firstShortlistedDataset ? `/datasets/${firstShortlistedDataset.id}` : '/trust-profile'} className={`block ${discoveryCardClass} transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
                                         <div className={discoveryText.itemTitle}>{firstShortlistedDataset ? 'Top shortlist candidate' : 'Trust Profile'}</div>
                                         <p className={`mt-2 ${discoveryText.body}`}>
                                             {firstShortlistedDataset
@@ -692,27 +695,27 @@ function DiscoveryPanel({
     return (
         <section className={`${discoveryPanelClass} ${className}`.trim()} aria-labelledby={id}>
             <div className={discoveryText.eyebrow}>{eyebrow}</div>
-            <h2 id={id} className={`mt-2 ${discoveryText.panelTitle}`}>{title}</h2>
-            <p className={`mt-2 ${discoveryText.body}`}>{description}</p>
-            <div className="mt-4">{children}</div>
+            <h2 id={id} className={`mt-3 ${discoveryText.panelTitle}`}>{title}</h2>
+            <p className={`mt-3 max-w-3xl ${discoveryText.body}`}>{description}</p>
+            <div className="mt-6">{children}</div>
         </section>
     )
 }
 
 function HeroMetricChip({ label, value }: HeroMetric) {
     return (
-        <span className={`inline-flex items-center gap-2 ${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['metric-chip']} px-3 py-2 text-xs font-medium text-slate-200`}>
+        <span className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.045] px-4 py-3 text-sm font-medium text-slate-200 shadow-[0_16px_36px_-28px_rgba(2,6,23,0.92)] backdrop-blur-xl">
             <span className="uppercase tracking-[0.16em] text-slate-500">{label}</span>
-            <span className="text-slate-100">{value}</span>
+            <span className="text-base font-semibold text-slate-100">{value}</span>
         </span>
     )
 }
 
 function DecisionStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className={`rounded-[20px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-3`}>
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.045] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
             <div className={discoveryText.eyebrow}>{label}</div>
-            <div className={`mt-2 ${discoveryText.itemTitle}`}>{value}</div>
+            <div className={`mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-50`}>{value}</div>
         </div>
     )
 }
@@ -731,13 +734,13 @@ function FilterSelect({
     renderLabel?: (value: string) => string
 }) {
     return (
-        <label className="block">
+        <label className="block rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)] backdrop-blur-xl">
             <span className={discoveryText.eyebrow}>{label}</span>
             <select
                 aria-label={label}
                 value={value}
                 onChange={event => onChange(event.target.value)}
-                className={`mt-2 w-full ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/55 px-4 py-3 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20`}
+                className={`${discoveryFieldClass} mt-3`}
             >
                 {options.map(option => (
                     <option key={option} value={option}>
@@ -795,54 +798,55 @@ function DatasetDecisionCard({
     const providerTone = dataset.providerTrustScore >= 90 ? 'healthy' : dataset.providerTrustScore >= 82 ? 'scheduled' : 'monitoring'
 
     return (
-        <article aria-label={`Dataset card for ${dataset.title}`} className={discoveryCardClass}>
+        <article aria-label={`Dataset card for ${dataset.title}`} className={`${discoveryCardClass} flex h-full min-h-[540px] flex-col`}>
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                     <div className={discoveryText.eyebrow}>Best for</div>
-                    <h3 className={`mt-2 ${discoveryText.itemTitle}`}>{dataset.title}</h3>
-                    <p className={`mt-2 ${discoveryText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dataset.bestFor}</p>
+                    <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.035em] text-slate-50">{dataset.title}</h3>
+                    <p className={`mt-3 ${discoveryText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dataset.bestFor}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="flex shrink-0 flex-col items-end gap-2.5">
                     <InlineBadge label={dataset.verificationStatus} tone={dataset.verificationStatus === 'Verified' ? 'healthy' : 'monitoring'} />
                     <InlineBadge label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
                 </div>
             </div>
 
-            <p className={`mt-3 ${discoveryText.body}`}>{dataset.description}</p>
+            <p className={`mt-4 ${discoveryText.body}`}>{dataset.description}</p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <SignalCard label="Confidence score" value={`${dataset.confidenceScore}%`} detail={dataset.coverage} tone={confidenceTone} />
                 <SignalCard label="Provider trust" value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} tone={providerTone} />
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-2.5">
                 <InlineNeutralChip label={dataset.domain} />
                 <InlineNeutralChip label={dataset.dataType} />
                 <InlineNeutralChip label={dataset.geography} />
                 <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
                 <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone="healthy" />
                 <MetricPill label="Freshness" value={`${dataset.freshness}%`} tone="scheduled" />
                 <MetricPill label="Consistency" value={`${dataset.consistency}%`} tone="healthy" />
             </div>
 
-            <div className={`mt-4 rounded-[20px] border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-3`}>
+            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5 shadow-[0_18px_42px_-30px_rgba(2,6,23,0.92)]">
                 <div className={discoveryText.eyebrow}>Why consider it</div>
-                <div className={`mt-2 ${discoveryText.bodyStrong}`}>{dataset.confidenceSummary}</div>
-                <div className={`mt-3 ${discoveryText.meta}`}>Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}</div>
+                <div className={`mt-3 ${discoveryText.bodyStrong}`}>{dataset.confidenceSummary}</div>
+                <div className={`mt-4 ${discoveryText.meta}`}>Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}</div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-auto pt-8">
+                <div className="flex flex-wrap gap-3.5">
                 <button
                     type="button"
                     onClick={onToggleShortlist}
                     aria-label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
-                    className={`inline-flex items-center justify-center rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-[0_18px_40px_-28px_rgba(2,6,23,0.92)] transition-all duration-200 ${
                         shortlisted
                             ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100 hover:border-emerald-400'
-                            : 'border-slate-700 bg-slate-950/70 text-slate-200 hover:border-cyan-400/30 hover:text-cyan-100'
+                            : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-cyan-100'
                     }`}
                 >
                     {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
@@ -852,10 +856,10 @@ function DatasetDecisionCard({
                     onClick={onToggleCompare}
                     aria-label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
                     disabled={compareDisabled}
-                    className={`inline-flex items-center justify-center rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-sm font-semibold shadow-[0_18px_40px_-28px_rgba(2,6,23,0.92)] transition-all duration-200 ${
                         compared
                             ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
-                            : 'border-slate-700 bg-slate-950/70 text-slate-200 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
+                            : 'border-white/10 bg-white/[0.04] text-slate-200 hover:border-cyan-400/30 hover:bg-cyan-400/6 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
                     }`}
                 >
                     {compared ? 'In compare' : 'Add to compare'}
@@ -867,10 +871,11 @@ function DatasetDecisionCard({
                 >
                     View details
                 </Link>
+                </div>
             </div>
 
             {compareDisabled ? (
-                <p className={`mt-3 ${discoveryText.meta}`}>Compare queue is full. Remove one candidate from compare to add another.</p>
+                <p className={`mt-4 ${discoveryText.meta}`}>Compare queue is full. Remove one candidate from compare to add another.</p>
             ) : null}
         </article>
     )
@@ -888,10 +893,10 @@ function SignalCard({
     tone: SignalTone
 }) {
     return (
-        <div className={`rounded-[20px] border px-4 py-3 ${getSignalToneMeta(tone).surfaceClassName}`}>
+        <div className={`rounded-[22px] border px-5 py-4 shadow-[0_18px_40px_-32px_rgba(2,6,23,0.92)] ${getSignalToneMeta(tone).surfaceClassName}`}>
             <div className={discoveryText.eyebrow}>{label}</div>
-            <div className={`mt-2 ${discoveryText.itemTitle}`}>{value}</div>
-            <div className={`mt-2 ${discoveryText.meta}`}>{detail}</div>
+            <div className="mt-3 text-[1.08rem] font-semibold tracking-[-0.025em] text-slate-50">{value}</div>
+            <div className={`mt-3 ${discoveryText.meta}`}>{detail}</div>
         </div>
     )
 }
@@ -906,16 +911,18 @@ function MetricPill({
     tone: SignalTone
 }) {
     return (
-        <div className={`rounded-[18px] border px-3 py-3 ${getSignalToneMeta(tone).surfaceClassName}`}>
-            <div className={discoveryText.eyebrow}>{label}</div>
-            <div className={`mt-2 ${discoveryText.bodyStrong}`}>{value}</div>
+        <div className={`min-w-0 rounded-[20px] border px-4 py-4 shadow-[0_16px_34px_-28px_rgba(2,6,23,0.88)] ${getSignalToneMeta(tone).surfaceClassName}`}>
+            <div className="text-[9px] font-semibold uppercase leading-4 tracking-[0.14em] text-slate-500 sm:text-[10px]">
+                {label}
+            </div>
+            <div className="mt-3 text-base font-semibold text-slate-100">{value}</div>
         </div>
     )
 }
 
 function InlineBadge({ label, tone }: { label: string; tone: SignalTone }) {
     return (
-        <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${getSignalToneMeta(tone).badgeClassName}`}>
+        <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold shadow-[0_14px_30px_-24px_rgba(2,6,23,0.9)] ${getSignalToneMeta(tone).badgeClassName}`}>
             <span className={`h-2 w-2 rounded-full ${getSignalToneMeta(tone).dotClassName}`} />
             {label}
         </span>
@@ -924,7 +931,7 @@ function InlineBadge({ label, tone }: { label: string; tone: SignalTone }) {
 
 function InlineNeutralChip({ label }: { label: string }) {
     return (
-        <span className={`rounded-full border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-3 py-1.5 text-xs font-semibold text-slate-300`}>
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-300 shadow-[0_12px_28px_-22px_rgba(2,6,23,0.9)]">
             {label}
         </span>
     )
@@ -943,12 +950,12 @@ function CompareTable({ datasets }: { datasets: Dataset[] }) {
     return (
         <div className="overflow-x-auto">
             <div
-                className="grid min-w-[620px] gap-px rounded-[24px] border border-[#22304D] bg-[#22304D]"
-                style={{ gridTemplateColumns: `160px repeat(${datasets.length}, minmax(160px, 1fr))` }}
+                className="grid min-w-[700px] gap-px rounded-[28px] border border-white/10 bg-[#22304D]/70 shadow-[0_20px_44px_-30px_rgba(2,6,23,0.92)]"
+                style={{ gridTemplateColumns: `180px repeat(${datasets.length}, minmax(180px, 1fr))` }}
             >
-                <div className="bg-[#0B1221] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Attribute</div>
+                <div className="bg-[#0B1221] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Attribute</div>
                 {datasets.map(dataset => (
-                    <div key={dataset.id} className="bg-[#0B1221] px-4 py-3 text-sm font-semibold text-slate-100">
+                    <div key={dataset.id} className="bg-[#0B1221] px-5 py-4 text-sm font-semibold leading-6 text-slate-100">
                         {dataset.title}
                     </div>
                 ))}
@@ -972,9 +979,9 @@ function CompareRow({
 }) {
     return (
         <>
-            <div className="bg-[#10192E] px-4 py-3 text-xs font-semibold text-slate-400">{label}</div>
+            <div className="bg-[#10192E] px-5 py-4 text-xs font-semibold text-slate-400">{label}</div>
             {datasets.map(dataset => (
-                <div key={`${label}-${dataset.id}`} className="bg-[#10192E] px-4 py-3 text-sm text-slate-100">
+                <div key={`${label}-${dataset.id}`} className="bg-[#10192E] px-5 py-4 text-sm text-slate-100">
                     {getValue(dataset)}
                 </div>
             ))}
@@ -990,23 +997,23 @@ function EmptyResultsState({
     onReset: () => void
 }) {
     return (
-        <div className={`mt-5 ${discoveryCardClass}`}>
+        <div className={`mt-8 ${discoveryCardClass}`}>
             <div className={discoveryText.itemTitle}>No datasets match these filters</div>
             <p className={`mt-2 ${discoveryText.body}`}>
                 Clear the current filters and try a broader buyer workflow. Metadata stays visible here, but access still requires governed approval in the next step.
             </p>
 
             {activeFilters.length > 0 ? (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-5 flex flex-wrap gap-2.5">
                     {activeFilters.map(filter => (
-                        <span key={filter.label} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
+                        <span key={filter.label} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-100 shadow-[0_14px_30px_-24px_rgba(34,211,238,0.38)]">
                             {filter.label}
                         </span>
                     ))}
                 </div>
             ) : null}
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3.5">
                 <button type="button" onClick={onReset} className={discoveryActionButtonClass}>
                     Reset filters
                 </button>
