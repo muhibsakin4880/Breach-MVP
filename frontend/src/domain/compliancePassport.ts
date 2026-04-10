@@ -74,29 +74,7 @@ const defaultVerification: VerificationSnapshot = {
     affiliationFileName: 'northbridge-affiliation.pdf',
     authorizationFileName: 'northbridge-compliance-letter.pdf',
     authenticationMethod: 'hardware_key',
-    ssoDomain: '',
-    rightsPackage: {
-        accessType: 'clean_room',
-        duration: '12_months',
-        usagePurposes: ['research'],
-        otherUsagePurpose: '',
-        geographicRestriction: 'global',
-        selectedRegions: [],
-        fieldRestrictions: [],
-        additionalConditions: {
-            attributionRequired: false,
-            auditLoggingMandatory: false,
-            noRedistribution: false
-        },
-        advancedConditions: {
-            redistributionRights: 'not_allowed',
-            auditLoggingRequirement: 'optional',
-            attributionRequirement: 'not_required',
-            volumeBasedPricing: false,
-            volumePricingAdjustment: 0,
-            volumePricingUnit: 'tb'
-        }
-    }
+    ssoDomain: ''
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,

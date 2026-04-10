@@ -1,7 +1,6 @@
 import type {
     ComplianceCommitment,
     LegalAcknowledgment,
-    RightsPackage,
     Step1FormState,
     SubmissionMeta,
     VerificationSnapshot
@@ -38,29 +37,7 @@ export const emptyVerificationSnapshot: VerificationSnapshot = {
     affiliationFileName: null,
     authorizationFileName: null,
     authenticationMethod: null,
-    ssoDomain: '',
-    rightsPackage: {
-        accessType: '',
-        duration: '',
-        usagePurposes: [],
-        otherUsagePurpose: '',
-        geographicRestriction: 'global',
-        selectedRegions: [],
-        fieldRestrictions: [],
-        additionalConditions: {
-            attributionRequired: false,
-            auditLoggingMandatory: false,
-            noRedistribution: false
-        },
-        advancedConditions: {
-            redistributionRights: 'not_allowed',
-            auditLoggingRequirement: 'optional',
-            attributionRequirement: 'not_required',
-            volumeBasedPricing: false,
-            volumePricingAdjustment: 0,
-            volumePricingUnit: 'tb'
-        }
-    }
+    ssoDomain: ''
 }
 
 export const emptyComplianceCommitment: ComplianceCommitment = {
