@@ -47,11 +47,6 @@ export default function OnboardingStep3() {
         navigate(participantOnboardingPaths.step2)
     }
 
-    const selectAllParticipation = () => {
-        setParticipationIntent(participationOptions)
-        writeOnboardingValue(onboardingStorageKeys.participationIntent, participationOptions)
-    }
-
     const fillMockData = () => {
         const mockParticipation = ['Access datasets', 'Collaborate']
         const mockLegal: LegalAcknowledgment = {
@@ -99,6 +94,12 @@ export default function OnboardingStep3() {
                             )
                         })}
                     </div>
+                    {participationIntent.includes('Contribute datasets') && (
+                        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                            Dataset privacy, access controls, and commercial terms are configured later in dataset onboarding.
+                            This participant application only verifies who your team is and what kind of platform participation you are requesting.
+                        </div>
+                    )}
                 </section>
 
                 <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
@@ -154,13 +155,6 @@ export default function OnboardingStep3() {
                         className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-300 hover:text-white transition-colors text-sm"
                     >
                         Use mock data
-                    </button>
-                    <button
-                        type="button"
-                        onClick={selectAllParticipation}
-                        className="px-4 py-2 rounded-lg border border-slate-600 hover:border-purple-500 text-slate-300 hover:text-purple-300 transition-colors text-sm"
-                    >
-                        Select All
                     </button>
                     <button
                         type="button"

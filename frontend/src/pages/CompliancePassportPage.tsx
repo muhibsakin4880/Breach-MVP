@@ -187,6 +187,7 @@ export default function CompliancePassportPage() {
                             </p>
                             <div className="mt-5 space-y-3">
                                 <PassportField label="Usage summary" value={passport.usageSummary} />
+                                <PassportField label="Use case summary" value={passport.useCaseSummary} />
                                 <PassportField label="Participation intent" value={passport.participationIntent.join(', ')} />
                                 <PassportField label="Preferred org type" value={passport.preferredOrgType} />
                                 <PassportField label="Default term" value={passport.defaultDuration} />

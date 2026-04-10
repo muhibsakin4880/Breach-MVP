@@ -5,6 +5,7 @@ import type {
     Step1FormState,
     VerificationSnapshot
 } from '../onboarding/types'
+import { isUseCaseSummaryValid } from '../onboarding/validators'
 
 export type CompliancePassportStatus = 'active' | 'review' | 'incomplete'
 
@@ -29,6 +30,7 @@ export type CompliancePassport = {
     validUntil: string
     organization: Step1FormState
     intendedUsage: string[]
+    useCaseSummary: string
     participationIntent: string[]
     legalAcknowledgment: LegalAcknowledgment
     verification: VerificationSnapshot
@@ -62,6 +64,8 @@ const defaultStep1: Step1FormState = {
 }
 
 const defaultUsage = ['Research', 'AI/ML training']
+const defaultUseCaseSummary =
+    'Evaluate healthcare datasets for benchmarking and mock reviewer triage before requesting governed access.'
 const defaultParticipationIntent = ['Access datasets', 'Collaborate']
 const defaultLegal: LegalAcknowledgment = {
     authorizedRepresentative: true,
@@ -154,6 +158,7 @@ export const buildCompliancePassport = (): CompliancePassport => {
         ...readOnboardingValue<Partial<Step1FormState>>(onboardingStorageKeys.step1, {})
     }
     const intendedUsage = readOnboardingValue<string[]>(onboardingStorageKeys.intendedUsage, defaultUsage)
+    const useCaseSummary = readOnboardingValue<string>(onboardingStorageKeys.useCaseSummary, defaultUseCaseSummary)
     const participationIntent = readOnboardingValue<string[]>(onboardingStorageKeys.participationIntent, defaultParticipationIntent)
     const legalAcknowledgment = {
         ...defaultLegal,
@@ -178,8 +183,13 @@ export const buildCompliancePassport = (): CompliancePassport => {
         {
             key: 'usage',
             label: 'Usage declaration',
-            complete: intendedUsage.length > 0 && participationIntent.length > 0,
-            detail: `${intendedUsage.length} usage scope(s) · ${participationIntent.length} participation path(s)`
+            complete:
+                intendedUsage.length > 0 &&
+                participationIntent.length > 0 &&
+                isUseCaseSummaryValid(useCaseSummary),
+            detail: useCaseSummary.trim()
+                ? `${intendedUsage.join(', ')} · ${useCaseSummary.trim()}`
+                : `${intendedUsage.length} usage scope(s) · ${participationIntent.length} participation path(s)`
         },
         {
             key: 'legal',
@@ -251,6 +261,7 @@ export const buildCompliancePassport = (): CompliancePassport => {
         validUntil: getValidUntil(status),
         organization,
         intendedUsage,
+        useCaseSummary,
         participationIntent,
         legalAcknowledgment,
         verification,
@@ -270,7 +281,7 @@ export const buildRequestPrefillFromPassport = (
 ): CompliancePassportRequestPrefill => ({
     orgType: passport.preferredOrgType,
     affiliation: passport.organization.organizationName,
-    intendedUsage: `${passport.usageSummary}. Requested by ${passport.organization.roleInOrganization.toLowerCase()} from ${passport.organization.organizationName}.`,
+    intendedUsage: `${passport.usageSummary}. ${passport.useCaseSummary.trim()} Requested by ${passport.organization.roleInOrganization.toLowerCase()} from ${passport.organization.organizationName}.`,
     duration: passport.defaultDuration,
     usageScale: inferUsageScale(passport.intendedUsage, passport.participationIntent),
     complianceChecked: passport.status === 'active' || passport.status === 'review',

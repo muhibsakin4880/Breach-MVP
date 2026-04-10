@@ -9,6 +9,7 @@ import type {
 export const onboardingStorageKeys = {
     step1: 'Redoubt:onboarding:step1',
     intendedUsage: 'Redoubt:onboarding:intendedUsage',
+    useCaseSummary: 'Redoubt:onboarding:useCaseSummary',
     participationIntent: 'Redoubt:onboarding:participationIntent',
     legalAcknowledgment: 'Redoubt:onboarding:legalAcknowledgment',
     verification: 'Redoubt:onboarding:verification',
@@ -30,6 +31,8 @@ export const emptyLegalAcknowledgment: LegalAcknowledgment = {
     governancePolicyAccepted: false,
     nonRedistributionAcknowledged: false
 }
+
+export const emptyUseCaseSummary = ''
 
 export const emptyVerificationSnapshot: VerificationSnapshot = {
     linkedInConnected: false,

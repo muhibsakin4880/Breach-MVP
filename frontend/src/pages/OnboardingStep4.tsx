@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
+    participantOnboardingEstimatedReviewTime,
     participantOnboardingPaths,
     participantOnboardingVerificationSummary
 } from '../onboarding/constants'
@@ -38,7 +39,9 @@ export default function OnboardingStep4() {
     const [dragTarget, setDragTarget] = useState<'affiliation' | 'authorization' | null>(null)
     const [showError, setShowError] = useState(false)
     const [corporateDomain, setCorporateDomain] = useState('')
-    const [domainVerificationStep, setDomainVerificationStep] = useState<1 | 2 | 3>(1)
+    const [domainVerificationStep, setDomainVerificationStep] = useState<1 | 2 | 3>(() =>
+        snapshot.domainVerified ? 3 : 1
+    )
     const [verificationCode, setVerificationCode] = useState('')
 
     useEffect(() => {
@@ -152,6 +155,8 @@ export default function OnboardingStep4() {
     const fillMockData = () => {
         setIsLinkedInConnected(true)
         setIsDomainVerified(true)
+        setCorporateDomain('demo.redoubt.local')
+        setDomainVerificationStep(3)
         setAffiliationFileName('affiliation-proof.pdf')
         setAuthorizationFileName('authorization-letter.pdf')
         setAuthenticationMethod('hardware_key')
@@ -170,6 +175,47 @@ export default function OnboardingStep4() {
                         <span className="text-xs uppercase tracking-[0.14em] text-amber-200">Required</span>
                     </div>
                     <p className="text-sm text-slate-400">{participantOnboardingVerificationSummary}</p>
+
+                    <article className="rounded-xl border border-cyan-500/25 bg-cyan-500/10 p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h3 className="text-base font-semibold text-white">Why we ask for these checks</h3>
+                                <p className="mt-1 text-sm text-cyan-100/80">
+                                    This mock review package helps explain how Redoubt verifies real applicants before access is approved.
+                                </p>
+                            </div>
+                            <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                Demo flow
+                            </span>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            <div className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
+                                <div className="text-sm font-semibold text-white">LinkedIn verification</div>
+                                <p className="mt-2 text-sm text-slate-300">
+                                    Confirms the public professional profile tied to the person submitting the request.
+                                </p>
+                            </div>
+                            <div className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
+                                <div className="text-sm font-semibold text-white">DNS verification</div>
+                                <p className="mt-2 text-sm text-slate-300">
+                                    Confirms the applicant can prove control of the corporate domain behind the work email.
+                                </p>
+                            </div>
+                            <div className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
+                                <div className="text-sm font-semibold text-white">Authorization evidence</div>
+                                <p className="mt-2 text-sm text-slate-300">
+                                    Shows the applicant is operating with organizational approval before protected workflows are unlocked.
+                                </p>
+                            </div>
+                            <div className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
+                                <div className="text-sm font-semibold text-white">Review timing</div>
+                                <p className="mt-2 text-sm text-slate-300">
+                                    Demo applications stay human-reviewed, with a typical turnaround of {participantOnboardingEstimatedReviewTime}.
+                                </p>
+                            </div>
+                        </div>
+                    </article>
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">

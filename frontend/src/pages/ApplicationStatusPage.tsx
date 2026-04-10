@@ -7,6 +7,7 @@ import {
     participantOnboardingPolicyPath,
     participantOnboardingReviewStatus
 } from '../onboarding/constants'
+import { isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
 import { emptySubmissionMeta, readSubmissionMeta } from '../onboarding/storage'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
@@ -39,6 +40,8 @@ const timelineSteps: TimelineStep[] = [
 
 export default function ApplicationStatusPage() {
     const [submissionMeta] = useState(() => readSubmissionMeta(emptySubmissionMeta))
+    const [snapshot] = useState(() => readOnboardingSnapshot())
+    const verificationReady = isStep4Complete(snapshot.verification)
 
     return (
         <div className="bg-slate-900 min-h-screen text-white">
@@ -77,6 +80,12 @@ export default function ApplicationStatusPage() {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-slate-400">Next update</span>
                                 <span className="text-slate-100 font-semibold">Email notification</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-400">Verification package</span>
+                                <span className={`font-semibold ${verificationReady ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {verificationReady ? 'Ready for review' : 'Still incomplete'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -153,6 +162,36 @@ export default function ApplicationStatusPage() {
                                 </li>
                             ))}
                         </ol>
+                    </div>
+
+                    <div className="bg-slate-900/55 border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
+                        <h3 className="text-lg font-semibold text-white">Verification snapshot</h3>
+                        <div className="grid gap-3 md:grid-cols-2 text-sm">
+                            <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
+                                <div className="text-slate-400">LinkedIn verification</div>
+                                <div className={`mt-1 font-semibold ${snapshot.verification.linkedInConnected ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {snapshot.verification.linkedInConnected ? 'Complete' : 'Pending'}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
+                                <div className="text-slate-400">Domain verification</div>
+                                <div className={`mt-1 font-semibold ${snapshot.verification.domainVerified ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {snapshot.verification.domainVerified ? 'Complete' : 'Pending'}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
+                                <div className="text-slate-400">Affiliation evidence</div>
+                                <div className={`mt-1 font-semibold ${snapshot.verification.affiliationFileName ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {snapshot.verification.affiliationFileName || 'Pending upload'}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
+                                <div className="text-slate-400">Authorization evidence</div>
+                                <div className={`mt-1 font-semibold ${snapshot.verification.authorizationFileName ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {snapshot.verification.authorizationFileName || 'Pending upload'}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="border-t border-slate-800/80 pt-6 flex flex-wrap gap-3">

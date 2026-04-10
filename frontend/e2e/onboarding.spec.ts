@@ -10,6 +10,7 @@ const authStorageKeys = {
 const onboardingStorageKeys = {
     step1: 'Redoubt:onboarding:step1',
     intendedUsage: 'Redoubt:onboarding:intendedUsage',
+    useCaseSummary: 'Redoubt:onboarding:useCaseSummary',
     participationIntent: 'Redoubt:onboarding:participationIntent',
     legalAcknowledgment: 'Redoubt:onboarding:legalAcknowledgment',
     verification: 'Redoubt:onboarding:verification',
@@ -27,6 +28,8 @@ const completedStep1 = {
 }
 
 const completedParticipation = ['Access datasets', 'Collaborate']
+const completedUseCaseSummary =
+    'We want to benchmark regulated healthcare datasets for internal research validation inside the Redoubt demo workflow.'
 
 const completedLegalAcknowledgment = {
     authorizedRepresentative: true,
@@ -84,12 +87,13 @@ test.describe('participant onboarding', () => {
 
         await page.goto('/login')
 
-        await expect(page.getByRole('heading', { name: 'System Authentication' })).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Secure Node Entry' })).toBeVisible()
         await expect(page.getByRole('heading', { name: 'Access Request Required' })).not.toBeVisible()
 
-        await page.getByPlaceholder('Authorized Corporate Email or Node ID').fill(completedStep1.officialWorkEmail)
-        await page.getByRole('button', { name: 'Verify Identity →' }).click()
-        await page.getByRole('button', { name: /Authenticate via Okta \/ Microsoft Entra/i }).click()
+        await page.getByPlaceholder('you@yourcompany.com').fill(completedStep1.officialWorkEmail)
+        await page.getByRole('button', { name: 'Continue →' }).click()
+        await expect(page.getByRole('heading', { name: 'SSO Redirect' })).toBeVisible()
+        await page.getByRole('button', { name: 'Continue to SSO →' }).click()
 
         await expect(page).toHaveURL(/\/dashboard$/)
     })
@@ -99,6 +103,7 @@ test.describe('participant onboarding', () => {
             onboarding: {
                 step1: completedStep1,
                 intendedUsage: ['Research'],
+                useCaseSummary: completedUseCaseSummary,
                 participationIntent: completedParticipation,
                 legalAcknowledgment: completedLegalAcknowledgment,
                 verification: {
@@ -143,7 +148,8 @@ test.describe('participant onboarding', () => {
         await seedAppState(page, {
             onboarding: {
                 step1: completedStep1,
-                intendedUsage: ['Research']
+                intendedUsage: ['Research'],
+                useCaseSummary: completedUseCaseSummary
             }
         })
 
@@ -175,23 +181,70 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText(/Please complete all required fields with a valid corporate email\./)).toBeVisible()
     })
 
+    test('step 2 requires both usage tags and a reviewer-facing use case summary before continuing', async ({ page }) => {
+        await seedAppState(page, {
+            onboarding: {
+                step1: completedStep1
+            }
+        })
+
+        await page.goto('/onboarding/step2')
+
+        const nextButton = page.getByRole('button', { name: 'Next' })
+        await expect(nextButton).toBeDisabled()
+
+        await page.getByRole('button', { name: 'Research' }).click()
+        await expect(nextButton).toBeDisabled()
+
+        await page.locator('#use-case-summary').fill('Need data.')
+        await expect(page.getByText('Add a bit more detail so reviewers understand the request.')).toBeVisible()
+        await expect(nextButton).toBeDisabled()
+
+        await page.locator('#use-case-summary').fill(completedUseCaseSummary)
+        await expect(nextButton).toBeEnabled()
+
+        await nextButton.click()
+        await expect(page).toHaveURL(/\/onboarding\/step3$/)
+    })
+
+    test('step 3 explains that dataset controls are configured later during dataset onboarding', async ({ page }) => {
+        await seedAppState(page, {
+            onboarding: {
+                step1: completedStep1,
+                intendedUsage: ['Research'],
+                useCaseSummary: completedUseCaseSummary
+            }
+        })
+
+        await page.goto('/onboarding/step3')
+
+        await page.getByRole('button', { name: 'Contribute datasets' }).click()
+
+        await expect(page.getByText(/Dataset privacy, access controls, and commercial terms are configured later in dataset onboarding\./)).toBeVisible()
+        await expect(page.getByText(/This participant application only verifies who your team is and what kind of platform participation you are requesting\./)).toBeVisible()
+    })
+
     test('step 4 keeps progress disabled until verification, uploads, and auth setup are complete', async ({ page }) => {
         await seedAppState(page, {
             onboarding: {
                 step1: completedStep1,
                 intendedUsage: ['Research'],
+                useCaseSummary: completedUseCaseSummary,
                 participationIntent: completedParticipation,
                 legalAcknowledgment: completedLegalAcknowledgment
             }
         })
 
         await page.goto('/onboarding/step4')
+
         await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled()
         await expect(page.getByRole('button', { name: 'Connect LinkedIn' })).toBeVisible()
-        await expect(page.getByRole('button', { name: 'Verify DNS Record' })).toBeVisible()
+        await expect(page.getByPlaceholder('yourcompany.com')).toBeVisible()
         await expect(page.getByText('Upload Proof of Affiliation')).toBeVisible()
         await expect(page.getByText('Upload Authorization / Compliance Letter')).toBeVisible()
         await expect(page.getByText('Authentication Setup')).toBeVisible()
+        await expect(page.getByText('Why we ask for these checks')).toBeVisible()
+        await expect(page.getByText('Privacy & Access Controls')).toHaveCount(0)
     })
 
     test('a completed onboarding submission lands on the onboarding confirmation screen and still allows mock console access', async ({ page }) => {
@@ -199,6 +252,7 @@ test.describe('participant onboarding', () => {
             onboarding: {
                 step1: completedStep1,
                 intendedUsage: ['Research', 'Analytics'],
+                useCaseSummary: completedUseCaseSummary,
                 participationIntent: completedParticipation,
                 legalAcknowledgment: completedLegalAcknowledgment
             }
@@ -209,7 +263,9 @@ test.describe('participant onboarding', () => {
         await page.getByRole('button', { name: 'Connect LinkedIn' }).click()
         await expect(page.getByText('Affiliation Confirmed')).toBeVisible()
 
-        await page.getByRole('button', { name: 'Verify DNS Record' }).click()
+        await page.getByPlaceholder('yourcompany.com').fill('northwindresearch.com')
+        await page.getByRole('button', { name: 'Continue to DNS Setup' }).click()
+        await page.getByRole('button', { name: 'Verify Domain' }).click()
         await expect(page.getByText('Domain Verified')).toBeVisible()
 
         await page.locator('#affiliation-proof-upload').setInputFiles({
@@ -225,12 +281,14 @@ test.describe('participant onboarding', () => {
 
         await expect(page.getByText('affiliation-proof.pdf')).toBeVisible()
         await expect(page.getByText('authorization-letter.pdf')).toBeVisible()
-        await page.getByText('Secure Email Token', { exact: true }).click()
+        await page.locator('label').filter({ hasText: 'Hardware Key (YubiKey / WebAuthn)' }).click()
 
         await page.getByRole('button', { name: 'Next' }).click()
         await expect(page).toHaveURL(/\/onboarding\/step5$/)
         await expect(page.getByRole('heading', { name: 'Final Review & Commitments' })).toBeVisible()
-        await expect(page.getByText('Secure Email Token', { exact: true })).toBeVisible()
+        await expect(page.getByText(completedUseCaseSummary)).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'What Happens Next' })).toBeVisible()
+        await expect(page.getByText('Hardware Key (YubiKey / WebAuthn)', { exact: true })).toBeVisible()
 
         await page.getByRole('checkbox', { name: /I will use approved data only/i }).check()
         await page.getByRole('checkbox', { name: /I will not share, resell, or redistribute/i }).check()
@@ -243,6 +301,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByRole('heading', { name: 'Application Submitted' })).toBeVisible()
         await expect(page.getByText('In review', { exact: true })).toBeVisible()
         await expect(page.getByText(/#RDT-2026-\d{4}/)).toBeVisible()
+        await expect(page.getByText('Verification Snapshot')).toBeVisible()
         await expect(page.getByRole('link', { name: 'Open Participant Console' })).toBeVisible()
         await expect(page.getByRole('link', { name: 'View Application Status' })).toBeVisible()
 
@@ -252,14 +311,18 @@ test.describe('participant onboarding', () => {
         await page.getByRole('link', { name: 'View Application Status' }).click()
         await expect(page).toHaveURL(/\/application-status$/)
         await expect(page.getByRole('heading', { name: 'Application Status' })).toBeVisible()
+        await expect(page.getByText('Verification package')).toBeVisible()
+        await expect(page.getByText('Ready for review')).toBeVisible()
 
         await page.getByRole('link', { name: 'Open Participant Console' }).click()
         await expect(page).toHaveURL(/\/login$/)
         await expect(page.getByText('Application review is still pending.')).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Secure Node Entry' })).toBeVisible()
 
-        await page.getByPlaceholder('Authorized Corporate Email or Node ID').fill(completedStep1.officialWorkEmail)
-        await page.getByRole('button', { name: 'Verify Identity →' }).click()
-        await page.getByRole('button', { name: /Authenticate via Okta \/ Microsoft Entra/i }).click()
+        await page.getByPlaceholder('you@yourcompany.com').fill(completedStep1.officialWorkEmail)
+        await page.getByRole('button', { name: 'Continue →' }).click()
+        await expect(page.getByRole('heading', { name: 'SSO Redirect' })).toBeVisible()
+        await page.getByRole('button', { name: 'Continue to SSO →' }).click()
 
         await expect(page).toHaveURL(/\/dashboard$/)
     })

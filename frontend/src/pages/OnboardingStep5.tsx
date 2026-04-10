@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../contexts/AuthContext'
 import {
+    participantOnboardingEstimatedReviewTime,
+    participantOnboardingNextSteps,
     participantOnboardingPostSubmitPath,
     participantOnboardingPaths,
+    participantOnboardingReviewStatus,
     participantOnboardingVerificationSummary
 } from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
@@ -75,6 +78,7 @@ export default function OnboardingStep5() {
     }
 
     const usageSummary = reviewSnapshot.intendedUsage.length > 0 ? reviewSnapshot.intendedUsage : ['No usage selected yet']
+    const useCaseSummary = reviewSnapshot.useCaseSummary.trim() || 'No reviewer-facing summary captured yet'
     const participationSummary =
         reviewSnapshot.participationIntent.length > 0
             ? reviewSnapshot.participationIntent
@@ -155,6 +159,10 @@ export default function OnboardingStep5() {
                                             {option}
                                         </span>
                                     ))}
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Use Case Summary</div>
+                                    <div className={detailValueClassName}>{useCaseSummary}</div>
                                 </div>
                             </article>
 
@@ -252,6 +260,31 @@ export default function OnboardingStep5() {
                                 <p className="text-sm text-slate-400">{participantOnboardingVerificationSummary}</p>
                             </article>
                         </div>
+                    </section>
+
+                    <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h2 className="text-xl font-semibold">What Happens Next</h2>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    This demo stays human-reviewed even though the application flow is mock-data driven.
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-right">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-blue-200">Review status</div>
+                                <div className="mt-1 text-sm font-semibold text-white">{participantOnboardingReviewStatus}</div>
+                                <div className="mt-1 text-xs text-slate-300">Typical turnaround: {participantOnboardingEstimatedReviewTime}</div>
+                            </div>
+                        </div>
+
+                        <ol className="space-y-3 text-sm text-slate-300">
+                            {participantOnboardingNextSteps.map((step, index) => (
+                                <li key={step} className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3">
+                                    <span className="mr-2 font-mono text-xs text-cyan-400">[{index + 1}]</span>
+                                    {step}
+                                </li>
+                            ))}
+                        </ol>
                     </section>
 
                     <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">

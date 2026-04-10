@@ -33,6 +33,7 @@ export type ComplianceCommitment = {
 export type OnboardingSnapshot = {
     step1: Step1FormState
     intendedUsage: string[]
+    useCaseSummary: string
     participationIntent: string[]
     legalAcknowledgment: LegalAcknowledgment
     verification: VerificationSnapshot
