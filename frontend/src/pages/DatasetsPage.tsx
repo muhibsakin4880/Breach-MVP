@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
-import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import {
     dashboardColorTokens,
     dashboardComponentTokens
 } from '../dashboardTokens'
+import { getDatasetGeoAccessSignal } from '../domain/datasetGeoAccess'
 import {
     emptyStep1FormState,
     onboardingStorageKeys,
@@ -89,12 +89,6 @@ type SidebarSectionState = Record<SidebarSectionKey, boolean>
 
 type RailSectionKey = 'shortlist' | 'compare' | 'requestReadiness'
 type RailSectionState = Record<RailSectionKey, boolean>
-
-type GeoAccessSignal = {
-    label: string
-    detail: string
-    tone: SignalTone
-}
 
 const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
@@ -186,111 +180,6 @@ const discoveryText = {
     meta: 'text-[13px] leading-6 text-slate-500',
     metaStrong: 'text-[13px] font-medium leading-6 text-slate-300'
 } as const
-
-const northAmericaCountries = new Set([
-    'united states',
-    'united states of america',
-    'canada',
-    'mexico'
-])
-
-const usEuCountries = new Set([
-    'united states',
-    'united states of america',
-    'austria',
-    'belgium',
-    'bulgaria',
-    'croatia',
-    'cyprus',
-    'czech republic',
-    'czechia',
-    'denmark',
-    'estonia',
-    'finland',
-    'france',
-    'germany',
-    'greece',
-    'hungary',
-    'ireland',
-    'italy',
-    'latvia',
-    'lithuania',
-    'luxembourg',
-    'malta',
-    'netherlands',
-    'poland',
-    'portugal',
-    'romania',
-    'slovakia',
-    'slovenia',
-    'spain',
-    'sweden'
-])
-
-const normalizeCountry = (value: string) => value.trim().toLowerCase()
-
-function getDatasetGeoAccessSignal(datasetId: number, buyerOrgCountry: string): GeoAccessSignal {
-    const packageGeography = getAccessPackageForDataset(String(datasetId)).geography.label
-    const normalizedCountry = normalizeCountry(buyerOrgCountry)
-
-    if (!normalizedCountry) {
-        return {
-            label: 'Geo check requires org profile',
-            detail: `${packageGeography} policy. Add your organization country to evaluate provider residency and regional access fit.`,
-            tone: 'scheduled'
-        }
-    }
-
-    if (packageGeography === 'Global') {
-        return {
-            label: 'Eligible from your org location',
-            detail: `Global package. ${buyerOrgCountry} is eligible to proceed to provider review, subject to final purpose and compliance checks.`,
-            tone: 'healthy'
-        }
-    }
-
-    if (packageGeography === 'North America') {
-        return northAmericaCountries.has(normalizedCountry)
-            ? {
-                label: 'Eligible from your org location',
-                detail: `North America package. ${buyerOrgCountry} falls inside the current regional access scope.`,
-                tone: 'healthy'
-            }
-            : {
-                label: 'Region-restricted',
-                detail: `North America package. ${buyerOrgCountry} sits outside the provider's current regional access scope.`,
-                tone: 'monitoring'
-            }
-    }
-
-    if (packageGeography === 'US / EU venue scope' || packageGeography === 'US / EU utility scope') {
-        return usEuCountries.has(normalizedCountry)
-            ? {
-                label: 'Eligible from your org location',
-                detail: `${packageGeography} package. ${buyerOrgCountry} matches the current buyer geography scope.`,
-                tone: 'healthy'
-            }
-            : {
-                label: 'Region-restricted',
-                detail: `${packageGeography} package. ${buyerOrgCountry} needs manual geography review before access can proceed.`,
-                tone: 'monitoring'
-            }
-    }
-
-    if (packageGeography === 'Residency constrained' || packageGeography === 'Residency reviewed') {
-        return {
-            label: 'Residency constrained',
-            detail: `${packageGeography} package. Provider residency controls and buyer location checks shape final access eligibility for ${buyerOrgCountry}.`,
-            tone: 'monitoring'
-        }
-    }
-
-    return {
-        label: 'Region-restricted',
-        detail: `${packageGeography} package. Final access depends on matching your organization location to the provider's approved geography.`,
-        tone: 'scheduled'
-    }
-}
 
 export default function DatasetsPage() {
     const [filters, setFilters] = useState<FilterState>(defaultFilters)

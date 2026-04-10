@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
 import {
     dashboardColorTokens,
     dashboardComponentTokens,
@@ -19,6 +20,15 @@ import {
     dashboardSupportContact,
     dashboardUpcomingSessions
 } from '../data/dashboardPanelsData'
+import {
+    buildDatasetGeoAccessOverview,
+    type GeoAccessTone
+} from '../domain/datasetGeoAccess'
+import {
+    emptyStep1FormState,
+    onboardingStorageKeys,
+    readOnboardingValue
+} from '../onboarding/storage'
 
 const dashboardSparklinePoints = [
     { x: 18, y: 60 },
@@ -78,6 +88,44 @@ export default function DashboardPage() {
     const dashboardAtAGlanceCards = getDashboardAtAGlanceCards()
     const completedChecklistItems = dashboardChecklistItems.filter(item => item.done).length
     const checklistProgress = Math.round((completedChecklistItems / dashboardChecklistItems.length) * 100)
+    const buyerOrgCountry = readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState).country.trim()
+    const geoAccessOverview = buildDatasetGeoAccessOverview(DATASET_DISCOVERY_SUMMARIES, buyerOrgCountry)
+    const geoAccessMetrics: GeoAccessMetric[] = [
+        {
+            label: 'Organization location',
+            value: buyerOrgCountry || 'Add org country',
+            detail: buyerOrgCountry
+                ? 'Used to personalize buyer geo eligibility across discovery.'
+                : 'Complete your org profile to activate buyer-specific geo checks.'
+        },
+        {
+            label: 'Eligible now',
+            value: `${geoAccessOverview.eligibleCount}`,
+            detail: `Of ${geoAccessOverview.totalDatasetCount} catalog datasets`
+        },
+        {
+            label: 'Region-restricted',
+            value: `${geoAccessOverview.regionRestrictedCount}`,
+            detail: 'Outside current provider geography scope'
+        },
+        buyerOrgCountry
+            ? {
+                label: 'Residency constrained',
+                value: `${geoAccessOverview.residencyConstrainedCount}`,
+                detail: 'Provider residency controls still narrow access'
+            }
+            : {
+                label: 'Geo checks pending',
+                value: `${geoAccessOverview.pendingProfileCount}`,
+                detail: 'Waiting on your organization location'
+            }
+    ]
+    const primaryGeoAccessAction = buyerOrgCountry
+        ? { label: 'Browse eligible datasets', to: '/datasets' }
+        : { label: 'Update org profile', to: '/profile' }
+    const secondaryGeoAccessAction = buyerOrgCountry
+        ? { label: 'Review org profile', to: '/profile' }
+        : { label: 'Open discovery', to: '/datasets' }
 
     return (
         <div className={dashboardPageClass}>
@@ -116,6 +164,13 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </section>
+
+                <DashboardGeoAccessOverview
+                    overview={geoAccessOverview}
+                    metrics={geoAccessMetrics}
+                    primaryAction={primaryGeoAccessAction}
+                    secondaryAction={secondaryGeoAccessAction}
+                />
 
                 <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="today-at-a-glance">
                     <div className={dashboardSectionIntroClass}>
@@ -533,6 +588,70 @@ export default function DashboardPage() {
     )
 }
 
+type GeoAccessMetric = {
+    label: string
+    value: string
+    detail: string
+}
+
+function DashboardGeoAccessOverview({
+    overview,
+    metrics,
+    primaryAction,
+    secondaryAction
+}: {
+    overview: ReturnType<typeof buildDatasetGeoAccessOverview>
+    metrics: GeoAccessMetric[]
+    primaryAction: { label: string; to: string }
+    secondaryAction: { label: string; to: string }
+}) {
+    const toneMeta = getDashboardGeoAccessToneMeta(overview.tone)
+
+    return (
+        <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="dashboard-geo-access-posture">
+            <div className={`relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${toneMeta.panelClassName} px-6 py-6 shadow-[0_24px_70px_-38px_rgba(2,6,23,0.92)] sm:px-7 sm:py-7`}>
+                <div className={`pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full blur-3xl ${toneMeta.glowClassName}`} />
+                <div className={`pointer-events-none absolute -left-8 bottom-0 h-32 w-32 rounded-full blur-3xl ${toneMeta.glowClassName}`} />
+
+                <div className={`relative grid grid-cols-1 ${dashboardGridGapClass} xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] xl:items-start`}>
+                    <div>
+                        <div className={dashboardText.eyebrow}>Geo access posture</div>
+                        <div className={`mt-3 flex flex-wrap items-center ${dashboardCompactGapClass}`}>
+                            <h2 id="dashboard-geo-access-posture" className={dashboardText.panelTitle}>{overview.postureLabel}</h2>
+                            <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold ${toneMeta.badgeClassName}`}>
+                                <span className={`h-2 w-2 rounded-full ${toneMeta.dotClassName}`} aria-hidden="true" />
+                                Workspace visibility
+                            </span>
+                        </div>
+                        <p className={`mt-3 max-w-3xl ${dashboardText.bodyStrong}`}>{overview.postureDetail}</p>
+                        <p className={`mt-4 max-w-3xl ${dashboardText.meta}`}>
+                            These signals are derived from your organization location, provider package geography, and residency controls already shown during discovery.
+                        </p>
+
+                        <div className={`mt-5 flex flex-wrap ${dashboardCompactGapClass}`}>
+                            <Link to={primaryAction.to} className={dashboardActionButtonClass}>
+                                {primaryAction.label}
+                            </Link>
+                            <Link
+                                to={secondaryAction.to}
+                                className={`inline-flex items-center justify-center ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-2.5 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-cyan-100`}
+                            >
+                                {secondaryAction.label}
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {metrics.map(metric => (
+                            <GeoAccessMetricCard key={metric.label} metric={metric} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
 function DashboardPanel({
     eyebrow,
     title,
@@ -553,6 +672,16 @@ function DashboardPanel({
             <p className={`mt-2 ${dashboardText.body}`}>{description}</p>
             <div className="mt-4">{children}</div>
         </section>
+    )
+}
+
+function GeoAccessMetricCard({ metric }: { metric: GeoAccessMetric }) {
+    return (
+        <article className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[#0D1528]/88 px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className={dashboardText.eyebrow}>{metric.label}</div>
+            <div className={`mt-3 ${dashboardText.value}`}>{metric.value}</div>
+            <p className={`mt-3 ${dashboardText.meta}`}>{metric.detail}</p>
+        </article>
     )
 }
 
@@ -577,6 +706,32 @@ function ProgressBarVisual({
             </div>
         </div>
     )
+}
+
+function getDashboardGeoAccessToneMeta(tone: GeoAccessTone) {
+    switch (tone) {
+        case 'monitoring':
+            return {
+                panelClassName: 'border-amber-400/22 bg-[linear-gradient(135deg,rgba(120,53,15,0.24),rgba(15,23,42,0.94)_42%,rgba(9,14,27,0.98))]',
+                badgeClassName: 'border-amber-400/35 bg-amber-500/10 text-amber-100',
+                dotClassName: 'bg-amber-300',
+                glowClassName: 'bg-amber-300/14'
+            }
+        case 'scheduled':
+            return {
+                panelClassName: 'border-cyan-400/22 bg-[linear-gradient(135deg,rgba(8,47,73,0.24),rgba(15,23,42,0.94)_42%,rgba(9,14,27,0.98))]',
+                badgeClassName: 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100',
+                dotClassName: 'bg-cyan-300',
+                glowClassName: 'bg-cyan-300/14'
+            }
+        default:
+            return {
+                panelClassName: 'border-emerald-400/22 bg-[linear-gradient(135deg,rgba(6,78,59,0.24),rgba(15,23,42,0.94)_42%,rgba(9,14,27,0.98))]',
+                badgeClassName: 'border-emerald-400/35 bg-emerald-500/10 text-emerald-100',
+                dotClassName: 'bg-emerald-300',
+                glowClassName: 'bg-emerald-300/14'
+            }
+    }
 }
 
 function getTimelineStateMeta(state: 'completed' | 'in_progress' | 'upcoming') {
