@@ -16,10 +16,26 @@ export type DatasetRequest = {
     lastUpdated: string
     category: string
     delivery: string
+    organizationType: string
+    intendedUsage: string
+    duration: string
+    requestedOutputs: string
+    legalBasis: string
+    rightsFit: string
+    auditRequirement: string
+    reviewerRationale: string
+    reviewerNextStep: string
     reviewerFeedback?: string
     expectedResolution?: string
     notes?: string
     trustProfile: DatasetTrustProfile
+}
+
+export type ProviderReviewStatus = 'Needs provider review' | 'Awaiting clarification' | 'Actioned'
+
+export type RequestReviewField = {
+    label: string
+    value: string
 }
 
 export type ApprovedDataset = {
@@ -59,6 +75,15 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-12',
         category: 'Finance',
         delivery: 'S3 presigned + VPN',
+        organizationType: 'Enterprise quant research desk',
+        intendedUsage: 'Backtesting factor research models and replay analysis inside a governed workspace.',
+        duration: '90 days',
+        requestedOutputs: 'Factor diagnostics, simulated execution metrics, and aggregated model reports.',
+        legalBasis: 'Commercial market-data licensing is assumed in the demo packet, with venue boundaries still requiring provider confirmation.',
+        rightsFit: 'Aligned with research-only replay rights. No redistribution or customer-facing use was requested.',
+        auditRequirement: 'Workspace session logging and replay export review are required.',
+        reviewerRationale: 'Approved because the replay workflow stayed inside research-only rights and matched the scoped delivery route.',
+        reviewerNextStep: 'Keep audit logging enabled and return for revalidation before the next 90-day window closes.',
         notes: 'Approved for quantitative research workspace. Revalidation every 90 days.',
         trustProfile: DATASET_TRUST_PROFILE_LIBRARY.marketData
     },
@@ -72,6 +97,15 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-10',
         category: 'Climate Science',
         delivery: 'Workspace + API key',
+        organizationType: 'Public climate-risk lab',
+        intendedUsage: 'Climate risk scoring and resilience model calibration for flood exposure scenarios.',
+        duration: '6 months',
+        requestedOutputs: 'Derived risk scores, scenario summaries, and aggregated climate baselines.',
+        legalBasis: 'Licensing basis is summarized in the demo packet, but provider confirmation is still required before live use.',
+        rightsFit: 'Mostly aligned with resilience-planning scope, but downstream model-output intent still needs clarification.',
+        auditRequirement: 'Scoped API logging and export review are required for regional control checks.',
+        reviewerRationale: 'Pending because the request needs a narrower description of downstream model outputs before provider approval can proceed.',
+        reviewerNextStep: 'Clarify whether outputs stay internal or will be embedded in customer-facing tooling.',
         reviewerFeedback: 'Reviewer requested clarification on intended downstream model outputs.',
         expectedResolution: 'Estimated by Feb 20, 2026',
         notes: 'Awaiting policy review for regional export controls.',
@@ -87,6 +121,15 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-08',
         category: 'NLP & Text',
         delivery: 'API (awaiting approval)',
+        organizationType: 'University policy lab',
+        intendedUsage: 'Sentiment benchmark comparisons and prompt-evaluation research on moderated public-post corpora.',
+        duration: '3 months',
+        requestedOutputs: 'Model evaluation metrics and aggregate benchmark reports.',
+        legalBasis: 'The sharing basis is only summarized at a mock level and still needs provider confirmation.',
+        rightsFit: 'May exceed current aggregate-only rights until retention and moderation constraints are clarified.',
+        auditRequirement: 'Mandatory audit logging with reviewer approval for any benchmark export.',
+        reviewerRationale: 'Reviewer is holding the request because retention and moderation controls are not yet documented to match the benchmark workflow.',
+        reviewerNextStep: 'Provide a narrower retention plan and confirm that outputs remain aggregate-only.',
         reviewerFeedback: 'Pending additional data retention and moderation compliance confirmation.',
         expectedResolution: 'Estimated by Feb 22, 2026',
         notes: 'External reviewer assigned for policy check.',
@@ -102,6 +145,15 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-05',
         category: 'Healthcare',
         delivery: 'Secure enclave (declined)',
+        organizationType: 'Healthcare AI startup',
+        intendedUsage: 'Model validation against de-identified chest X-ray outcome cohorts.',
+        duration: '12 months',
+        requestedOutputs: 'Validation metrics, false-positive analysis, and aggregated performance summaries.',
+        legalBasis: 'Clinical sharing basis and ethics coverage need reviewer confirmation before any live evaluation can be approved.',
+        rightsFit: 'Not aligned yet because human-subject and institutional review evidence were incomplete.',
+        auditRequirement: 'Safe-haven logging, output review, and named reviewer accountability are required.',
+        reviewerRationale: 'Rejected because the request lacked full ethics approval and institutional review evidence for clinical validation.',
+        reviewerNextStep: 'Attach a complete IRB package and resubmit with a narrower reviewed research scope.',
         reviewerFeedback: 'Rejected due to incomplete ethics approval and missing institutional review documentation.',
         notes: 'Resubmission allowed after full IRB package is attached.',
         trustProfile: DATASET_TRUST_PROFILE_LIBRARY.clinicalResearch
@@ -116,6 +168,15 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-09',
         category: 'Smart Cities',
         delivery: 'Streaming websocket + workspace',
+        organizationType: 'Municipal transport analytics unit',
+        intendedUsage: 'Traffic anomaly detection and congestion forecasting inside a governed municipal workspace.',
+        duration: '3 months',
+        requestedOutputs: 'Aggregate congestion indicators, route stress scores, and simulation summaries.',
+        legalBasis: 'Governed operational analytics basis is assumed in the demo packet, with location controls still subject to provider confirmation.',
+        rightsFit: 'Aligned with planning and forecasting scope. No direct location joins were requested.',
+        auditRequirement: 'Region-scoped streaming audit logs and export review are mandatory.',
+        reviewerRationale: 'Approved because the request stayed within aggregate planning scope and accepted region-scoped logging controls.',
+        reviewerNextStep: 'Maintain aggregate-only outputs and return for review if direct location joins are added.',
         notes: 'Approved with streaming quota and audit logging enabled.',
         trustProfile: DATASET_TRUST_PROFILE_LIBRARY.mobilityTelemetry
     }
@@ -228,6 +289,64 @@ export const statusStyles: Record<RequestStatus, string> = {
 }
 
 export const requestStatusLabel = (status: RequestStatus) => requestReviewStateLabel(status)
+
+export const getProviderReviewStatus = (request: DatasetRequest): ProviderReviewStatus => {
+    if (request.status !== 'REVIEW_IN_PROGRESS') return 'Actioned'
+    if (request.reviewerFeedback) return 'Awaiting clarification'
+    return 'Needs provider review'
+}
+
+export const providerReviewStatusStyles: Record<ProviderReviewStatus, string> = {
+    'Needs provider review': 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100',
+    'Awaiting clarification': 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+    Actioned: 'border-slate-600 bg-slate-800/80 text-slate-200'
+}
+
+export const buildRequestBasisFields = (request: DatasetRequest): RequestReviewField[] => [
+    { label: 'Organization type', value: request.organizationType },
+    { label: 'Requested purpose', value: request.intendedUsage },
+    { label: 'Requested outputs', value: request.requestedOutputs },
+    { label: 'Duration', value: request.duration },
+    { label: 'Delivery route', value: request.delivery }
+]
+
+export const buildRequestComplianceFields = (request: DatasetRequest): RequestReviewField[] => [
+    { label: 'Legal basis', value: request.legalBasis },
+    { label: 'Rights fit', value: request.rightsFit },
+    { label: 'Sensitivity', value: request.trustProfile.sensitivity.value },
+    { label: 'Re-id risk', value: request.trustProfile.reidentificationRisk.value },
+    { label: 'Audit requirement', value: request.auditRequirement },
+    { label: 'Responsibility boundary', value: request.trustProfile.responsibilityBoundary.value }
+]
+
+export const buildRequestReviewerFields = (request: DatasetRequest): RequestReviewField[] => {
+    const queueStatus = getProviderReviewStatus(request)
+
+    return [
+        { label: 'Provider queue state', value: queueStatus },
+        { label: 'Reviewer rationale', value: request.reviewerRationale },
+        {
+            label: 'Reviewer note',
+            value:
+                request.reviewerFeedback ??
+                (request.status === 'REQUEST_APPROVED'
+                    ? 'No additional reviewer note is blocking this approved request.'
+                    : 'Reviewer note is still being prepared.')
+        },
+        {
+            label: 'Expected resolution',
+            value:
+                request.status === 'REVIEW_IN_PROGRESS'
+                    ? request.expectedResolution ?? 'Resolution timing will be shared after reviewer assignment.'
+                    : 'No pending review window'
+        },
+        { label: 'Next step', value: request.reviewerNextStep },
+        {
+            label: 'Notes',
+            value: request.notes ?? 'No additional notes are attached to this request.'
+        }
+    ]
+}
 
 export const activityDot: Record<RecentActivityItem['type'], string> = {
     success: 'bg-emerald-400',

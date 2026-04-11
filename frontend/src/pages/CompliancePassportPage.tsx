@@ -21,7 +21,7 @@ export default function CompliancePassportPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Compliance Passport</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            Reuse identity, legal, verification, and usage declarations as demo review context across access requests, rights quotes,
+                            Reuse identity, legal, verification, and usage declarations as buyer-side demo review context across access requests, rights quotes,
                             and governed checkout instead of re-entering the same diligence each time.
                         </p>
                     </div>
@@ -49,9 +49,9 @@ export default function CompliancePassportPage() {
                             <div className="mt-6 grid gap-4 md:grid-cols-3">
                                 <MetricCard label="Completion" value={`${passport.completionPercent}%`} detail={statusMeta.detail} tone="emerald" />
                                 <MetricCard
-                                    label="Reusable review context"
+                                    label="Reusable buyer context"
                                     value={passport.fastTrackEligible ? 'Ready' : 'Needs work'}
-                                    detail={passport.fastTrackEligible ? 'Requests and quotes can reuse declared diligence context.' : 'Complete remaining sections to improve reviewer reuse.'}
+                                    detail={passport.fastTrackEligible ? 'Requests and quotes can reuse declared buyer-side diligence context.' : 'Complete remaining sections to improve buyer-context reuse for reviewers.'}
                                     tone={passport.fastTrackEligible ? 'cyan' : 'amber'}
                                 />
                                 <MetricCard
@@ -71,7 +71,7 @@ export default function CompliancePassportPage() {
                                     <div>
                                         <h2 className="text-lg font-semibold text-white">Reusable Identity Snapshot</h2>
                                         <p className="mt-1 text-sm text-slate-400">
-                                            The normalized profile that downstream requests and quotes can inherit.
+                                            The normalized buyer-context packet that downstream requests and quotes can inherit.
                                         </p>
                                     </div>
                                     <Link
@@ -96,8 +96,8 @@ export default function CompliancePassportPage() {
                         <aside className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 shadow-[0_0_30px_rgba(16,185,129,0.12)]">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <h2 className="text-lg font-semibold text-white">Reuse Privileges</h2>
-                                    <p className="mt-1 text-sm text-emerald-100/75">What this passport unlocks right now.</p>
+                                    <h2 className="text-lg font-semibold text-white">Review Prep Uses</h2>
+                                    <p className="mt-1 text-sm text-emerald-100/75">Where this buyer context can be reused in the demo.</p>
                                 </div>
                                 <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100">
                                     Demo
@@ -116,7 +116,7 @@ export default function CompliancePassportPage() {
                                                         : 'border-amber-400/40 bg-amber-500/15 text-amber-100'
                                                 }`}
                                             >
-                                                {benefit.active ? 'Enabled' : 'Pending'}
+                                                {benefit.active ? 'Reusable' : 'Pending'}
                                             </span>
                                         </div>
                                         <p className="mt-2 text-xs text-slate-200/80">{benefit.detail}</p>
@@ -147,7 +147,7 @@ export default function CompliancePassportPage() {
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div>
                                 <h2 className="text-xl font-semibold text-white">Passport Coverage</h2>
-                                <p className="mt-1 text-sm text-slate-400">Each section becomes reusable once it is fully satisfied.</p>
+                                <p className="mt-1 text-sm text-slate-400">Each section adds reusable buyer context once it is fully satisfied.</p>
                             </div>
                             <Link
                                 to="/onboarding"
@@ -174,7 +174,7 @@ export default function CompliancePassportPage() {
                                                     : 'border-amber-500/40 bg-amber-500/10 text-amber-200'
                                             }`}
                                         >
-                                            {section.complete ? 'Reusable' : 'Missing detail'}
+                                            {section.complete ? 'Reusable context' : 'Missing detail'}
                                         </span>
                                     </div>
                                     <p className="mt-3 text-sm text-slate-300">{section.detail}</p>
@@ -187,7 +187,7 @@ export default function CompliancePassportPage() {
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/85 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
                             <h2 className="text-xl font-semibold text-white">Declared Scope Defaults</h2>
                             <p className="mt-1 text-sm text-slate-400">
-                                These defaults are what the passport can feed into quote builder and request workflows.
+                                These defaults are what the passport can propose into quote builder and request workflows before reviewer narrowing.
                             </p>
                             <div className="mt-5 space-y-3">
                                 <PassportField label="Usage summary" value={passport.usageSummary} />
@@ -202,9 +202,9 @@ export default function CompliancePassportPage() {
                         <section className="rounded-3xl border border-cyan-500/25 bg-cyan-500/8 p-6 shadow-[0_0_30px_rgba(34,211,238,0.12)]">
                             <h2 className="text-xl font-semibold text-white">Why This Matters</h2>
                             <div className="mt-4 space-y-3 text-sm text-slate-200">
-                                <p>Without a passport, each deal re-collects identity, governance, and verification data.</p>
-                                <p>With a passport, review context becomes a reusable asset that lowers friction in requests, quotes, and checkout.</p>
-                                <p>The quote builder now reads this passport directly, so pricing and reviewer readiness reflect declared diligence state rather than a legal guarantee.</p>
+                                <p>Without a passport, each deal re-collects buyer identity, governance, and verification context from scratch.</p>
+                                <p>With a passport, reviewers start from one reusable buyer-context packet instead of scattered declarations.</p>
+                                <p>The quote builder and request surfaces read this passport as demo review prep only, not as a legal guarantee or approval shortcut.</p>
                             </div>
                         </section>
                     </div>

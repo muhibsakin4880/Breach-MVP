@@ -1,4 +1,15 @@
 import { Link } from 'react-router-dom'
+import {
+    approvedDatasets,
+    buildRequestBasisFields,
+    buildRequestComplianceFields,
+    datasetRequests,
+    getProviderReviewStatus,
+    providerReviewStatusStyles,
+    requestStatusLabel,
+    statusStyles,
+    type DatasetRequest
+} from '../data/workspaceData'
 
 type DatasetStatus = 'Active' | 'Paused'
 
@@ -11,55 +22,11 @@ type ProviderDataset = {
     lastUpdated: string
 }
 
-type AccessRequest = {
-    id: string
-    organizationType: string
-    usage: string
-    duration: string
-    datasetName: string
-    status: 'New' | 'Pending' | 'Actioned'
-}
-
 const datasets: ProviderDataset[] = [
     { id: 'dp-01', name: 'Anonymized Retail Transactions 2024', confidence: 94, requests: 18, status: 'Active', lastUpdated: '2026-02-14' },
     { id: 'dp-02', name: 'Urban Mobility Sensor Streams', confidence: 90, requests: 11, status: 'Active', lastUpdated: '2026-02-13' },
     { id: 'dp-03', name: 'Satellite Imagery - Agriculture Zones', confidence: 92, requests: 7, status: 'Paused', lastUpdated: '2026-02-10' },
     { id: 'dp-04', name: 'Clinical Trial Outcomes (De-identified)', confidence: 96, requests: 5, status: 'Active', lastUpdated: '2026-02-12' }
-]
-
-const accessRequests: AccessRequest[] = [
-    {
-        id: 'rq-781',
-        organizationType: 'Enterprise analytics team',
-        usage: 'Demand forecasting models across new regions',
-        duration: '6 months',
-        datasetName: 'Anonymized Retail Transactions 2024',
-        status: 'New'
-    },
-    {
-        id: 'rq-782',
-        organizationType: 'Research lab (university)',
-        usage: 'Traffic anomaly detection benchmarks',
-        duration: '3 months',
-        datasetName: 'Urban Mobility Sensor Streams',
-        status: 'Pending'
-    },
-    {
-        id: 'rq-783',
-        organizationType: 'Healthcare AI startup',
-        usage: 'Model validation with aggregated outcomes',
-        duration: '12 months',
-        datasetName: 'Clinical Trial Outcomes (De-identified)',
-        status: 'New'
-    },
-    {
-        id: 'rq-784',
-        organizationType: 'Mapping provider partnership',
-        usage: 'Crop health layer enrichment for LATAM',
-        duration: '9 months',
-        datasetName: 'Satellite Imagery - Agriculture Zones',
-        status: 'Pending'
-    }
 ]
 
 const performanceSummary = {
@@ -74,12 +41,6 @@ const statusBadge: Record<DatasetStatus, string> = {
     Paused: 'bg-amber-500/10 text-amber-200 border border-amber-400/60'
 }
 
-const requestBadge: Record<AccessRequest['status'], string> = {
-    New: 'bg-blue-500/10 text-blue-200 border border-blue-400/60',
-    Pending: 'bg-amber-500/10 text-amber-200 border border-amber-400/60',
-    Actioned: 'bg-slate-700 text-slate-200 border border-slate-600'
-}
-
 const confidenceColor = (score: number) => {
     if (score >= 95) return 'text-emerald-300'
     if (score >= 90) return 'text-cyan-300'
@@ -89,8 +50,10 @@ const confidenceColor = (score: number) => {
 
 export default function ProviderDashboardPage() {
     const totalDatasets = datasets.length
-    const activeRequests = accessRequests.filter(r => r.status !== 'Actioned').length
-    const approvedAccesses = 9 // mock aggregate
+    const providerReviewRequests = datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS')
+    const actionedReviewCount = datasetRequests.length - providerReviewRequests.length
+    const activeRequests = providerReviewRequests.length
+    const approvedAccesses = approvedDatasets.length
 
     return (
         <div className="bg-slate-900 text-white min-h-screen">
@@ -220,57 +183,24 @@ export default function ProviderDashboardPage() {
                 </section>
 
                 <section className="grid xl:grid-cols-3 gap-6">
-                    <div className="xl:col-span-2 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                        <div className="xl:col-span-2 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
                             <div>
                                 <h2 className="text-xl font-semibold">Incoming access requests</h2>
-                                <p className="text-slate-400 text-sm">Only org type and usage are shown; buyer identity stays hidden.</p>
+                                <p className="text-slate-400 text-sm">Buyer identity stays hidden, but purpose, legal basis, rights fit, and risk posture stay visible before you act.</p>
                             </div>
                             <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/40 text-xs text-blue-100">
-                                {activeRequests} awaiting
+                                {activeRequests} awaiting provider action
                             </span>
                         </div>
 
+                        <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                            {actionedReviewCount} request{actionedReviewCount === 1 ? '' : 's'} already have an action recorded in the shared review log. This queue stays focused on items that still need a provider decision or clarification.
+                        </div>
+
                         <div className="space-y-4">
-                            {accessRequests.map(request => (
-                                <div key={request.id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 space-y-3">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-1">Dataset</p>
-                                            <h3 className="text-lg font-semibold">{request.datasetName}</h3>
-                                            <p className="text-xs text-slate-400">Request ID: {request.id}</p>
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${requestBadge[request.status]}`}>
-                                            {request.status}
-                                        </span>
-                                    </div>
-                                    <div className="grid md:grid-cols-3 gap-3 text-sm">
-                                        <div className="bg-slate-800 rounded-lg border border-slate-700 p-3">
-                                            <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-1">Org type</div>
-                                            <div className="text-slate-100">{request.organizationType}</div>
-                                        </div>
-                                        <div className="bg-slate-800 rounded-lg border border-slate-700 p-3 md:col-span-2">
-                                            <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-1">Intended usage</div>
-                                            <div className="text-slate-100">{request.usage}</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                                        <span className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200">
-                                            Duration: {request.duration}
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <button className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white transition-colors">
-                                                Approve access
-                                            </button>
-                                            <button className="px-3 py-2 rounded-lg border border-rose-500 text-rose-100 hover:bg-rose-500/10 text-xs font-semibold transition-colors">
-                                                Reject request
-                                            </button>
-                                            <button className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
-                                                Ask clarification
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                            {providerReviewRequests.map(request => (
+                                <ProviderRequestCard key={request.id} request={request} />
                             ))}
                         </div>
                     </div>
@@ -304,6 +234,79 @@ export default function ProviderDashboardPage() {
                     </div>
                 </section>
             </div>
+        </div>
+    )
+}
+
+function ProviderRequestCard({ request }: { request: DatasetRequest }) {
+    const providerReviewStatus = getProviderReviewStatus(request)
+    const basisFields = buildRequestBasisFields(request)
+    const complianceFields = buildRequestComplianceFields(request)
+
+    return (
+        <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <p className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-1">Dataset</p>
+                    <h3 className="text-lg font-semibold">{request.name}</h3>
+                    <p className="text-xs text-slate-400">Request ID: {request.requestNumber}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${providerReviewStatusStyles[providerReviewStatus]}`}>
+                        {providerReviewStatus}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[request.status]}`}>
+                        {requestStatusLabel(request.status)}
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+                {basisFields.map(field => (
+                    <RequestFieldCard key={`${request.id}-${field.label}`} label={field.label} value={field.value} />
+                ))}
+            </div>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-950/55 p-4">
+                <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-3">Compliance posture</div>
+                <div className="grid gap-3 md:grid-cols-2">
+                    {complianceFields.map(field => (
+                        <RequestFieldCard key={`${request.id}-compliance-${field.label}`} label={field.label} value={field.value} />
+                    ))}
+                </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/8 px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">Reviewer rationale</div>
+                <p className="mt-2 text-sm leading-6 text-amber-50/95">{request.reviewerRationale}</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+                <Link
+                    to={`/access-requests/${request.id}`}
+                    className="px-3 py-2 rounded-lg border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+                >
+                    Open review detail
+                </Link>
+                <button className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white transition-colors">
+                    Approve access
+                </button>
+                <button className="px-3 py-2 rounded-lg border border-rose-500 text-rose-100 hover:bg-rose-500/10 text-xs font-semibold transition-colors">
+                    Reject request
+                </button>
+                <button className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
+                    Ask clarification
+                </button>
+            </div>
+        </article>
+    )
+}
+
+function RequestFieldCard({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-3">
+            <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-1">{label}</div>
+            <div className="text-sm leading-6 text-slate-100">{value}</div>
         </div>
     )
 }

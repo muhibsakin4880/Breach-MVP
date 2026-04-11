@@ -72,11 +72,11 @@ export default function DataLineagePage() {
                             Data Lineage
                         </h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Trace every dataset from source to delivery with tracked lineage checkpoints.
+                            Trace every dataset from source to delivery with curated demo checkpoints and provenance cues.
                         </p>
                     </div>
                     <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
-                        Provenance tracking active
+                        Provenance cues active
                     </div>
                 </header>
 
@@ -149,7 +149,7 @@ export default function DataLineagePage() {
                             ))}
                         </div>
                         <div className="mt-6 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-xs text-blue-200">
-                            Lineage checkpoints are shown as demo provenance references and export cues.
+                            Lineage checkpoints are shown as curated demo provenance references. They help reviewers inspect flow history, but they are not proof of chain-of-custody.
                         </div>
                     </div>
                 </section>

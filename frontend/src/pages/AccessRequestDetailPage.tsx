@@ -1,5 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { datasetRequests, requestStatusLabel, statusStyles } from '../data/workspaceData'
+import {
+    buildRequestBasisFields,
+    buildRequestComplianceFields,
+    buildRequestReviewerFields,
+    datasetRequests,
+    getProviderReviewStatus,
+    providerReviewStatusStyles,
+    requestStatusLabel,
+    statusStyles
+} from '../data/workspaceData'
 
 export default function AccessRequestDetailPage() {
     const { requestId } = useParams()
@@ -22,15 +31,10 @@ export default function AccessRequestDetailPage() {
         )
     }
 
-    const reviewerReason =
-        request.status === 'REQUEST_APPROVED'
-            ? 'No reviewer feedback required after approval.'
-            : request.reviewerFeedback || 'Reviewer feedback is still being prepared.'
-
-    const expectedResolution =
-        request.status === 'REVIEW_IN_PROGRESS'
-            ? request.expectedResolution || 'Resolution timeline will be shared after reviewer assignment.'
-            : 'Not applicable'
+    const providerReviewStatus = getProviderReviewStatus(request)
+    const requestBasisFields = buildRequestBasisFields(request)
+    const complianceFields = buildRequestComplianceFields(request)
+    const reviewerFields = buildRequestReviewerFields(request)
 
     return (
         <div className="container mx-auto px-4 py-10 space-y-6 text-white">
@@ -38,11 +42,16 @@ export default function AccessRequestDetailPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-semibold">Request Details</h1>
-                        <p className="text-slate-400 text-sm mt-1">Detailed review status and workflow context for this access request.</p>
+                        <p className="text-slate-400 text-sm mt-1">Detailed review status, compliance posture, and rationale for this access request.</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full border text-xs font-medium w-fit ${statusStyles[request.status]}`}>
-                        {requestStatusLabel(request.status)}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                        <span className={`px-3 py-1 rounded-full border text-xs font-medium w-fit ${providerReviewStatusStyles[providerReviewStatus]}`}>
+                            {providerReviewStatus}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full border text-xs font-medium w-fit ${statusStyles[request.status]}`}>
+                            {requestStatusLabel(request.status)}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="mt-6 grid md:grid-cols-2 gap-4">
@@ -50,21 +59,30 @@ export default function AccessRequestDetailPage() {
                     <DetailCard label="Dataset Name" value={request.name} />
                     <DetailCard label="Submitted Date" value={request.submittedDate} />
                     <DetailCard label="Last Updated" value={request.lastUpdated} />
-                    <DetailCard label="Expected Resolution" value={expectedResolution} />
+                    <DetailCard label="Expected Resolution" value={request.status === 'REVIEW_IN_PROGRESS' ? request.expectedResolution || 'Resolution timing will be shared after reviewer assignment.' : 'No pending review window'} />
                     <DetailCard label="Category" value={request.category} />
                 </div>
 
-                <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-                    <h2 className="text-sm uppercase tracking-[0.08em] text-slate-400 mb-2">Reason / Reviewer Feedback</h2>
-                    <p className="text-sm text-slate-200 leading-relaxed">{reviewerReason}</p>
-                </div>
+                <RequestDetailSection
+                    title="Request basis"
+                    description="What the organization says it wants to do, how long it needs access, and what outputs it expects to generate."
+                    fields={requestBasisFields}
+                    className="mt-6"
+                />
 
-                <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-                    <h2 className="text-sm uppercase tracking-[0.08em] text-slate-400 mb-2">Notes / Comments</h2>
-                    <p className="text-sm text-slate-200 leading-relaxed">
-                        {request.notes || 'No additional notes are currently attached to this request.'}
-                    </p>
-                </div>
+                <RequestDetailSection
+                    title="Compliance posture"
+                    description="The current trust, rights, and audit signals attached to this request before any access is approved."
+                    fields={complianceFields}
+                    className="mt-4"
+                />
+
+                <RequestDetailSection
+                    title="Reviewer rationale"
+                    description="Why the request is currently approved, pending, or blocked, plus what should happen next."
+                    fields={reviewerFields}
+                    className="mt-4"
+                />
 
                 <div className="mt-6">
                     <Link
@@ -93,5 +111,31 @@ function DetailCard({ label, value }: DetailCardProps) {
             <p className="text-xs uppercase tracking-[0.08em] text-slate-400 mb-1">{label}</p>
             <p className="text-sm text-slate-100">{value}</p>
         </div>
+    )
+}
+
+function RequestDetailSection({
+    title,
+    description,
+    fields,
+    className = ''
+}: {
+    title: string
+    description: string
+    fields: Array<{ label: string; value: string }>
+    className?: string
+}) {
+    return (
+        <section className={`rounded-xl border border-slate-700 bg-slate-900/70 p-4 ${className}`.trim()}>
+            <div className="mb-4">
+                <h2 className="text-sm uppercase tracking-[0.08em] text-slate-400">{title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">{description}</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+                {fields.map(field => (
+                    <DetailCard key={`${title}-${field.label}`} label={field.label} value={field.value} />
+                ))}
+            </div>
+        </section>
     )
 }

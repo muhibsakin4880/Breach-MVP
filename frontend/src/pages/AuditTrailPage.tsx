@@ -65,7 +65,7 @@ export default function AuditTrailPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Audit Visibility Timeline</h1>
                         <p className="mt-2 text-slate-400">
-                            Review-oriented access logs with export cues and follow-up signals
+                            Review-oriented access logs with trace references, export cues, and follow-up signals
                         </p>
                     </div>
                     <div className={`rounded-2xl border px-4 py-3 text-sm shadow-[0_0_20px_rgba(16,185,129,0.18)] ${
@@ -167,12 +167,16 @@ export default function AuditTrailPage() {
                     </div>
                 </section>
 
+                <section className="mt-6 rounded-xl border border-amber-400/20 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/90">
+                    Rows in this timeline are demo review cues. Trace references help people inspect workflow history, but they are not cryptographic proof or a signed legal record.
+                </section>
+
                 <section className="mt-10 rounded-2xl border border-white/10 bg-[#0a1628] shadow-[0_10px_40px_rgba(0,0,0,0.25)] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left">
                             <thead className="bg-white/5 text-xs uppercase tracking-[0.14em] text-slate-500">
                                 <tr>
-                                    {['Timestamp', 'Event', 'Participant', 'Dataset', 'Purpose', 'Compliance Status', 'Hash', 'Action'].map(head => (
+                                    {['Timestamp', 'Event', 'Participant', 'Dataset', 'Purpose', 'Compliance Status', 'Trace Ref', 'Action'].map(head => (
                                         <th key={head} className="px-4 py-3 whitespace-nowrap">{head}</th>
                                     ))}
                                 </tr>
@@ -205,19 +209,19 @@ export default function AuditTrailPage() {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 font-mono text-xs text-emerald-200 whitespace-nowrap flex items-center gap-2">
+                                        <td className="px-4 py-3 font-mono text-xs text-emerald-200 whitespace-nowrap">
                                             <span className="truncate max-w-[140px] inline-block">{row.hash}</span>
-                                            {row.verified ? (
-                                                <span className="flex items-center gap-1 text-emerald-300">
-                                                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                                    ✓
-                                                </span>
-                                            ) : (
-                                                <span className="flex items-center gap-1 text-amber-300">
-                                                    <span className="h-2 w-2 rounded-full bg-amber-400" />
-                                                    ✗
-                                                </span>
-                                            )}
+                                            <div className="mt-2">
+                                                {row.verified ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-200">
+                                                        Review cue logged
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
+                                                        Follow-up needed
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             {(row.status === 'CLEARED' || row.event === 'Dataset Access') && (
@@ -246,7 +250,7 @@ export default function AuditTrailPage() {
                         <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">Push to SIEM (Splunk / QRadar)</button>
                         <button className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">Download CSV</button>
                     </div>
-                    <p className="text-xs text-slate-500">Logs are shown as append-style demo history for review and export.</p>
+                    <p className="text-xs text-slate-500">Logs are shown as append-style demo history with trace references for review and export.</p>
                 </section>
             </div>
         </div>
