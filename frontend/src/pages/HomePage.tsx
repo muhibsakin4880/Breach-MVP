@@ -482,19 +482,13 @@ function PermissionGateEmblem({
 // MAIN HOMEPAGE
 // ──────────────────────────────────────────────────────────────
 export default function HomePage() {
-    const { startOnboarding, signIn, signOut, signInAdmin } = useAuth()
+    const { startOnboarding, signIn, signOut } = useAuth()
     const navigate = useNavigate()
     const prefersReducedMotion = usePrefersReducedMotion()
 
     const [wizardOpen,  setWizardOpen]  = useState(false)
     const [wizardStep,  setWizardStep]  = useState(1)
     const [heroVisible, setHeroVisible] = useState(false)
-    const [adminModalOpen, setAdminModalOpen] = useState(false)
-    const [adminId, setAdminId] = useState('admin@redoubt.io')
-    const [adminPassphrase, setAdminPassphrase] = useState('admin123')
-    const [adminSecurityKey, setAdminSecurityKey] = useState('123456')
-    const [adminError, setAdminError] = useState<string | null>(null)
-    const [isAdminLoading, setIsAdminLoading] = useState(false)
 
     const howItWorksRef = useInView(0.18)
     const trustRef = useInView(0.18)
@@ -506,21 +500,6 @@ export default function HomePage() {
         const timer = window.setTimeout(() => setHeroVisible(true), prefersReducedMotion ? 0 : 80)
         return () => window.clearTimeout(timer)
     }, [prefersReducedMotion])
-
-    useEffect(() => {
-        if (!adminModalOpen) return
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setAdminModalOpen(false)
-                setAdminError(null)
-                setIsAdminLoading(false)
-            }
-        }
-
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [adminModalOpen])
 
     const heroReady = prefersReducedMotion || heroVisible
     const taglineText = 'Protected Evaluation Before Production Rollout'
@@ -583,7 +562,7 @@ export default function HomePage() {
         { title: 'Deployment Handoff Layer', desc: 'Keep evidence, approval flow, and downstream production constraints visible across the entire path.' },
     ]
 
-const joinSegments = [
+    const joinSegments = [
         'Quant research and market-data evaluation teams',
         'Alternative-data procurement and diligence teams',
         'Buy-side and sell-side research operations',
@@ -604,49 +583,6 @@ const joinSegments = [
         navigate(participantOnboardingPaths.entry)
     }
     const handleSignInFromLanding = () => { signOut() }
-    const openAdminModal = () => {
-        setAdminError(null)
-        setIsAdminLoading(false)
-        setAdminModalOpen(true)
-    }
-    const closeAdminModal = () => {
-        setAdminModalOpen(false)
-        setAdminError(null)
-        setIsAdminLoading(false)
-    }
-    const handleAdminAccess = (e: React.FormEvent) => {
-        e.preventDefault()
-        setAdminError(null)
-
-        if (!adminId.trim()) {
-            setAdminError('Administrator ID required.')
-            return
-        }
-
-        if (!adminPassphrase.trim()) {
-            setAdminError('Master passphrase required.')
-            return
-        }
-
-        if (adminSecurityKey.trim().length !== 6) {
-            setAdminError('6-digit security key required.')
-            return
-        }
-
-        setIsAdminLoading(true)
-
-        window.setTimeout(() => {
-            const success = signInAdmin(adminId, adminPassphrase)
-            if (success) {
-                setAdminModalOpen(false)
-                navigate('/admin/dashboard')
-                return
-            }
-
-            setAdminError('Access denied. Use valid admin credentials.')
-            setIsAdminLoading(false)
-        }, 350)
-    }
     const handleWizardCancel = () => { setWizardOpen(false); setWizardStep(1) }
     const handleEnterDashboard = () => { signIn(); setWizardOpen(false); setWizardStep(1); navigate('/dashboard') }
     const handleReviewProfile = () => { signIn(); setWizardOpen(false); setWizardStep(1); navigate('/profile') }
@@ -846,114 +782,6 @@ const joinSegments = [
                     onEnterDashboard={handleEnterDashboard}
                     onReviewProfile={handleReviewProfile}
                 />
-            )}
-
-            {adminModalOpen && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-6 backdrop-blur-xl">
-                    <div
-                        className="absolute inset-0"
-                        onClick={closeAdminModal}
-                        aria-hidden="true"
-                    />
-                    <div className="relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-red-500/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.98)_0%,rgba(2,6,23,0.99)_100%)] p-7 shadow-[0_25px_120px_rgba(0,0,0,0.55),0_0_60px_rgba(127,29,29,0.18)]">
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-400/80 to-transparent" />
-                        <button
-                            onClick={closeAdminModal}
-                            className="absolute right-4 top-4 rounded-full border border-slate-700/70 bg-slate-900/70 p-2 text-slate-400 transition-colors hover:text-white"
-                            aria-label="Close admin access modal"
-                        >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-
-                        <div className="mb-6 flex items-start gap-4">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-300">
-                                <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-red-300/80">Restricted Entry</p>
-                                <h2 className="mt-2 text-2xl font-semibold text-white">Admin Console Access</h2>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">
-                                    Sign in to open the oversight console. The full page remains available at <span className="font-mono text-slate-300">/admin/login</span>.
-                                </p>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleAdminAccess} className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Administrator ID
-                                </label>
-                                <input
-                                    type="text"
-                                    value={adminId}
-                                    onChange={(e) => setAdminId(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition-colors focus:border-red-400/60"
-                                    placeholder="admin@redoubt.io"
-                                    autoComplete="username"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Master Passphrase
-                                </label>
-                                <input
-                                    type="password"
-                                    value={adminPassphrase}
-                                    onChange={(e) => setAdminPassphrase(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition-colors focus:border-red-400/60"
-                                    placeholder="admin123"
-                                    autoComplete="current-password"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Security Key
-                                </label>
-                                <input
-                                    type="text"
-                                    value={adminSecurityKey}
-                                    onChange={(e) => setAdminSecurityKey(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition-colors focus:border-red-400/60"
-                                    placeholder="123456"
-                                    inputMode="numeric"
-                                />
-                            </div>
-
-                            {adminError && (
-                                <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                    {adminError}
-                                </div>
-                            )}
-
-                            <div className="rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-xs leading-6 text-slate-400">
-                                Demo admin credentials: <span className="font-mono text-slate-200">admin@redoubt.io</span> / <span className="font-mono text-slate-200">admin123</span>
-                            </div>
-
-                            <div className="flex flex-col gap-3 sm:flex-row">
-                                <button
-                                    type="submit"
-                                    disabled={isAdminLoading}
-                                    className="flex-1 rounded-xl border border-red-400/30 bg-red-500/15 px-5 py-3 text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-70"
-                                >
-                                    {isAdminLoading ? 'Opening console...' : 'Open Admin Console'}
-                                </button>
-                                <Link
-                                    to="/admin/login"
-                                    onClick={closeAdminModal}
-                                    className="rounded-xl border border-slate-700 bg-slate-900/80 px-5 py-3 text-center text-sm font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
-                                >
-                                    Full Login Page
-                                </Link>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             )}
 
             {/* ── PAGE BODY ── */}

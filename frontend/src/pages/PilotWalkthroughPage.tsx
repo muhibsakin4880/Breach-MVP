@@ -31,12 +31,12 @@ const walkthroughSteps = [
 const walkthroughSignals = [
     'One dataset, one use case, one decision path',
     'Explicit policy and approval checkpoints',
-    'Protected evaluation before broader expansion',
+    'Protected evaluation before production rollout',
     'Audit visibility throughout the review cycle'
 ]
 
 const pageOutcomes = [
-    'Show how confidence and controls appear before the pilot expands.',
+    'Show how confidence and controls appear before production access expands.',
     'Demonstrate that policy and review requirements are part of the workflow, not a late-stage add-on.',
     'Give stakeholders a clearer path from first review to a documented decision.'
 ]

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 const trustPillars = [
     {
         title: 'Controls before expansion',
-        description: 'Confidence, classification, policy scope, and review checkpoints are surfaced before a pilot expands into broader access.'
+        description: 'Confidence, classification, policy scope, and review checkpoints are surfaced before protected evaluation expands into broader access.'
     },
     {
         title: 'Protected evaluation',
@@ -99,7 +99,7 @@ const deploymentPatterns = [
 const riskReductionOutcomes = [
     'Reduce late-stage surprises around classification, residency, or approval requirements.',
     'Make protected evaluation a visible decision gate instead of an opaque technical handoff.',
-    'Give stakeholders a more credible control and evidence story before a pilot expands.',
+    'Give stakeholders a more credible control and evidence story before production access expands.',
     'Create a cleaner path from first dataset review to a documented go, no-go, or revise outcome.'
 ]
 
@@ -117,7 +117,7 @@ export default function TrustCenterPage() {
                     <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
                         This public page brings Redoubt’s control story into one place. It focuses on how confidence,
                         policy, audit visibility, deployment posture, and approval steps are made visible before a
-                        pilot expands into broader access.
+                        protected evaluation moves into broader access or production rollout.
                     </p>
 
                     <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -127,7 +127,7 @@ export default function TrustCenterPage() {
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
                             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Decision Point</div>
-                            <div className="mt-3 text-lg font-semibold text-white">Protected evaluation before broader expansion</div>
+                            <div className="mt-3 text-lg font-semibold text-white">Protected evaluation before production rollout</div>
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
                             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Infrastructure Baseline</div>

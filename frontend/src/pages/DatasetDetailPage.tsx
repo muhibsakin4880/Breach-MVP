@@ -202,11 +202,11 @@ export default function DatasetDetailPage() {
     const minimumTrustNeedsReview = minimumTrustState !== 'documented'
     const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
     const trustSummaryRows = getDatasetTrustSummaryRows(dataset.trustProfile)
-    const requestEntryLabel = minimumTrustNeedsReview ? 'Request Review' : 'Request Access'
-    const requestSubmitLabel = minimumTrustNeedsReview ? 'Submit review request' : 'Submit secure request'
+    const requestEntryLabel = minimumTrustNeedsReview ? 'Request Review' : 'Request Evaluation'
+    const requestSubmitLabel = minimumTrustNeedsReview ? 'Submit review request' : 'Submit evaluation request'
     const requestSectionDescription = minimumTrustNeedsReview
         ? 'Request review with intended use. One or more minimum trust fields still need provider or reviewer confirmation before live access.'
-        : 'Request access with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.'
+        : 'Request protected evaluation with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.'
     const requestModalDescription = minimumTrustNeedsReview
         ? `${trustSignalStateLabel(minimumTrustState)} on minimum trust fields. Share intended use so the provider and review team can confirm the packet.`
         : 'Share intended use to route approval. Provider identity remains private.'

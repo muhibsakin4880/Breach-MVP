@@ -13,7 +13,7 @@ const publicNav: PublicNavItem[] = [
     { label: 'How it Works', href: '/#how-it-works' },
     { label: 'Security', href: '/#security' },
     { label: 'Solutions', to: '/solutions' },
-    { label: 'Evaluate', href: '/#how-it-works' }
+    { label: 'Protected Evaluation', href: '/#how-it-works' }
 ]
 
 export default function Header() {
@@ -95,7 +95,7 @@ export default function Header() {
                         onClick={handleRequestAccess}
                         className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
                     >
-                        Talk to Team
+                        Request Pilot Access
                     </button>
                 </div>
 
@@ -130,7 +130,7 @@ export default function Header() {
                             onClick={handleRequestAccess}
                             className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
                         >
-                            Talk to Team
+                            Request Pilot Access
                         </button>
                     </div>
                 </div>
