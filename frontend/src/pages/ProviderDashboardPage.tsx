@@ -36,6 +36,13 @@ const performanceSummary = {
     avgConfidence: 93
 }
 
+const economicsSummary = {
+    grossContractValue: '$184,000',
+    platformFee: '$22,080',
+    netPayout: '$161,920',
+    currentFeeTier: '12% repeat-provider tier'
+}
+
 const statusBadge: Record<DatasetStatus, string> = {
     Active: 'bg-emerald-500/10 text-emerald-200 border border-emerald-400/60',
     Paused: 'bg-amber-500/10 text-amber-200 border border-amber-400/60'
@@ -110,6 +117,55 @@ export default function ProviderDashboardPage() {
                             <div className="text-xs text-slate-400">Quality signal</div>
                         </div>
                     </div>
+
+                    <section className="rounded-2xl border border-cyan-500/20 bg-slate-950/65 p-6 shadow-[0_20px_50px_rgba(2,8,20,0.24)]">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                    Commercial snapshot
+                                </div>
+                                <h2 className="mt-4 text-xl font-semibold text-white">Provider economics at a glance</h2>
+                                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                    Mock commercial values for the current protected-evaluation pipeline. These numbers are demo-only, but they make the fee path and provider payout structure visible.
+                                </p>
+                            </div>
+                            <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                                {economicsSummary.currentFeeTier}
+                            </span>
+                        </div>
+
+                        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <div className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+                                <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Gross contract value</div>
+                                <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.grossContractValue}</div>
+                                <div className="mt-1 text-xs text-slate-400">Current protected-evaluation book</div>
+                            </div>
+                            <div className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
+                                <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Redoubt platform fee</div>
+                                <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.platformFee}</div>
+                                <div className="mt-1 text-xs text-slate-400">Applied after successful engagement</div>
+                            </div>
+                            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                                <div className="text-xs uppercase tracking-[0.12em] text-emerald-200/80">Provider net payout</div>
+                                <div className="mt-3 text-2xl font-semibold text-emerald-100">{economicsSummary.netPayout}</div>
+                                <div className="mt-1 text-xs text-emerald-100/75">Net after current fee tier</div>
+                            </div>
+                            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+                                <div className="text-xs uppercase tracking-[0.12em] text-cyan-200/80">Current fee tier</div>
+                                <div className="mt-3 text-lg font-semibold text-cyan-100">{economicsSummary.currentFeeTier}</div>
+                                <div className="mt-1 text-xs text-cyan-100/75">Repeat-provider economics</div>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-slate-200">
+                                <span className="font-semibold text-white">Pilot Cohort:</span> fee-waived buyer evaluations are reserved for selected design partners with LOI-backed intent, feedback participation, and a credible production pathway.
+                            </div>
+                            <div className="rounded-xl border border-cyan-500/20 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+                                <span className="font-semibold text-white">Expansion path:</span> successful evaluations can expand into production or API access pricing without restarting provider onboarding.
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
 

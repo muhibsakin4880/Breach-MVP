@@ -523,25 +523,25 @@ export default function HomePage() {
     }, [adminModalOpen])
 
     const heroReady = prefersReducedMotion || heroVisible
-    const taglineText = 'The Missing Layer Between Data Discovery and Trusted Deployment'
+    const taglineText = 'Protected Evaluation Before Production Rollout'
     const taglineTyped = useTypingEffect(taglineText, prefersReducedMotion ? 0 : 32, heroReady)
 
     const heroHighlights = [
         {
-            title: 'Confidence Before Access',
-            detail: 'Fit, provenance, and handling checks before pilot access.',
+            title: 'Quant / Market-Data Focus',
+            detail: 'Built first for teams evaluating external market data before procurement-scale adoption.',
         },
         {
             title: 'Protected Evaluation',
-            detail: 'Scoped evaluation before broader access opens.',
+            detail: 'Buyer-paid protected evaluation is the standard path into governed validation.',
         },
         {
-            title: 'Policy & Approval Alignment',
-            detail: 'One workflow for privacy, legal, and governance sign-off.',
+            title: 'Invite-Led Pilot Cohort',
+            detail: 'Selected design partners can qualify for fee-waived evaluation with LOI-backed intent.',
         },
     ]
 
-    const trustSignals = ['Secure Evaluation', 'Approval Gates', 'Residency-Aware']
+    const trustSignals = ['Invite-Led Launch', 'Protected Evaluation', 'Team-Assisted Pilots']
 
     const sharedResponsibilityCards: Array<{ title: CloudProvider; detail: string }> = [
         {
@@ -563,44 +563,40 @@ export default function HomePage() {
     ]
 
     const workflowSteps = [
-        { num: '01', title: 'Review', desc: 'Examine dataset fit, provenance, and handling requirements.' },
-        { num: '02', title: 'Scope', desc: 'Configure rights, geography, duration, and evaluation boundaries before commercial review.' },
-        { num: '03', title: 'Request', desc: 'Route the access request through purpose, governance, and approval checkpoints.' },
-        { num: '04', title: 'Evaluate', desc: 'Enter protected evaluation with audit visibility before any broader rollout is approved.' },
+        { num: '01', title: 'Review', desc: 'Examine fit, provenance, schema shape, and handling requirements before paid evaluation begins.' },
+        { num: '02', title: 'Scope', desc: 'Set rights, geography, duration, and review controls for a protected evaluation path.' },
+        { num: '03', title: 'Validate', desc: 'Run the governed evaluation with buyer validation, credits, and clear decision checkpoints.' },
+        { num: '04', title: 'Deploy', desc: 'Move successful evaluations into approved API or production access without treating the first step like full rollout.' },
     ]
 
     const trustFeatures = [
-        { title: 'Dataset Provenance', desc: 'Expose origin, preparation context, and handling notes before a team enters a pilot review.' },
-        { title: 'Governed Evaluation', desc: 'Let teams validate dataset fit without treating the first step like a full procurement event.' },
-        { title: 'Clean-Room Controls', desc: 'Support protected evaluation with egress controls, temporary credentials, and audit visibility.' },
-        { title: 'Residency-Aware Options', desc: 'Handle organizations that need deployment and review paths aligned to stricter enterprise policies.' },
+        { title: 'Dataset Provenance', desc: 'Expose origin, preparation context, and handling notes before a research team enters protected evaluation.' },
+        { title: 'Governed Evaluation', desc: 'Let teams validate dataset fit before procurement-scale commitment or production rollout.' },
+        { title: 'Protected Controls', desc: 'Support evaluation with egress controls, temporary credentials, and audit visibility.' },
+        { title: 'Residency-Aware Options', desc: 'Handle buyers that need deployment and review paths aligned to stricter enterprise policies.' },
     ]
 
     const solutionCards = [
-        { title: 'Provenance Layer', desc: 'Surface origin, handling context, and confidence signals before teams escalate a dataset into formal review.' },
-        { title: 'Rights & Policy Layer', desc: 'Scope duration, geography, delivery mode, and permitted use before access terms become operational.' },
-        { title: 'Protected Evaluation Layer', desc: 'Move from metadata review into a controlled clean-room or governed evaluation step before broader rollout.' },
-        { title: 'Audit & Residency Layer', desc: 'Keep evidence, approval flow, and deployment constraints visible across cross-organization collaboration.' },
+        { title: 'Provenance Layer', desc: 'Surface origin, handling context, and confidence signals before teams escalate a dataset into commercial review.' },
+        { title: 'Rights & Policy Layer', desc: 'Scope duration, geography, delivery mode, and permitted use before evaluation turns operational.' },
+        { title: 'Protected Evaluation Layer', desc: 'Move from metadata review into a controlled evaluation step before production access is approved.' },
+        { title: 'Deployment Handoff Layer', desc: 'Keep evidence, approval flow, and downstream production constraints visible across the entire path.' },
     ]
 
 const joinSegments = [
-        'Quant research and risk analytics teams',
-        'Data residency & stewardship',
-        'Climate and geospatial product teams',
-        'Healthcare AI and research leads',
-        'Mobility and smart city analytics teams',
-        'Utilities and smart-grid analytics teams',
-        'Consumer, retail, and commerce analytics teams',
-        'NLP, text-corpus, and social-media intelligence teams',
-        'Contributing research institutions',
-        'Industrial and IoT sensor analytics teams',
+        'Quant research and market-data evaluation teams',
+        'Alternative-data procurement and diligence teams',
+        'Buy-side and sell-side research operations',
+        'Signal, risk, and alpha research programs',
+        'Contributing market-data providers',
+        'Residency-sensitive enterprise data teams',
     ]
 
     const workflowContexts = [
-        'Privacy and sensitive-data review programs',
-        'Consent-heavy research and legal-basis workflows',
+        'LOI-backed design-partner pilots',
+        'Early procurement and production-pathway reviews',
         'Third-party data intake and DUA-first diligence workflows',
-        'Public-sector and civic data programs (secondary fit)',
+        'Residency-sensitive evaluation programs',
     ]
 
     const handleRequestPlatformAccess = () => {
@@ -823,12 +819,6 @@ const joinSegments = [
                                 <a href="#join" className="text-slate-300 hover:text-white transition-colors">Who Can Join</a>
                             </nav>
                             <div className="flex items-center gap-3">
-                                <button
-                                    onClick={openAdminModal}
-                                    className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition-colors hover:border-red-400/45 hover:bg-red-500/15"
-                                >
-                                    Admin Access
-                                </button>
                                 <Link
                                     to="/login"
                                     onClick={handleSignInFromLanding}
@@ -840,7 +830,7 @@ const joinSegments = [
                                     onClick={handleRequestPlatformAccess}
                                     className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors"
                                 >
-                                    Request Access
+                                    Request Pilot Access
                                 </button>
                             </div>
                         </div>
@@ -1020,8 +1010,10 @@ const joinSegments = [
 
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
                                 <p className="mt-5 max-w-[65ch] text-xs leading-7 text-slate-200 sm:text-sm md:text-base md:leading-8">
-                                    Redoubt is a data confidence layer for governed access, helping organizations evaluate
-                                    sensitive external datasets with provenance, policy, and audit context before a pilot begins.
+                                    Redoubt is a high-trust protected evaluation platform built first for quant and market-data
+                                    research teams reviewing sensitive external datasets before procurement-scale adoption or
+                                    production rollout. The launch motion is invite-led, team-assisted, and designed around
+                                    governed evaluation rather than open marketplace access.
                                 </p>
                             </MotionReveal>
 
@@ -1042,7 +1034,7 @@ const joinSegments = [
                                                 onClick={handleRequestPlatformAccess}
                                                 className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[14rem] items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_44px_rgba(34,211,238,0.34),0_18px_42px_rgba(2,8,23,0.22)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_58px_rgba(34,211,238,0.42),0_20px_46px_rgba(2,8,23,0.24)]"
                                             >
-                                                Request Platform Access
+                                                Request Pilot Access
                                             </button>
                                         </div>
                                     </div>
@@ -1089,6 +1081,28 @@ const joinSegments = [
                                 ))}
                             </div>
                         </div>
+                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={520} className="mx-auto mt-6 w-full max-w-5xl">
+                            <div className="grid gap-3 lg:grid-cols-2">
+                                <div className="rounded-2xl border border-cyan-400/20 bg-slate-900/65 p-5 text-left shadow-[0_18px_40px_rgba(2,8,23,0.22)]">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                                        Standard Path
+                                    </div>
+                                    <h3 className="mt-4 text-lg font-semibold text-white">Buyer-paid protected evaluation</h3>
+                                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                                        Metadata preview stays free. Buyers then pay for protected evaluation, and successful programs can move into API or production access pricing.
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-5 text-left shadow-[0_18px_40px_rgba(2,8,23,0.22)]">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                                        Pilot Cohort
+                                    </div>
+                                    <h3 className="mt-4 text-lg font-semibold text-white">Fee-waived evaluation for selected design partners</h3>
+                                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                                        Redoubt runs a limited early-access evaluation program for LOI-backed buyers who agree to feedback, design-partner participation, and a credible production pathway.
+                                    </p>
+                                </div>
+                            </div>
+                        </MotionReveal>
                     </div>
                 </section>
 
@@ -1106,7 +1120,7 @@ const joinSegments = [
                                 </div>
                                 <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Your Governed Path Forward</h2>
                                 <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
-                                    A focused workflow for regulated analytics teams reviewing external datasets before moving into a pilot.
+                                    A focused workflow for quant and market-data teams reviewing external datasets before protected evaluation and production rollout.
                                 </p>
                             </div>
                         </MotionReveal>
@@ -1251,11 +1265,11 @@ const joinSegments = [
                             <div className="text-center mb-16">
                                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 border border-emerald-400/20 text-emerald-300 text-xs font-semibold mb-6">
                                     <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-400"></span>
-                                    Supported Contexts
+                                    Launch Focus
                                 </div>
-                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Supported Operating Contexts</h2>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Current Best-Fit Teams</h2>
                                 <p className="mx-auto mt-4 max-w-3xl text-slate-400 text-lg">
-                                    The current demo is strongest where teams need confidence, policy, and approval context before broader dataset access is discussed.
+                                    The current demo is strongest where teams need controlled evaluation, pricing clarity, and documented procurement readiness before broader production access is discussed.
                                 </p>
                             </div>
                         </MotionReveal>
@@ -1288,7 +1302,7 @@ const joinSegments = [
                             delay={120 + joinSegments.length * 60}
                         >
                             <div className="mt-10">
-                                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300 mb-5 text-center">Cross-cutting programs</div>
+                                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300 mb-5 text-center">Launch overlays</div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {workflowContexts.map((context, index) => (
                                         <TiltCard disabled={prefersReducedMotion} key={context} className="h-full">
@@ -1320,26 +1334,26 @@ const joinSegments = [
                             <div className="landing-panel rounded-[2.5rem] border border-cyan-500/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.9)_0%,rgba(2,8,20,0.98)_100%)] px-8 py-12 text-center shadow-[0_0_80px_rgba(8,47,73,0.2),inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-14">
                                 <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
                                     <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-300" />
-                                    Regulated Analytics Pilot Intake
+                                    Invite-Led Pilot Intake
                                 </div>
                                 <h2 className="text-3xl md:text-4xl font-semibold text-white mb-5">
-                                    Exploring a governed dataset pilot?
+                                    Exploring protected evaluation for external market data?
                                 </h2>
                                 <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
-                                    Redoubt is being shaped for teams that need a credible review and evaluation workflow before broader access is discussed, especially where clean-room controls or residency constraints matter.
+                                    Redoubt is being shaped for teams that need a credible pre-production evaluation path, especially when procurement intent, controlled access, or downstream API deployment all need to stay visible from the start.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <button
-                                        onClick={openAdminModal}
-                                        className="px-8 py-4 border border-red-500/25 bg-red-500/10 text-red-100 font-medium rounded-xl hover:border-red-400/45 hover:bg-red-500/15 transition-all"
+                                    <Link
+                                        to="/solutions"
+                                        className="px-8 py-4 border border-amber-400/30 bg-amber-500/10 text-amber-100 font-medium rounded-xl hover:border-amber-300/55 hover:bg-amber-500/15 transition-all"
                                     >
-                                        Admin Access
-                                    </button>
+                                        Pilot Cohort Details
+                                    </Link>
                                     <button
                                         onClick={handleRequestPlatformAccess}
                                         className="px-8 py-4 bg-cyan-400 text-slate-950 font-semibold rounded-xl hover:bg-cyan-300 transition-all shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.4)]"
                                     >
-                                        Request Access
+                                        Request Pilot Access
                                     </button>
                                     <Link
                                         to="/login"

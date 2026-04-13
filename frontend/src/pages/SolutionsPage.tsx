@@ -16,10 +16,10 @@ const frictionPoints = [
 ]
 
 const stakeholderProfiles = [
-    'Analytics, research, and AI leads reviewing external datasets before a pilot starts',
-    'Data partnerships and program teams coordinating terms with contributing institutions',
+    'Quant, market-data, and signal-research leads reviewing external datasets before production rollout',
+    'Data partnerships, procurement, and program teams coordinating terms with contributing institutions',
     'Privacy, legal, governance, and review stakeholders who need explicit checkpoints',
-    'Contributing institutions and data stewards preparing controlled access documentation'
+    'Market-data providers and data stewards preparing controlled evaluation documentation'
 ]
 
 const workflowPillars = [
@@ -37,39 +37,37 @@ const workflowPillars = [
     },
     {
         title: 'Use protected evaluation as the decision point',
-        description: 'Move into a controlled evaluation step with audit visibility before a pilot expands into broader operational use.'
+        description: 'Move into a controlled evaluation step with audit visibility before production access or procurement-scale commitment.'
     }
 ]
 
 const operatingContexts = [
     'Quant / market-data research',
-    'Climate / geospatial analytics',
-    'Healthcare AI / research',
-    'Mobility / smart city analytics',
-    'Utilities / smart-grid analytics',
-    'Consumer / retail / commerce analytics',
-    'NLP / text-corpus / social-media intelligence',
-    'Industrial / IoT sensor analytics'
+    'Alternative-data procurement',
+    'Risk and signal research',
+    'Buy-side research operations',
+    'Sell-side market-data diligence',
+    'Contributing data providers'
 ]
 
 const crossCuttingPrograms = [
-    'Secure clean-room evaluation',
-    'Residency-sensitive enterprise deployment',
-    'Privacy and sensitive-data review',
-    'Consent-heavy research collaboration',
+    'Protected evaluation with governed workspace',
+    'LOI-backed design-partner pilots',
+    'Production-pathway diligence before API handoff',
+    'Residency-sensitive deployment review',
     'Third-party data intake and DUA-first diligence'
 ]
 
 const pilotPlan = [
     {
         step: '01',
-        title: 'Pick one dataset and one use case',
-        description: 'Keep the first pilot narrow: one evaluation path, one requesting organization, and one review objective.'
+        title: 'Pick one dataset and one production-bound use case',
+        description: 'Keep the first program narrow: one evaluation path, one requesting organization, and one review objective.'
     },
     {
         step: '02',
-        title: 'Run the governed review flow',
-        description: 'Review provenance, rights, policy requirements, and approval checkpoints before protected evaluation begins.'
+        title: 'Align LOI and evaluation scope',
+        description: 'Review provenance, rights, policy requirements, and the commercial pathway before protected evaluation begins.'
     },
     {
         step: '03',
@@ -78,8 +76,8 @@ const pilotPlan = [
     },
     {
         step: '04',
-        title: 'End with a clear decision',
-        description: 'Close the pilot with a yes, no, or revise outcome instead of leaving the process in an indefinite review state.'
+        title: 'End with a clear deployment decision',
+        description: 'Close the program with a yes, no, or revise outcome and a clear plan for API or production handoff.'
     }
 ]
 
@@ -103,9 +101,9 @@ const sharedResponsibilityModels = [
 ]
 
 const pilotOutcomes = [
-    'Confirm whether a sensitive external dataset is fit for a defined analytics or research use case.',
-    'Shorten the path between first review, protected evaluation, and a clear pilot decision.',
-    'Give governance stakeholders a more credible control, audit, and policy narrative before access expands.'
+    'Confirm whether a sensitive external dataset is fit for a defined quant, market-data, or research use case.',
+    'Shorten the path between first review, protected evaluation, and a clear commercial decision.',
+    'Give governance stakeholders a more credible control, audit, and production-readiness narrative before access expands.'
 ]
 
 export default function SolutionsPage() {
@@ -114,29 +112,30 @@ export default function SolutionsPage() {
             <div className="mx-auto max-w-6xl px-4 py-14">
                 <section className="rounded-[2rem] border border-cyan-500/15 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_40%),linear-gradient(180deg,rgba(15,23,42,0.96)_0%,rgba(2,8,20,0.98)_100%)] px-8 py-12 shadow-[0_0_80px_rgba(8,47,73,0.16)]">
                     <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                        Pilot Program
+                        Invite-Led Launch
                     </div>
                     <h1 className="mt-5 text-4xl font-bold tracking-tight text-white md:text-5xl">
-                        Governed Access Before the Pilot Begins
+                        Protected Evaluation Before Production Rollout
                     </h1>
                     <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
-                        Redoubt is a data confidence layer for organizations that need a safer way to review sensitive
-                        external datasets before a pilot moves forward. The goal is not to accelerate access blindly.
-                        It is to make confidence, policy, and review requirements visible early enough to support a better decision.
+                        Redoubt is a high-trust protected evaluation platform built first for quant and market-data research
+                        teams that need a safer way to review sensitive external datasets before procurement-scale adoption.
+                        The default path is buyer-paid protected evaluation, with selected lighthouse buyers eligible for
+                        LOI-backed fee-waived pilots when there is clear commercial intent.
                     </p>
 
                     <div className="mt-8 grid gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Core Motion</div>
-                            <div className="mt-3 text-lg font-semibold text-white">Governed dataset review before pilot expansion</div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Lead Use Case</div>
+                            <div className="mt-3 text-lg font-semibold text-white">Quant and market-data evaluation before production rollout</div>
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Primary Value</div>
-                            <div className="mt-3 text-lg font-semibold text-white">Clearer confidence, policy, and approval context</div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Commercial Motion</div>
+                            <div className="mt-3 text-lg font-semibold text-white">Paid protected evaluation, then API or production access</div>
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Control Baseline</div>
-                            <div className="mt-3 text-lg font-semibold text-white">Shared-responsibility cloud models across major platforms</div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Launch Model</div>
+                            <div className="mt-3 text-lg font-semibold text-white">Invite-led, team-assisted pilots with controlled disclosure</div>
                         </div>
                     </div>
 
@@ -171,6 +170,27 @@ export default function SolutionsPage() {
                             </svg>
                         </Link>
                     </div>
+                </section>
+
+                <section className="mt-10 grid gap-6 lg:grid-cols-2">
+                    <article className="rounded-3xl border border-cyan-500/20 bg-cyan-500/8 p-8">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                            Standard Path
+                        </div>
+                        <h2 className="mt-4 text-2xl font-semibold text-white">Buyer-paid protected evaluation</h2>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">
+                            Metadata preview and initial scoping stay free. Buyers then pay for protected evaluation, and successful programs can move into API or production access pricing as the validated deployment path.
+                        </p>
+                    </article>
+                    <article className="rounded-3xl border border-amber-500/20 bg-amber-500/8 p-8">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                            Pilot Cohort
+                        </div>
+                        <h2 className="mt-4 text-2xl font-semibold text-white">Fee-waived evaluation for selected design partners</h2>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">
+                            The early lighthouse path is limited, team-reviewed, and tied to LOI, feedback, design-partner participation, and a credible early procurement or production pathway. It is not the default pricing model.
+                        </p>
+                    </article>
                 </section>
 
                 <section className="mt-10">
@@ -238,10 +258,9 @@ export default function SolutionsPage() {
                         <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">
                             Secondary fit
                         </div>
-                        <h3 className="mt-4 text-xl font-semibold text-white">Public-sector / civic data programs</h3>
+                        <h3 className="mt-4 text-xl font-semibold text-white">Residency-sensitive enterprise evaluation programs</h3>
                         <p className="mt-3 text-sm leading-7 text-slate-300">
-                            The current control language also supports public-sector and civic data review, especially where residency,
-                            explicit approval paths, and control profiles matter. It is a secondary fit today rather than the lead walkthrough.
+                            The current control language also supports residency-sensitive enterprise programs where explicit approval paths, deployment constraints, and production handoff planning matter. It is a secondary fit today rather than the lead walkthrough.
                         </p>
                     </div>
                 </section>

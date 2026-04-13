@@ -452,9 +452,9 @@ export default function DatasetDetailPage() {
                                                 <div className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                     Protected
                                                 </div>
-                                                <h3 className="mt-3 text-lg font-semibold text-white">Paid Clean-Room Evaluation</h3>
+                                                <h3 className="mt-3 text-lg font-semibold text-white">Protected Evaluation</h3>
                                                 <p className="mt-2 text-sm text-slate-200/85">
-                                                    Enter protected evaluation setup, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. Preview and terms generation stay free until this step.
+                                                    Enter protected evaluation setup, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. This is the standard buyer-paid step before production or API access is discussed.
                                                 </p>
                                             </div>
                                             <div className="text-right">
@@ -474,6 +474,13 @@ export default function DatasetDetailPage() {
                                             {latestSavedQuote
                                                 ? `Terms ${latestSavedQuote.id} is ready for protected evaluation.`
                                                 : 'Evaluation setup will generate passport-based starter terms if you have not saved any yet.'}
+                                        </div>
+
+                                        <div className="mt-4 rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-100">Pilot Cohort</div>
+                                            <p className="mt-2 text-sm text-slate-200/90">
+                                                Fee-waived evaluation is reserved for selected design partners in Redoubt&apos;s early-access evaluation program. Admission is LOI-backed and tied to feedback, design-partner participation, and a credible production pathway.
+                                            </p>
                                         </div>
 
                                         <Link

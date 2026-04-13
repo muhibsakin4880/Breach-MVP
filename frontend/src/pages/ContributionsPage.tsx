@@ -769,7 +769,7 @@ export default function ContributionsPage() {
                             />
                             <span className="text-slate-400 text-sm">USD per access</span>
                         </div>
-                        <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Redoubt applies a provider settlement fee only after a successful engagement: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
+                        <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Standard buyers pay for protected evaluation, selected lighthouse pilots may be fee-waived, and Redoubt applies provider settlement fees only after a successful engagement: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
                     </div>
                 </div>
             )
@@ -1953,14 +1953,14 @@ export default function ContributionsPage() {
                                 <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
                                     <div className="text-[11px] uppercase tracking-[0.14em] text-cyan-300/80">Pricing info</div>
                                     <p className="mt-2 text-slate-200">
-                                        No onboarding fees apply to participants or datasets. Revenue starts only after a successful settlement.
+                                        No onboarding fees apply to participants or datasets. Protected evaluation can start as a paid buyer step or a limited lighthouse exception, but provider revenue still begins only after a successful settlement.
                                     </p>
                                 </div>
                             </section>
 
                             <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
                                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Review signals</div>
-                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Quality and marketplace review summary</h4>
+                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Quality and evaluation-readiness summary</h4>
 
                                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                                     <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
@@ -1976,7 +1976,7 @@ export default function ContributionsPage() {
                                     <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-4">
                                         <div className="text-[11px] uppercase tracking-[0.14em] text-violet-300/80">Review timeline</div>
                                         <div className="mt-2 text-3xl font-semibold text-violet-100">{uploadDraft.review.reviewTimeline}</div>
-                                        <div className="mt-1 text-xs text-slate-300">Compliance and marketplace review begins after submission.</div>
+                                        <div className="mt-1 text-xs text-slate-300">Compliance and evaluation-readiness review begins after submission.</div>
                                     </div>
                                 </div>
 

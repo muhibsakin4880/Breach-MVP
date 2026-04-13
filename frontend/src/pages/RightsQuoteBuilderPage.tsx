@@ -276,7 +276,7 @@ export default function RightsQuoteBuilderPage() {
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Configure Evaluation Terms</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
                             This builder defines the evaluation terms: delivery mode, field access,
-                            usage rights, exclusivity, geography, term, and support expectations. Creating and saving terms is free; evaluation fees begin only when protected evaluation starts.
+                            usage rights, exclusivity, geography, term, and support expectations. Creating and saving terms is free; the standard commercial path becomes buyer-paid when protected evaluation starts, and successful programs can later move into production or API access pricing.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${statusMeta.classes}`}>
@@ -466,7 +466,7 @@ export default function RightsQuoteBuilderPage() {
                             </div>
 
                             <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                Terms generation is free. Evaluation fees begin only when this package moves into protected evaluation, and provider settlement fees are applied only after a successful engagement.
+                                Standard path: terms generation is free and buyer-paid protected evaluation begins at checkout. Pilot Cohort exceptions are limited to LOI-backed design partners, and provider settlement fees still apply only after a successful engagement.
                             </div>
 
                             <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">

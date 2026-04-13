@@ -254,7 +254,7 @@ export default function EscrowCheckoutPage() {
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Evaluation Setup</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
                             This setup turns the evaluation into a governed engagement: it funds escrow, generates the DUA,
-                            chooses access mode, sets the review window, provisions the workspace, and issues scoped credentials. Metadata review and terms creation are free; this is the point where evaluation fees begin.
+                            chooses access mode, sets the review window, provisions the workspace, and issues scoped credentials. Metadata review and terms creation are free; this is where the standard buyer-paid protected evaluation path begins.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${passportStatus.classes}`}>
@@ -519,8 +519,8 @@ export default function EscrowCheckoutPage() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-white">Outcome Protection</h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        Metadata preview is free, clean-room evaluation is paid, payout waits for evaluation org validation,
-                                        and schema or freshness misses automatically create evaluation credits.
+                                        Metadata preview is free, protected evaluation is paid by default, payout waits for evaluation org validation,
+                                        and schema or freshness misses automatically create evaluation credits before any production handoff.
                                     </p>
                                 </div>
                                 <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
@@ -544,10 +544,10 @@ export default function EscrowCheckoutPage() {
                                 </div>
 
                                 <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
-                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Paid clean-room evaluation</div>
+                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Protected evaluation fee</div>
                                     <div className="mt-3 text-lg font-semibold text-white">{formatUsd(evaluationFeeUsd)}</div>
                                     <p className="mt-2 text-sm text-slate-300">
-                                        Evaluation happens inside the governed workspace before escrow release, even when the final delivery path is broader.
+                                        Evaluation happens inside the governed workspace before escrow release, even when the later delivery path moves into production access.
                                     </p>
                                     <div className="mt-3 text-xs text-slate-400">{outcomeStatus.detail}</div>
                                 </div>
@@ -647,7 +647,7 @@ export default function EscrowCheckoutPage() {
                                     </div>
                                 ) : (
                                     <div className="mt-4 rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
-                                        The protection engine arms itself after scoped credentials are issued for paid clean-room evaluation.
+                                        The protection engine arms itself after scoped credentials are issued for protected evaluation.
                                     </div>
                                 )}
                             </div>
@@ -707,7 +707,7 @@ export default function EscrowCheckoutPage() {
                                     </div>
                                 ) : (
                                     <div className="mt-4 rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
-                                        Buyer validation controls unlock after the paid evaluation workspace is live.
+                                        Buyer validation controls unlock after the protected evaluation workspace is live.
                                     </div>
                                 )}
                             </div>
@@ -738,8 +738,13 @@ export default function EscrowCheckoutPage() {
                                 <SummaryStat label="Payment rail" value={paymentMethodMeta[config.paymentMethod].label} />
                             </div>
 
-                            <div className="mt-4 rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
-                                Buyers are charged for protected evaluation here. Provider settlement fees are withheld only after a successful release and follow volume-based tiers.
+                            <div className="mt-4 grid gap-3">
+                                <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                    <span className="font-semibold text-white">Standard Path:</span> buyers are charged for protected evaluation here, and successful programs can move into downstream API or production access pricing.
+                                </div>
+                                <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                                    <span className="font-semibold text-white">Pilot Cohort:</span> selected design partners may receive a fee-waived evaluation through Redoubt&apos;s LOI-backed early-access program. These requests still require feedback participation, commercial intent, and a credible production pathway.
+                                </div>
                             </div>
 
                             {notice && (

@@ -51,9 +51,9 @@ export const summaryCards: SummaryCard[] = [
         action: 'Open credentials'
     },
     {
-        label: 'Current API Plan',
-        value: 'Growth',
-        hint: '10,000 calls per month',
+        label: 'Production Access',
+        value: 'Growth plan active',
+        hint: '10,000 calls per month after evaluation approval',
         to: '/usage-analytics',
         action: 'View usage'
     },

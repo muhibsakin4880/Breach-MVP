@@ -48,9 +48,9 @@ export default function PipelinesOverviewTab({
                     to="/usage-analytics"
                     className="rounded-3xl border border-cyan-500/30 bg-black/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_#00F0FF30]"
                 >
-                    <h3 className="text-lg font-semibold text-white">Review recurring API usage</h3>
+                    <h3 className="text-lg font-semibold text-white">Review production API usage</h3>
                     <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                        Check query volume, plan usage, and workspace-level metering for the recurring API line.
+                        Check query volume, plan usage, and workspace-level metering for approved production access.
                     </p>
                     <div className="mt-4 text-sm font-semibold text-cyan-300">Open Usage Analytics</div>
                 </Link>
@@ -180,10 +180,9 @@ export default function PipelinesOverviewTab({
 
                 <div className="space-y-6">
                     <SurfaceCard>
-                        <h3 className="text-xl font-bold text-white">Current API plan snapshot</h3>
+                        <h3 className="text-xl font-bold text-white">Production Access Pricing</h3>
                         <p className="mt-2 text-sm text-slate-400">
-                            Recurring API subscriptions stay separate from governed deal pricing. Participant onboarding,
-                            dataset onboarding, metadata preview, and quote creation remain free.
+                            Monthly API pricing begins after protected evaluation clears or a validated pilot hands off into production. Participant onboarding, dataset onboarding, metadata preview, and quote creation remain free.
                         </p>
                         <div className="mt-5 grid gap-4 md:grid-cols-3">
                             <div className="rounded-2xl border border-cyan-500/20 bg-black/50 p-4">
@@ -203,6 +202,20 @@ export default function PipelinesOverviewTab({
                                 <div className="text-sm font-semibold text-white">Enterprise</div>
                                 <div className="mt-2 text-2xl font-bold text-white">Custom</div>
                                 <div className="mt-1 text-xs text-slate-400">Unlimited volume with SLA</div>
+                            </div>
+                        </div>
+                        <div className="mt-5 rounded-2xl border border-cyan-500/20 bg-black/40 p-4">
+                            <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Validated deployment path</div>
+                            <div className="mt-3 grid gap-3 md:grid-cols-3">
+                                {[
+                                    'Free metadata preview',
+                                    'Protected evaluation and buyer validation',
+                                    'Approved API or production access'
+                                ].map(step => (
+                                    <div key={step} className="rounded-xl border border-cyan-500/15 bg-black/30 px-3 py-3 text-sm text-slate-300">
+                                        {step}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                         <div className="mt-5 flex flex-wrap gap-3">
@@ -259,7 +272,7 @@ export default function PipelinesOverviewTab({
                             <div>
                                 <h3 className="text-xl font-bold text-white">Recent API activity</h3>
                                 <p className="mt-2 text-sm text-slate-400">
-                                    Shared mock activity connected to the same recurring API and workspace request story.
+                                    Shared mock activity connected to the post-evaluation production access story.
                                 </p>
                             </div>
                             <Link to="/audit-trail" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
@@ -300,7 +313,7 @@ export default function PipelinesOverviewTab({
                         <div>
                             <h3 className="text-xl font-bold text-white">Approved API-enabled datasets</h3>
                             <p className="mt-2 text-sm text-slate-400">
-                                These routes are derived from the participant workspace’s approved dataset access state.
+                                These routes are derived from dataset access that has already cleared protected evaluation or a validated pilot handoff.
                             </p>
                         </div>
                         <Link to="/datasets" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">

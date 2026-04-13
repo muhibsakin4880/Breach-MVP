@@ -15,7 +15,7 @@ export default function PipelinesHero({ activeTab }: { activeTab: PipelinesTab }
                     </div>
                     <h1 className="text-3xl font-bold">Pipelines</h1>
                     <p className="mt-1 text-slate-400">
-                        Manage API usage, credentials, and governed access workflows for your participant workspace.
+                        Manage production access, credentials, and downstream dataset integrations after protected evaluation is approved.
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -37,10 +37,10 @@ export default function PipelinesHero({ activeTab }: { activeTab: PipelinesTab }
                             Participant integration workspace
                         </div>
                         <h2 className="mt-4 text-2xl font-bold text-white md:text-3xl">
-                            Use verified datasets through scoped credentials and tracked access requests.
+                            Move validated datasets into scoped production access and tracked integration workflows.
                         </h2>
                         <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
-                            Pipelines is for developer access and workspace integrations. Dataset uploads and validation still run through Contributions, while recurring API usage is tracked separately from governed deal workflows.
+                            Pipelines is the downstream handoff after protected evaluation succeeds. Dataset uploads and validation still run through Contributions, while recurring API usage is tracked separately from evaluation pricing and procurement-stage review.
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-3">
