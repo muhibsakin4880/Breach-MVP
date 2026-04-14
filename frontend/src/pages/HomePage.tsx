@@ -844,6 +844,17 @@ const joinSegments = [
                                                         <span className="motion-safe-home ml-2 inline-block h-[1.05em] w-px translate-y-1 bg-cyan-100/80 align-middle [animation:cursorBlink_1s_steps(2,end)_infinite]" />
                                                     )}
                                                 </p>
+                                                <div className="mt-5 flex max-w-full flex-nowrap items-center justify-center gap-1.5 sm:gap-2.5">
+                                                    {trustSignals.map((item, index) => (
+                                                        <span
+                                                            key={item}
+                                                            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-300/12 bg-emerald-500/5 px-2 py-1 text-[8px] font-semibold uppercase leading-none tracking-[0.1em] text-emerald-50 sm:gap-2 sm:px-2.5 sm:py-1.5 sm:text-[9px] md:px-3 md:text-[10px]"
+                                                        >
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" style={{ animationDelay: `${index * 0.18}s` }} />
+                                                            {item}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </MotionReveal>
                                     </div>
@@ -884,21 +895,6 @@ const joinSegments = [
                                             </div>
                                         </MotionReveal>
 
-                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={420}>
-                                            <div className="mt-6 flex justify-center lg:justify-start">
-                                                <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-                                                    {trustSignals.map((item, index) => (
-                                                        <span
-                                                            key={item}
-                                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/12 bg-emerald-500/5 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-50"
-                                                        >
-                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" style={{ animationDelay: `${index * 0.18}s` }} />
-                                                            {item}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </MotionReveal>
                                     </div>
                                 </div>
                             </div>
