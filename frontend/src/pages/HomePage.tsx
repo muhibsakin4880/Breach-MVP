@@ -520,7 +520,7 @@ export default function HomePage() {
         },
     ]
 
-    const trustSignals = ['Secure Evaluation', 'Approval Gates', 'Residency-Aware']
+    const trustSignals = ['Governed Access', 'Policy Enforcement', 'Audit Visibility']
 
     const sharedResponsibilityCards: Array<{ title: CloudProvider; detail: string }> = [
         {
@@ -807,8 +807,8 @@ const joinSegments = [
 
                     <div className="relative z-10 mx-auto max-w-6xl px-6">
                         <div className="mx-auto flex min-h-[calc(100vh-8.5rem)] max-w-6xl flex-col justify-center lg:min-h-[calc(100vh-7.5rem)]">
-                            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-24">
-                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-20 lg:py-12">
+                            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-20 xl:grid-cols-[minmax(0,1.22fr)_minmax(0,0.78fr)] xl:gap-24">
+                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-24 lg:py-12">
                                     <div className="flex flex-col items-center">
                                         <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion}>
                                             <div className="relative isolate mb-4 sm:mb-6">
@@ -849,12 +849,16 @@ const joinSegments = [
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-20 lg:py-12 lg:items-start lg:text-left">
-                                    <div className="w-full max-w-[34rem]">
+                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-14 lg:py-12 lg:items-start lg:text-left xl:px-16">
+                                    <div className="w-full max-w-[34rem] lg:max-w-[29rem] xl:max-w-[30rem]">
                                         <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
-                                            <p className="max-w-[65ch] text-xs leading-7 text-slate-200 sm:text-sm md:text-base md:leading-8">
-                                                Redoubt is a data confidence layer for governed access, helping organizations evaluate
-                                                sensitive external datasets with provenance, policy, and audit context before a pilot begins.
+                                            <p className="max-w-[65ch] text-left font-sans leading-[1.5] text-[#E0E0E0]">
+                                                <span className="block text-sm font-semibold text-[#F2F5F7] sm:text-[1.02rem]">
+                                                    Evaluate sensitive external data with total confidence.
+                                                </span>
+                                                <span className="mt-2 block text-xs sm:text-sm">
+                                                    We provide the governed access, policy enforcement, and audit visibility you need to deploy securely.
+                                                </span>
                                             </p>
                                         </MotionReveal>
 
@@ -868,7 +872,7 @@ const joinSegments = [
                                                         onClick={handleSignInFromLanding}
                                                         className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[10rem] items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/72 px-6 py-3 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.16),0_18px_42px_rgba(2,8,23,0.26)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_52px_rgba(34,211,238,0.24),0_20px_46px_rgba(2,8,23,0.28)]"
                                                     >
-                                                        Sign In →
+                                                        Sign In
                                                     </Link>
                                                     <button
                                                         onClick={handleRequestPlatformAccess}
