@@ -292,7 +292,7 @@ export default function DatasetsPage() {
                         <div className="pointer-events-none absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-cyan-400/10 blur-3xl" />
                         <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
 
-                        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.68fr)_minmax(380px,0.96fr)] xl:items-start">
+                        <div className="relative grid gap-8 2xl:grid-cols-[minmax(0,1.68fr)_minmax(380px,0.96fr)] 2xl:items-start">
                             <div className="min-w-0">
                                 <div className={discoveryText.heroEyebrow}>Curated evaluation workspace</div>
                                 <h1 id="dataset-discovery-hero" className={`mt-2 ${discoveryText.heroTitle}`}>
@@ -487,11 +487,9 @@ export default function DatasetsPage() {
                     </div>
                 </section>
 
-                <section className="grid gap-8 xl:grid-cols-[minmax(0,1.85fr)_minmax(390px,0.88fr)] 2xl:grid-cols-[minmax(0,1.94fr)_minmax(420px,0.9fr)] xl:items-start">
-
-                    <section className={`${panelSurfaceClass} min-w-0`} aria-labelledby="matched-datasets">
+                <section className={`${panelSurfaceClass} min-w-0`} aria-labelledby="matched-datasets">
                         <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
-                            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                            <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
                                 <div className="min-w-0">
                                     <div className={discoveryText.eyebrow}>Eligible opportunities</div>
                                     <h2 id="matched-datasets" className={`mt-3 ${discoveryText.panelTitle}`}>
@@ -502,7 +500,7 @@ export default function DatasetsPage() {
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col gap-1 text-left xl:items-end xl:text-right">
+                                <div className="flex flex-col gap-1 text-left 2xl:items-end 2xl:text-right">
                                     <div className={discoveryText.metaStrong}>Showing {filteredDatasets.length} of {DATASETS.length} datasets</div>
                                     <div className={discoveryText.meta}>Sorted by {sortOptions.find(option => option.value === sortOption)?.label}</div>
                                 </div>
@@ -527,9 +525,20 @@ export default function DatasetsPage() {
                                 <EmptyResultsState onReset={resetFilters} />
                             )}
                         </div>
-                    </section>
+                </section>
 
-                    <div className="space-y-6 xl:sticky xl:top-[104px]">
+                <section className="space-y-8" aria-labelledby="decision-workspace">
+                    <div className="px-1">
+                        <div className={discoveryText.eyebrow}>Decision workspace</div>
+                        <h2 id="decision-workspace" className={`mt-3 ${discoveryText.panelTitle}`}>
+                            Priority, review, and readiness
+                        </h2>
+                        <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
+                            Keep your priority set, side-by-side comparison queue, and buyer guidance in one workspace below the results so the dataset cards have more room to breathe.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-6 xl:grid-cols-2">
                         <RailSection
                             eyebrow="Priority set"
                             title="Review priority set"
@@ -610,76 +619,6 @@ export default function DatasetsPage() {
                         </RailSection>
 
                         <RailSection
-                            eyebrow="Side-by-side review"
-                            title="Review opportunities side by side"
-                            description="Queue up to three opportunities to compare trust, freshness, coverage geography, geo policy, and access path without leaving governed discovery."
-                            id="compare-panel"
-                            action={
-                                compareDatasets.length > 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setCompareIds([])}
-                                        className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
-                                    >
-                                        Clear review queue
-                                    </button>
-                                ) : undefined
-                            }
-                        >
-                            <div className={`${subCardSurfaceClass} px-5 py-5`}>
-                                <div className="text-base font-semibold text-slate-50">Side-by-side review queue</div>
-                                <p className={`mt-2 ${discoveryText.body}`}>
-                                    Add up to three opportunities. Once the queue is full, review buttons stay disabled until you remove one.
-                                </p>
-                            </div>
-
-                            {compareDatasets.length > 0 ? (
-                                <div className="mt-5 space-y-4">
-                                    <div className="flex items-center justify-between gap-3">
-                                        <span className={discoveryText.metaStrong}>{compareDatasets.length} of {MAX_COMPARE_ITEMS} selected</span>
-                                    </div>
-
-                                    {compareDatasets.map(dataset => (
-                                        <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="min-w-0">
-                                                    <div className="text-base font-semibold text-slate-50">{dataset.title}</div>
-                                                    <div className={`mt-2 ${discoveryText.meta}`}>
-                                                        {dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleCompare(dataset.id)}
-                                                    aria-label={`Remove ${dataset.title} from compare`}
-                                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {compareDatasets.length >= 2 ? (
-                                        <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} />
-                                    ) : (
-                                        <div className={`${subCardSurfaceClass} px-5 py-5`}>
-                                        <div className="text-base font-semibold text-slate-50">Add one more opportunity to review</div>
-                                            <p className={`mt-2 ${discoveryText.body}`}>Side-by-side review becomes useful once at least two governed opportunities are in the queue.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="mt-5">
-                                    <EmptyRailState
-                                        title="No opportunities in review"
-                                        detail="Use side-by-side review when the priority set has more than one viable option and you need a fast trust and access readout."
-                                    />
-                                </div>
-                            )}
-                        </RailSection>
-
-                        <RailSection
                             eyebrow="Request readiness"
                             title="Buyer guidance"
                             description="Use the priority set and side-by-side review state to decide whether to keep researching, inspect details, or move closer to guided request prep."
@@ -738,6 +677,76 @@ export default function DatasetsPage() {
                             </div>
                         </RailSection>
                     </div>
+
+                    <RailSection
+                        eyebrow="Side-by-side review"
+                        title="Review opportunities side by side"
+                        description="Queue up to three opportunities to compare trust, freshness, coverage geography, geo policy, and access path without leaving governed discovery."
+                        id="compare-panel"
+                        action={
+                            compareDatasets.length > 0 ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setCompareIds([])}
+                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                >
+                                    Clear review queue
+                                </button>
+                            ) : undefined
+                        }
+                    >
+                        <div className={`${subCardSurfaceClass} px-5 py-5`}>
+                            <div className="text-base font-semibold text-slate-50">Side-by-side review queue</div>
+                            <p className={`mt-2 ${discoveryText.body}`}>
+                                Add up to three opportunities. Once the queue is full, review buttons stay disabled until you remove one.
+                            </p>
+                        </div>
+
+                        {compareDatasets.length > 0 ? (
+                            <div className="mt-5 space-y-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className={discoveryText.metaStrong}>{compareDatasets.length} of {MAX_COMPARE_ITEMS} selected</span>
+                                </div>
+
+                                {compareDatasets.map(dataset => (
+                                    <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <div className="text-base font-semibold text-slate-50">{dataset.title}</div>
+                                                <div className={`mt-2 ${discoveryText.meta}`}>
+                                                    {dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleCompare(dataset.id)}
+                                                aria-label={`Remove ${dataset.title} from compare`}
+                                                className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {compareDatasets.length >= 2 ? (
+                                    <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} />
+                                ) : (
+                                    <div className={`${subCardSurfaceClass} px-5 py-5`}>
+                                        <div className="text-base font-semibold text-slate-50">Add one more opportunity to review</div>
+                                        <p className={`mt-2 ${discoveryText.body}`}>Side-by-side review becomes useful once at least two governed opportunities are in the queue.</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="mt-5">
+                                <EmptyRailState
+                                    title="No opportunities in review"
+                                    detail="Use side-by-side review when the priority set has more than one viable option and you need a fast trust and access readout."
+                                />
+                            </div>
+                        )}
+                    </RailSection>
                 </section>
             </div>
         </div>
@@ -823,7 +832,7 @@ function DatasetDecisionCard({
     const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
 
     return (
-        <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px]`}>
+        <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px] min-w-0`}>
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Best for</div>

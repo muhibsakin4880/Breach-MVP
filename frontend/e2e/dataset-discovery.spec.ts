@@ -28,6 +28,42 @@ async function seedParticipantSession(page: Page) {
     await page.reload()
 }
 
+async function expectDatasetDiscoveryShell(page: Page, viewportWidth: number) {
+    const resultsRegion = page.getByRole('region', { name: 'Decision-ready results' })
+    const shortlistRegion = page.getByRole('region', { name: 'Review priority set' })
+    const firstDatasetCard = resultsRegion.getByRole('article').first()
+    const secondDatasetCard = resultsRegion.getByRole('article').nth(1)
+
+    await expect(resultsRegion).toBeVisible()
+    await expect(shortlistRegion).toBeVisible()
+    await expect(firstDatasetCard).toBeVisible()
+    await expect(secondDatasetCard).toBeVisible()
+
+    const resultsBox = await resultsRegion.boundingBox()
+    const shortlistBox = await shortlistRegion.boundingBox()
+    const firstCardBox = await firstDatasetCard.boundingBox()
+    const secondCardBox = await secondDatasetCard.boundingBox()
+
+    expect(resultsBox).not.toBeNull()
+    expect(shortlistBox).not.toBeNull()
+    expect(firstCardBox).not.toBeNull()
+    expect(secondCardBox).not.toBeNull()
+
+    if (!resultsBox || !shortlistBox || !firstCardBox || !secondCardBox) {
+        throw new Error('Expected dataset discovery regions and cards to expose bounding boxes.')
+    }
+
+    expect(firstCardBox.width).toBeGreaterThanOrEqual(340)
+    expect(shortlistBox.y).toBeGreaterThan(resultsBox.y + resultsBox.height)
+
+    if (viewportWidth >= 1280) {
+        expect(Math.abs(firstCardBox.y - secondCardBox.y)).toBeLessThanOrEqual(8)
+        return
+    }
+
+    expect(secondCardBox.y).toBeGreaterThan(firstCardBox.y + firstCardBox.height)
+}
+
 test.describe('participant dataset discovery', () => {
     test('supports buyer filtering, sorting, empty-state reset, and detail routing', async ({ page }) => {
         await seedParticipantSession(page)
@@ -35,7 +71,7 @@ test.describe('participant dataset discovery', () => {
 
         await page.goto('/datasets')
 
-        await expect(page.getByRole('heading', { name: 'Dataset Discovery' })).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Curated Evaluation Opportunities' })).toBeVisible()
         await expect(page.getByText('Showing 8 of 8 datasets')).toBeVisible()
 
         await page.getByRole('button', { name: 'Filter domain Healthcare' }).click()
@@ -65,8 +101,8 @@ test.describe('participant dataset discovery', () => {
         const marketTickCard = page.getByRole('article', { name: 'Dataset card for Financial Market Tick Data' })
         const genomicsCard = page.getByRole('article', { name: 'Dataset card for Genomics Research Dataset v2' })
         const smartGridCard = page.getByRole('article', { name: 'Dataset card for Smart Grid Energy Patterns' })
-        const shortlistRegion = page.getByRole('region', { name: 'Review shortlist' })
-        const compareRegion = page.getByRole('region', { name: 'Compare datasets' })
+        const shortlistRegion = page.getByRole('region', { name: 'Review priority set' })
+        const compareRegion = page.getByRole('region', { name: 'Review opportunities side by side' })
 
         await page.goto('/datasets')
         await expect(page.getByText('Showing 8 of 8 datasets')).toBeVisible()
@@ -96,5 +132,48 @@ test.describe('participant dataset discovery', () => {
         await expect(shortlistRegion.getByText('Global Climate Observations 2020-2024')).toBeVisible()
         await expect(compareRegion.getByText('Financial Market Tick Data').first()).toBeVisible()
         await expect(compareRegion.getByText('Genomics Research Dataset v2').first()).toBeVisible()
+    })
+
+    test('keeps the guidance workspace below results at 1280px without crushing dataset cards', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 1200 })
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets')
+
+        await expectDatasetDiscoveryShell(page, 1280)
+    })
+
+    test('keeps guidance below results and caps cards to two columns at 1536px', async ({ page }) => {
+        await page.setViewportSize({ width: 1536, height: 1200 })
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets')
+
+        await expectDatasetDiscoveryShell(page, 1536)
+    })
+
+    test('keeps guidance below results and caps cards to two columns at 1920px', async ({ page }) => {
+        await page.setViewportSize({ width: 1920, height: 1200 })
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets')
+
+        await expectDatasetDiscoveryShell(page, 1920)
+    })
+
+    test('keeps in-page anchors working after moving guidance panels below results', async ({ page }) => {
+        await page.setViewportSize({ width: 1536, height: 1200 })
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets')
+
+        const shortlistRegion = page.getByRole('region', { name: 'Review priority set' })
+        const compareRegion = page.getByRole('region', { name: 'Review opportunities side by side' })
+
+        await page.getByRole('link', { name: 'Review priority set' }).first().click()
+        await expect(shortlistRegion).toBeInViewport()
+
+        await page.getByRole('link', { name: 'Open side-by-side review' }).click()
+        await expect(compareRegion).toBeInViewport()
     })
 })
