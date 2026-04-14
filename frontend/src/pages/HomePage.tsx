@@ -795,7 +795,7 @@ const joinSegments = [
                 {/* ════════════════════════════════════════
                     HERO
                 ════════════════════════════════════════ */}
-                <section className="relative overflow-hidden pt-24 pb-12 md:pt-32 md:pb-16">
+                <section className="relative overflow-hidden pt-24 pb-10 md:pt-28 md:pb-12">
                     <div className="absolute inset-0 bg-[#020814]" />
                     <div className="hero-grid-lines motion-safe-home absolute inset-0 opacity-40" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_14%,rgba(34,211,238,0.16)_0%,rgba(34,211,238,0.08)_18%,rgba(5,12,31,0)_56%)]" />
@@ -806,112 +806,118 @@ const joinSegments = [
                     <ParticleCanvas disabled={prefersReducedMotion} />
 
                     <div className="relative z-10 mx-auto max-w-6xl px-6">
-                        <div className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-4xl flex-col items-center justify-center text-center">
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion}>
-                                <div className="relative isolate mb-8 sm:mb-10">
-                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                                        <div className="hero-orbit motion-safe-home h-[30rem] w-[30rem] rounded-full border border-cyan-400/10" />
-                                    </div>
-                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                                        <div className="hero-orbit delay motion-safe-home h-[24rem] w-[24rem] rounded-full border border-cyan-300/10" />
-                                    </div>
-                                    <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                                        <div className="hero-orbit fast motion-safe-home h-[18rem] w-[18rem] rounded-full border border-cyan-200/10" />
-                                    </div>
-                                    <div className="absolute inset-0 rounded-full bg-cyan-400/12 blur-3xl" />
-                                    <div className="absolute inset-4 rounded-full border border-cyan-300/10" />
-                                    <div className="relative z-10 scale-[0.82] sm:scale-[0.92] md:scale-100">
-                                        <PermissionGateEmblem visible={heroVisible} className="mb-10" />
-                                    </div>
-                                </div>
-                            </MotionReveal>
+                        <div className="mx-auto flex min-h-[calc(100vh-8.5rem)] max-w-6xl flex-col justify-center lg:min-h-[calc(100vh-7.5rem)]">
+                            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-24">
+                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-20 lg:py-12">
+                                    <div className="flex flex-col items-center">
+                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion}>
+                                            <div className="relative isolate mb-4 sm:mb-6">
+                                                <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                                    <div className="hero-orbit motion-safe-home h-[30rem] w-[30rem] rounded-full border border-cyan-400/10" />
+                                                </div>
+                                                <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                                    <div className="hero-orbit delay motion-safe-home h-[24rem] w-[24rem] rounded-full border border-cyan-300/10" />
+                                                </div>
+                                                <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                                                    <div className="hero-orbit fast motion-safe-home h-[18rem] w-[18rem] rounded-full border border-cyan-200/10" />
+                                                </div>
+                                                <div className="absolute inset-0 rounded-full bg-cyan-400/12 blur-3xl" />
+                                                <div className="absolute inset-4 rounded-full border border-cyan-300/10" />
+                                                <div className="relative z-10 scale-[0.82] sm:scale-[0.92] md:scale-100">
+                                                    <PermissionGateEmblem visible={heroVisible} className="mb-10" />
+                                                </div>
+                                            </div>
+                                        </MotionReveal>
 
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={80}>
-                                <h1 className="hero-wordmark motion-safe-home redoubt-font bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[clamp(3.2rem,8vw,5.75rem)] font-extrabold leading-tight tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
-                                    REDOUBT
-                                </h1>
-                            </MotionReveal>
-
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={150}>
-                                <p className="mt-5 min-h-[2rem] redoubt-font text-base font-semibold tracking-[0.08em] text-slate-300 sm:text-lg md:text-xl">
-                                    {taglineTyped}
-                                    {!prefersReducedMotion && (
-                                        <span className="motion-safe-home ml-2 inline-block h-[1.05em] w-px translate-y-1 bg-cyan-100/80 align-middle [animation:cursorBlink_1s_steps(2,end)_infinite]" />
-                                    )}
-                                </p>
-                            </MotionReveal>
-
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
-                                <p className="mt-5 max-w-[65ch] text-xs leading-7 text-slate-200 sm:text-sm md:text-base md:leading-8">
-                                    Redoubt is a data confidence layer for governed access, helping organizations evaluate
-                                    sensitive external datasets with provenance, policy, and audit context before a pilot begins.
-                                </p>
-                            </MotionReveal>
-
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={320} className="w-full">
-                                <div className="mx-auto mt-8 w-full max-w-[48rem] lg:mt-10">
-                                    <div className="relative w-full">
-                                        <div className="pointer-events-none absolute left-[24%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[78px]" />
-                                        <div className="pointer-events-none absolute left-[76%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/12 blur-[82px]" />
-                                        <div className="relative flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center max-w-md mx-auto">
-                                            <Link
-                                                to="/login"
-                                                onClick={handleSignInFromLanding}
-                                                className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[10rem] items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/72 px-6 py-3 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.16),0_18px_42px_rgba(2,8,23,0.26)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_52px_rgba(34,211,238,0.24),0_20px_46px_rgba(2,8,23,0.28)]"
-                                            >
-                                                Sign In →
-                                            </Link>
-                                            <button
-                                                onClick={handleRequestPlatformAccess}
-                                                className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[14rem] items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_44px_rgba(34,211,238,0.34),0_18px_42px_rgba(2,8,23,0.22)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_58px_rgba(34,211,238,0.42),0_20px_46px_rgba(2,8,23,0.24)]"
-                                            >
-                                                Request Platform Access
-                                            </button>
-                                        </div>
+                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={80} className="text-center lg:-mt-8">
+                                            <div className="mx-auto flex w-fit flex-col items-center">
+                                                <div className="flex justify-center">
+                                                    <div className="origin-center scale-[0.74] sm:scale-[0.86] md:scale-[0.92] lg:scale-[0.62]">
+                                                        <h1 className="hero-wordmark motion-safe-home redoubt-font bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[clamp(3.2rem,8vw,5.75rem)] font-extrabold leading-tight tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
+                                                            REDOUBT
+                                                        </h1>
+                                                    </div>
+                                                </div>
+                                                <p className="mt-3 flex min-h-[2rem] items-center justify-center whitespace-nowrap text-center redoubt-font text-[clamp(0.44rem,0.92vw,0.96rem)] font-semibold tracking-[0.06em] text-slate-300">
+                                                    {taglineTyped}
+                                                    {!prefersReducedMotion && (
+                                                        <span className="motion-safe-home ml-2 inline-block h-[1.05em] w-px translate-y-1 bg-cyan-100/80 align-middle [animation:cursorBlink_1s_steps(2,end)_infinite]" />
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </MotionReveal>
                                     </div>
                                 </div>
-                            </MotionReveal>
 
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={420}>
-                                <div className="mt-6 flex justify-center">
-                                    <div className="flex gap-3">
-                                        {trustSignals.map((item, index) => (
-                                            <span 
-                                                key={item}
-                                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/12 bg-emerald-500/5 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-50"
-                                            >
-                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" style={{ animationDelay: `${index * 0.18}s` }} />
-                                                {item}
-                                            </span>
-                                        ))}
+                                <div className="flex flex-col items-center px-6 py-8 text-center lg:px-20 lg:py-12 lg:items-start lg:text-left">
+                                    <div className="w-full max-w-[34rem]">
+                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
+                                            <p className="max-w-[65ch] text-xs leading-7 text-slate-200 sm:text-sm md:text-base md:leading-8">
+                                                Redoubt is a data confidence layer for governed access, helping organizations evaluate
+                                                sensitive external datasets with provenance, policy, and audit context before a pilot begins.
+                                            </p>
+                                        </MotionReveal>
+
+                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={320} className="w-full">
+                                            <div className="relative mt-8 w-full">
+                                                <div className="pointer-events-none absolute left-[28%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[78px]" />
+                                                <div className="pointer-events-none absolute left-[74%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/12 blur-[82px]" />
+                                                <div className="relative flex w-full flex-col gap-3 sm:flex-row sm:gap-4 lg:justify-start">
+                                                    <Link
+                                                        to="/login"
+                                                        onClick={handleSignInFromLanding}
+                                                        className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[10rem] items-center justify-center rounded-[1.15rem] border border-cyan-300/25 bg-slate-950/72 px-6 py-3 text-sm font-semibold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.16),0_18px_42px_rgba(2,8,23,0.26)] transition-all duration-300 hover:border-cyan-200/55 hover:bg-cyan-300/12 hover:shadow-[0_0_52px_rgba(34,211,238,0.24),0_20px_46px_rgba(2,8,23,0.28)]"
+                                                    >
+                                                        Sign In →
+                                                    </Link>
+                                                    <button
+                                                        onClick={handleRequestPlatformAccess}
+                                                        className="inline-flex min-h-[3.5rem] w-full sm:w-auto sm:min-w-[14rem] items-center justify-center rounded-[1.15rem] border border-cyan-200/20 bg-gradient-to-r from-cyan-300 via-cyan-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_44px_rgba(34,211,238,0.34),0_18px_42px_rgba(2,8,23,0.22)] transition-all duration-300 hover:from-cyan-200 hover:via-cyan-300 hover:to-sky-400 hover:shadow-[0_0_58px_rgba(34,211,238,0.42),0_20px_46px_rgba(2,8,23,0.24)]"
+                                                    >
+                                                        Request Platform Access
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </MotionReveal>
+
+                                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={420}>
+                                            <div className="mt-6 flex justify-center lg:justify-start">
+                                                <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+                                                    {trustSignals.map((item, index) => (
+                                                        <span
+                                                            key={item}
+                                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/12 bg-emerald-500/5 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-50"
+                                                        >
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" style={{ animationDelay: `${index * 0.18}s` }} />
+                                                            {item}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </MotionReveal>
                                     </div>
                                 </div>
-                            </MotionReveal>
-
-                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
-                                <svg className="w-5 h-5 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                </svg>
-                            </div>
-
-                        </div>
-
-                        <div className="mx-auto mt-8 w-full max-w-5xl lg:mt-10">
-                            <div className="relative grid items-stretch gap-3 lg:grid-cols-3">
-                                {heroHighlights.map((item, index) => (
-                                    <div
-                                        key={item.title}
-                                        className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3"
-                                    >
-                                        <span className="h-2 w-2 flex-shrink-0 rounded-full bg-cyan-300" />
-                                        <div>
-                                            <p className="text-sm font-semibold text-cyan-50">{item.title}</p>
-                                            <p className="text-xs text-slate-400">{item.detail}</p>
-                                        </div>
-                                    </div>
-                                ))}
                             </div>
                         </div>
+
+                        <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={520} className="w-full">
+                            <div className="mx-auto mt-3 max-w-6xl border-t border-white/8 pt-5 lg:mt-0 lg:pt-6">
+                                <div className="grid gap-3 md:grid-cols-3">
+                                    {heroHighlights.map((item) => (
+                                        <div
+                                            key={item.title}
+                                            className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3"
+                                        >
+                                            <span className="h-2 w-2 flex-shrink-0 rounded-full bg-cyan-300" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-cyan-50">{item.title}</p>
+                                                <p className="text-xs text-slate-400">{item.detail}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </MotionReveal>
                     </div>
                 </section>
 
