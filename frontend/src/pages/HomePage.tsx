@@ -869,16 +869,16 @@ const joinSegments = [
                                                 <span className="block text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-300">
                                                     Trust Infrastructure
                                                 </span>
-                                                <h2 className="mt-3 w-full text-[1.45rem] font-semibold leading-[1.15] text-cyan-100 sm:text-[1.7rem]">
+                                                <h2 className="mt-2.5 w-full text-[1.45rem] font-semibold leading-[1.15] text-cyan-100 sm:text-[1.7rem]">
                                                     The Trusted Layer for Regulated Data
                                                 </h2>
-                                                <p className="mt-4 text-sm leading-[1.6] text-cyan-100/80 sm:text-base">
+                                                <p className="mt-3.5 text-sm leading-[1.6] text-cyan-100/80 sm:text-base">
                                                     Redoubt commands the critical infrastructure between data acquisition and
-                                                    deployment. We enforce zero-trust compliance through AI interrogation, strictly
-                                                    scoring datasets and locking transactions in secure escrow. Built for enterprises
-                                                    that demand absolute data integrity.
+                                                    deployment. We enforce zero-trust compliance through AI interrogation, rigorous
+                                                    dataset scoring, and secure escrow, delivering absolute data integrity for
+                                                    enterprises that cannot afford risk.
                                                 </p>
-                                                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-cyan-100/70">
+                                                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-cyan-100/70">
                                                     <span className="inline-flex items-center gap-2 text-xs font-medium">
                                                         <span aria-hidden="true">🔒</span>
                                                         Escrow Protected
@@ -896,7 +896,7 @@ const joinSegments = [
                                         </MotionReveal>
 
                                         <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={320} className="w-full">
-                                            <div className="relative mt-8 w-full lg:mt-8">
+                                            <div className="relative mt-7 w-full lg:mt-7">
                                                 <div className="pointer-events-none absolute left-[28%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[78px]" />
                                                 <div className="pointer-events-none absolute left-[74%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/12 blur-[82px]" />
                                                 <div className="relative grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] sm:gap-4">
