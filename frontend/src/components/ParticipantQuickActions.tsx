@@ -213,7 +213,7 @@ export default function ParticipantQuickActions() {
     return (
         <div
             ref={menuRef}
-            className="fixed inset-x-4 bottom-4 z-40 flex items-center justify-end gap-2 rounded-[28px] border border-slate-700/80 bg-slate-950/88 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-2xl md:inset-x-auto md:right-4 md:bottom-6 md:gap-3 lg:bottom-auto lg:right-6 lg:top-1/2 lg:flex-col lg:justify-center lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:-translate-y-1/2"
+            className="fixed inset-x-4 bottom-4 z-40 flex items-center justify-end gap-2 rounded-[28px] border border-slate-700/80 bg-slate-950/88 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-2xl md:inset-x-auto md:right-4 md:bottom-6 md:gap-3 lg:bottom-auto lg:right-5 lg:top-1/2 lg:flex-col lg:justify-center lg:gap-2 lg:rounded-[24px] lg:border lg:border-[#22304D]/80 lg:bg-[#0C1426]/76 lg:p-2 lg:shadow-[0_28px_56px_-36px_rgba(2,6,23,0.96)] lg:-translate-y-1/2"
             role="toolbar"
             aria-label="Participant quick actions"
         >
@@ -229,10 +229,10 @@ export default function ParticipantQuickActions() {
                             aria-expanded={openMenu === group.id}
                             aria-haspopup="menu"
                             aria-controls={menuId}
-                            className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all duration-200 ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-[18px] border transition-all duration-200 ${
                                 openMenu === group.id
-                                    ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.28)]'
-                                    : 'border-slate-700 bg-slate-950/90 text-slate-300 hover:border-cyan-400/50 hover:bg-slate-900 hover:text-cyan-200'
+                                    ? 'border-cyan-400/35 bg-cyan-500/14 text-cyan-200 shadow-[0_14px_30px_-18px_rgba(34,211,238,0.35)]'
+                                    : 'border-[#25314A]/78 bg-[#0C1426]/90 text-slate-400 hover:border-cyan-400/28 hover:bg-[#101a30] hover:text-slate-200'
                             }`}
                         >
                             <ActionIcon name={group.id} className="h-5 w-5" />
@@ -243,7 +243,7 @@ export default function ParticipantQuickActions() {
                                 id={menuId}
                                 role="menu"
                                 aria-label={`${group.label} actions`}
-                                className="fixed inset-x-4 bottom-20 w-auto rounded-[28px] border border-slate-700/80 bg-slate-950/95 p-2 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.95)] backdrop-blur-xl md:inset-x-auto md:right-4 md:bottom-24 md:w-72 lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-14 lg:top-1/2 lg:w-64 lg:-translate-y-1/2"
+                                className="fixed inset-x-4 bottom-20 w-auto rounded-[24px] border border-[#25314A]/80 bg-[#0B1221]/96 p-2 shadow-[0_28px_50px_-30px_rgba(2,6,23,0.98)] backdrop-blur-xl md:inset-x-auto md:right-4 md:bottom-24 md:w-72 lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-16 lg:top-1/2 lg:w-64 lg:-translate-y-1/2"
                             >
                                 {group.items.map((item) => (
                                     <button
@@ -251,9 +251,9 @@ export default function ParticipantQuickActions() {
                                         type="button"
                                         role="menuitem"
                                         onClick={() => handleAction(item)}
-                                        className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-slate-800/80"
+                                        className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-slate-800/60"
                                     >
-                                        <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-slate-700/80 bg-slate-900/90 text-cyan-200">
+                                        <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-[#25314A]/80 bg-[#0E172B]/92 text-cyan-200">
                                             <ActionIcon name={group.id} className="h-4 w-4" />
                                         </span>
                                         <span className="min-w-0">
