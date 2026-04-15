@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card } from '../components/Card'
+import PermissionGateMark from '../components/PermissionGateMark'
 import { useAuth } from '../contexts/AuthContext'
 
 type MetricItem = {
@@ -206,15 +207,11 @@ export default function ParticipantConsolePage() {
                                             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200"
                                             aria-hidden="true"
                                         >
-                                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 20.25h6" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25v3" />
-                                            </svg>
+                                            <PermissionGateMark className="h-5 w-5" />
                                         </div>
                                         <div>
                                             <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Participant Console</div>
-                                            <div className="mt-1 text-base font-semibold text-white">Redoubt Workspace</div>
+                                            <div className="mt-1 text-base font-semibold text-white">Redoubt</div>
                                         </div>
                                     </div>
 

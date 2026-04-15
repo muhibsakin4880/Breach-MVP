@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import PermissionGateMark from '../components/PermissionGateMark'
 import ParticipantQuickActions from '../components/ParticipantQuickActions'
 
 type NavItem = {
@@ -91,63 +92,12 @@ export default function AppLayout() {
                 <div className="flex h-full w-full flex-col overflow-hidden">
                     <div className="border-b border-slate-800 px-5 py-5">
                         <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`}>
-                            <svg
-                                className="w-10 h-10 overflow-visible"
-                                viewBox="0 0 240 300"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                style={{ filter: 'drop-shadow(0 0 12px rgba(72, 219, 229, 0.5)) drop-shadow(0 0 24px rgba(14, 42, 80, 0.5))' }}
-                            >
-                                <defs>
-                                    <linearGradient id="dashShieldOuter" x1="120" y1="0" x2="120" y2="300" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#10294b"/>
-                                        <stop offset="1" stopColor="#0a1323"/>
-                                    </linearGradient>
-                                    <linearGradient id="dashShieldInner" x1="120" y1="40" x2="120" y2="260" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#0f2442"/>
-                                        <stop offset="1" stopColor="#091322"/>
-                                    </linearGradient>
-                                    <filter id="dashCircuitGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                        <feMerge>
-                                            <feMergeNode in="coloredBlur"/>
-                                            <feMergeNode in="SourceGraphic"/>
-                                        </feMerge>
-                                    </filter>
-                                    <filter id="dashShieldGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                        <feGaussianBlur stdDeviation="6" result="softGlow"/>
-                                        <feMerge>
-                                            <feMergeNode in="softGlow"/>
-                                            <feMergeNode in="SourceGraphic"/>
-                                        </feMerge>
-                                    </filter>
-                                </defs>
-                                <path
-                                    d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
-                                    fill="url(#dashShieldOuter)"
-                                    stroke="#0f3a7a"
-                                    strokeWidth="4"
-                                    filter="url(#dashShieldGlow)"
-                                />
-                                <path
-                                    d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
-                                    fill="url(#dashShieldInner)"
-                                    stroke="#0b2552"
-                                    strokeWidth="3"
-                                />
-                                <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#dashCircuitGlow)">
-                                    <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
-                                    <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
-                                    <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
-                                </g>
-                                <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                                <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                                <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                                <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                            </svg>
-                            <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/25 bg-cyan-500/10 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.14)]">
+                                <PermissionGateMark className="h-6 w-6" />
+                            </span>
+                            <span className="text-xl font-bold text-white transition-colors hover:text-blue-300">Redoubt</span>
                         </Link>
-                        <p className="ml-11 mt-1 text-xs text-slate-300">Participant Console</p>
+                        <p className="pl-[3.25rem] pt-1 text-xs text-slate-300">Participant Console</p>
                     </div>
                     <nav className="flex-1 overflow-y-auto p-4 space-y-4">
                         {navGroups.map((group, groupIndex) => (
@@ -182,15 +132,11 @@ export default function AppLayout() {
                         <div className="flex items-center gap-4">
                             <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`} aria-label="Open participant dashboard">
                                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 sm:h-10 sm:w-10">
-                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 20.25h6" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25v3" />
-                                    </svg>
+                                    <PermissionGateMark className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </span>
                                 <span className="min-w-0">
                                     <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
-                                    <span className="mt-1 block truncate text-sm font-semibold text-slate-100">Redoubt Workspace</span>
+                                    <span className="mt-1 block truncate text-sm font-semibold text-slate-100">Redoubt</span>
                                 </span>
                             </Link>
                         </div>

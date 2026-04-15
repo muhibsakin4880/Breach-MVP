@@ -98,6 +98,23 @@ test.describe('participant onboarding', () => {
         await expect(page).toHaveURL(/\/dashboard$/)
     })
 
+    test('authenticated participant routes show the refreshed Redoubt branding', async ({ page }) => {
+        await seedAppState(page, {
+            auth: {
+                accessStatus: 'approved',
+                isAuthenticated: 'true',
+                onboardingInitiated: 'false',
+                applicantEmail: completedStep1.officialWorkEmail
+            }
+        })
+
+        await page.goto('/participant-console')
+
+        const consoleHeader = page.getByLabel('Participant console header')
+        await expect(consoleHeader.getByText('Redoubt', { exact: true })).toBeVisible()
+        await expect(consoleHeader.getByText('Redoubt Workspace', { exact: true })).toHaveCount(0)
+    })
+
     test('request access starts a fresh onboarding flow instead of resuming a prior submission', async ({ page }) => {
         await seedAppState(page, {
             onboarding: {
@@ -324,6 +341,13 @@ test.describe('participant onboarding', () => {
         await expect(page.getByRole('heading', { name: 'SSO Redirect' })).toBeVisible()
         await page.getByRole('button', { name: 'Continue to SSO →' }).click()
 
+        await expect(page).toHaveURL(/\/dashboard$/)
+
+        const participantDashboardLink = page.getByRole('link', { name: 'Open participant dashboard' })
+        await expect(page.getByText('Redoubt Workspace', { exact: true })).toHaveCount(0)
+        await expect(participantDashboardLink.getByText('Redoubt', { exact: true })).toBeVisible()
+
+        await participantDashboardLink.click()
         await expect(page).toHaveURL(/\/dashboard$/)
     })
 })
