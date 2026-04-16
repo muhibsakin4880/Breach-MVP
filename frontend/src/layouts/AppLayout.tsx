@@ -137,9 +137,6 @@ export default function AppLayout() {
                     <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-6">
                         <div className="flex items-center gap-4">
                             <Link to="/dashboard" className={shellBrandLinkClass} aria-label="Open participant dashboard">
-                                <span className={`${shellBrandIconClass} h-9 w-9 sm:h-10 sm:w-10`}>
-                                    <PermissionGateMark className="h-5 w-5 sm:h-6 sm:w-6" />
-                                </span>
                                 <span className="min-w-0">
                                     <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
                                 </span>
