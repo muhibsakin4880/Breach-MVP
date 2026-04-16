@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { participantOnboardingPaths } from '../onboarding/constants'
+import { participantOnboardingEstimatedReviewTime, participantOnboardingPaths } from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { isStep1Complete } from '../onboarding/flow'
 import { emptyStep1FormState, onboardingStorageKeys, readOnboardingValue, writeOnboardingValue } from '../onboarding/storage'
 import type { Step1FormState } from '../onboarding/types'
+
+type Step1DraftState = Step1FormState & {
+    organizationWebsite: string
+}
 
 const BLOCKED_EMAIL_DOMAINS = new Set([
     'gmail.com',
@@ -23,6 +27,30 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
     'live.com'
 ])
 
+const initialStep1DraftState: Step1DraftState = {
+    ...emptyStep1FormState,
+    organizationWebsite: ''
+}
+
+const fieldLabelClassName = 'mb-2 block text-sm font-medium text-slate-200'
+const fieldInputClassName =
+    'w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none'
+
+const reviewChecks = [
+    {
+        title: 'Corporate identity consistency',
+        description: 'Organization name, website, industry, and operating region are reviewed together to confirm the request maps to a real entity.'
+    },
+    {
+        title: 'Verified business contact',
+        description: 'Your work email is used as the starting point for confirming organizational affiliation before later verification steps begin.'
+    },
+    {
+        title: 'Submitting representative context',
+        description: 'Role and team function help reviewers understand why this person is the right representative for the onboarding request.'
+    }
+] as const
+
 function isPersonalEmail(email: string): boolean {
     const domain = email.toLowerCase().split('@')[1]
     return domain ? BLOCKED_EMAIL_DOMAINS.has(domain) : false
@@ -30,20 +58,20 @@ function isPersonalEmail(email: string): boolean {
 
 export default function OnboardingStep1() {
     const navigate = useNavigate()
-    const [state, setState] = useState<Step1FormState>(() =>
-        readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState)
+    const [state, setState] = useState<Step1DraftState>(() =>
+        readOnboardingValue(onboardingStorageKeys.step1, initialStep1DraftState)
     )
     const [showError, setShowError] = useState(false)
     const [emailWarning, setEmailWarning] = useState<string | null>(null)
 
-    const handleChange = (field: keyof Step1FormState, value: string) => {
+    const handleChange = (field: keyof Step1DraftState, value: string) => {
         const next = { ...state, [field]: value }
         setState(next)
         writeOnboardingValue(onboardingStorageKeys.step1, next)
-        
+
         if (field === 'officialWorkEmail' && value.includes('@')) {
             if (isPersonalEmail(value)) {
-                setEmailWarning('⚠️ Personal email addresses are not accepted. Please use your verified corporate email.')
+                setEmailWarning('Personal email providers are not accepted. Use a verified corporate email.')
             } else {
                 setEmailWarning(null)
             }
@@ -53,8 +81,9 @@ export default function OnboardingStep1() {
     }
 
     const fillMockData = () => {
-        const mockState: Step1FormState = {
+        const mockState: Step1DraftState = {
             organizationName: 'Demo Corporation',
+            organizationWebsite: 'https://www.redoubt.local',
             officialWorkEmail: 'demo@redoubt.local',
             inviteCode: 'REDO-2026',
             roleInOrganization: 'Senior Data Engineer',
@@ -65,11 +94,75 @@ export default function OnboardingStep1() {
         setState(mockState)
         writeOnboardingValue(onboardingStorageKeys.step1, mockState)
         setShowError(false)
+        setEmailWarning(null)
     }
 
-    const stepReady = useMemo(
-        () => isStep1Complete(state),
-        [state]
+    const stepReady = useMemo(() => isStep1Complete(state), [state])
+
+    const helperPanel = (
+        <div className="space-y-4">
+            <section className="rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.94)_100%)] p-5 shadow-[0_22px_50px_rgba(8,47,73,0.24)]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
+                    Identity Review
+                </div>
+                <h2 className="mt-3 text-xl font-semibold text-white">Why this first step matters</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
+                    Redoubt starts by establishing the corporate identity behind the request so later governance,
+                    verification, and reviewer routing all begin from a trusted organization record.
+                </p>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                            Typical approval timing
+                        </div>
+                        <div className="mt-2 text-lg font-semibold text-white">
+                            {participantOnboardingEstimatedReviewTime}
+                        </div>
+                        <p className="mt-2 text-sm text-slate-300">
+                            Review may move faster when identity and organization details are consistent.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                            Invite code
+                        </div>
+                        <div className="mt-2 text-lg font-semibold text-white">Optional</div>
+                        <p className="mt-2 text-sm text-slate-300">
+                            You can continue without a code. If you have one, it helps route the request more quickly.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-[26px] border border-white/10 bg-slate-900/75 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.24)]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    What Gets Checked
+                </div>
+                <div className="mt-4 space-y-4">
+                    {reviewChecks.map((check) => (
+                        <div key={check.title} className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                            <div className="text-sm font-semibold text-white">{check.title}</div>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="rounded-[26px] border border-white/10 bg-slate-900/70 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Invite Code Guidance
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                    If your organization received an invite code, enter it exactly as issued. If not, leave the
+                    field blank and continue. The current review flow still accepts the request without one.
+                </p>
+                <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                    This step records your identity and organization context first. Verification depth increases in
+                    later stages, not here.
+                </div>
+            </section>
+        </div>
     )
 
     const handleNext = () => {
@@ -83,93 +176,197 @@ export default function OnboardingStep1() {
 
     return (
         <OnboardingStepGuard currentPath={participantOnboardingPaths.step1}>
-            <OnboardingPageLayout activeStep={1}>
-                <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
-                    <div className="flex items-center justify-between gap-3">
-                        <h2 className="text-xl font-semibold">Organization & Identity</h2>
+            <OnboardingPageLayout
+                activeStep={1}
+                showDefaultHelperPanel={false}
+                helperPanel={helperPanel}
+                headerTitle="Organization & Identity"
+                headerSubtitle="Establish the verified corporate identity behind this request before deeper governance and verification review begin."
+                pageEyebrow="Participant onboarding · Identity review"
+            >
+                <div className="space-y-6">
+                    <section className="rounded-[28px] border border-slate-800 bg-slate-900/70 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.24)]">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="max-w-2xl">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Step 1 intake
+                                </div>
+                                <h2 className="mt-2 text-2xl font-semibold text-white">Start with trusted organization details</h2>
+                                <p className="mt-3 text-sm leading-6 text-slate-300">
+                                    This opening step anchors the onboarding request to a legitimate organization and
+                                    an accountable representative. Complete the required fields now so the rest of the
+                                    workflow can build on a clean trust record.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={fillMockData}
+                                className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                            >
+                                Use mock data
+                            </button>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <div className="rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
+                                Corporate identity required
+                            </div>
+                            <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                                Invite code optional
+                            </div>
+                            <div className="rounded-full border border-amber-400/25 bg-amber-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100">
+                                Typical review: {participantOnboardingEstimatedReviewTime}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="rounded-[28px] border border-slate-800 bg-slate-900/65 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.22)]">
+                        <div className="grid gap-6 xl:grid-cols-2">
+                            <article className="rounded-[24px] border border-slate-800 bg-slate-950/70 p-5">
+                                <div className="mb-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                        Organization profile
+                                    </div>
+                                    <h3 className="mt-2 text-lg font-semibold text-white">Corporate details</h3>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                        These fields help reviewers identify the organization behind the request and
+                                        resolve the correct operating context early.
+                                    </p>
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="md:col-span-2">
+                                        <label className={fieldLabelClassName}>Organization name</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.organizationName}
+                                            onChange={(event) => handleChange('organizationName', event.target.value)}
+                                            placeholder="Your legal or operating organization name"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className={fieldLabelClassName}>Organization website</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.organizationWebsite}
+                                            onChange={(event) => handleChange('organizationWebsite', event.target.value)}
+                                            placeholder="https://www.organization.com"
+                                        />
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Optional, but useful when reviewers need to confirm the public corporate
+                                            footprint tied to this request.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label className={fieldLabelClassName}>Industry / domain</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.industryDomain}
+                                            onChange={(event) => handleChange('industryDomain', event.target.value)}
+                                            placeholder="Healthcare, public sector, mobility..."
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={fieldLabelClassName}>Primary operating region</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.country}
+                                            onChange={(event) => handleChange('country', event.target.value)}
+                                            placeholder="Country or region"
+                                        />
+                                    </div>
+                                </div>
+                            </article>
+
+                            <article className="rounded-[24px] border border-slate-800 bg-slate-950/70 p-5">
+                                <div className="mb-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                        Submitting representative
+                                    </div>
+                                    <h3 className="mt-2 text-lg font-semibold text-white">Participant identity</h3>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                        Use the business contact information reviewers should associate with this
+                                        application package.
+                                    </p>
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="md:col-span-2">
+                                        <label className={fieldLabelClassName}>Official work email</label>
+                                        <input
+                                            type="email"
+                                            className={fieldInputClassName}
+                                            value={state.officialWorkEmail}
+                                            onChange={(event) => handleChange('officialWorkEmail', event.target.value)}
+                                            placeholder="name@organization.com"
+                                        />
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Use the same corporate email that later verification and reviewer contact
+                                            should reference.
+                                        </p>
+                                        {emailWarning && (
+                                            <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                                                {emailWarning}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className={fieldLabelClassName}>Role / team function</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.roleInOrganization}
+                                            onChange={(event) => handleChange('roleInOrganization', event.target.value)}
+                                            placeholder="Research lead, security engineering, compliance operations..."
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className={fieldLabelClassName}>Invite code</label>
+                                        <input
+                                            className={fieldInputClassName}
+                                            value={state.inviteCode}
+                                            onChange={(event) => handleChange('inviteCode', event.target.value)}
+                                            placeholder="Enter if provided"
+                                        />
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Optional. You can continue without an invite code. If you have one, enter
+                                            it exactly as issued to help route the request faster.
+                                        </p>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+
+                        {showError && !stepReady && (
+                            <div className="mt-6 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                                To continue, complete the organization identity fields and provide a valid corporate
+                                email. Invite codes remain optional, but if you enter one it should match the issued
+                                code format.
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-slate-800 bg-slate-900/60 px-5 py-4">
+                        <div>
+                            <div className="text-sm font-semibold text-white">Next step</div>
+                            <p className="mt-1 text-sm text-slate-400">
+                                After identity intake, onboarding moves into intended platform usage and request scope.
+                            </p>
+                        </div>
+
                         <button
                             type="button"
-                            onClick={fillMockData}
-                            className="text-xs px-3 py-2 rounded-lg border border-slate-600 text-slate-200 hover:border-blue-500 hover:text-white transition-colors"
+                            onClick={handleNext}
+                            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
                         >
-                            Use mock data
+                            Continue to Step 2
                         </button>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Organization name</label>
-                            <input
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.organizationName}
-                                onChange={(e) => handleChange('organizationName', e.target.value)}
-                                placeholder="Your organization"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Official work email</label>
-                            <input
-                                type="email"
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.officialWorkEmail}
-                                onChange={(e) => handleChange('officialWorkEmail', e.target.value)}
-                                placeholder="name@organization.com"
-                            />
-                            {emailWarning && <p className="mt-1 text-sm text-amber-300">{emailWarning}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Invite code</label>
-                            <input
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.inviteCode}
-                                onChange={(e) => handleChange('inviteCode', e.target.value)}
-                                placeholder="INV-XXXXXX"
-                            />
-                            <p className="mt-1 text-xs text-slate-500">Optional — we'll verify either way, but this helps us move faster.</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Role in organization</label>
-                            <input
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.roleInOrganization}
-                                onChange={(e) => handleChange('roleInOrganization', e.target.value)}
-                                placeholder="Research lead, ML engineer, analyst..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Industry/domain</label>
-                            <input
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.industryDomain}
-                                onChange={(e) => handleChange('industryDomain', e.target.value)}
-                                placeholder="Healthcare, mobility, climate..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-slate-300 mb-2">Country</label>
-                            <input
-                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                                value={state.country}
-                                onChange={(e) => handleChange('country', e.target.value)}
-                                placeholder="Country"
-                            />
-                        </div>
-                    </div>
-                    {showError && !stepReady && (
-                        <div className="text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
-                            Please complete all required fields with a valid corporate email. If you have an invite code,
-                            make sure it is valid before continuing.
-                        </div>
-                    )}
-                </section>
-
-                <div className="flex items-center justify-end gap-3">
-                    <button
-                        type="button"
-                        onClick={handleNext}
-                        className="px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-60"
-                    >
-                        Continue to Step 2
-                    </button>
+                    </section>
                 </div>
             </OnboardingPageLayout>
         </OnboardingStepGuard>
