@@ -55,6 +55,12 @@ const confidenceColor = (score: number) => {
     return 'text-rose-300'
 }
 
+const primaryPanelClass =
+    'rounded-[28px] border border-white/10 bg-slate-950/70 shadow-[0_24px_80px_rgba(2,8,20,0.3)] backdrop-blur-sm'
+
+const secondaryPanelClass =
+    'rounded-[24px] border border-white/10 bg-slate-900/70 shadow-[0_18px_56px_rgba(2,8,20,0.24)] backdrop-blur-sm'
+
 export default function ProviderDashboardPage() {
     const totalDatasets = datasets.length
     const providerReviewRequests = datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS')
@@ -63,229 +69,215 @@ export default function ProviderDashboardPage() {
     const approvedAccesses = approvedDatasets.length
 
     return (
-        <div className="bg-slate-900 text-white min-h-screen">
-            <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-800">
-                <div className="container mx-auto px-4 py-10 md:py-14 space-y-8">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                        <div className="space-y-3">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs uppercase tracking-[0.12em] text-slate-300">
-                                Data Provider Hub
+        <div className="min-h-screen bg-slate-900 text-white">
+            <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 px-4 py-6 sm:px-6 xl:px-8">
+                <section className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.98)_0%,rgba(2,8,20,0.96)_100%)] p-6 shadow-[0_30px_90px_rgba(2,8,20,0.34)] backdrop-blur-sm lg:p-8">
+                    <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_340px] xl:items-start">
+                        <div className="space-y-6">
+                            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                <div className="max-w-3xl space-y-3">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/70 px-3 py-1 text-xs uppercase tracking-[0.12em] text-slate-300">
+                                        Data Provider Hub
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">Provider Dashboard</h1>
+                                        <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
+                                            Manage the datasets you publish, respond to access requests, and monitor delivery quality—all without revealing buyer identity.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex shrink-0 flex-wrap gap-3">
+                                    <button className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
+                                        Configure delivery
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-semibold mb-2">Provider Dashboard</h1>
-                                <p className="text-slate-300 max-w-2xl">
-                                    Manage the datasets you publish, respond to access requests, and monitor delivery quality—all without revealing buyer identity.
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <button className="px-4 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-sm font-medium text-slate-200 hover:text-white transition-colors">
-                                    Configure delivery
-                                </button>
+
+                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                <SummaryMetricCard label="Total datasets" value={totalDatasets} hint="Uploaded" toneClass="bg-[linear-gradient(180deg,rgba(59,130,246,0.16)_0%,rgba(2,8,20,0)_100%)]" />
+                                <SummaryMetricCard label="Active requests" value={activeRequests} hint="Awaiting action" toneClass="bg-[linear-gradient(180deg,rgba(245,158,11,0.16)_0%,rgba(2,8,20,0)_100%)]" />
+                                <SummaryMetricCard label="Approved accesses" value={approvedAccesses} hint="Provisioned" toneClass="bg-[linear-gradient(180deg,rgba(16,185,129,0.16)_0%,rgba(2,8,20,0)_100%)]" />
+                                <SummaryMetricCard label="Avg confidence" value={`${performanceSummary.avgConfidence}%`} hint="Quality signal" valueClass="text-cyan-300" toneClass="bg-[linear-gradient(180deg,rgba(34,211,238,0.16)_0%,rgba(2,8,20,0)_100%)]" />
                             </div>
                         </div>
-                        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-lg w-full max-w-sm">
-                            <div className="flex items-center justify-between mb-2">
+
+                        <aside className="rounded-[26px] border border-white/10 bg-slate-950/78 p-6 shadow-[0_20px_60px_rgba(2,8,20,0.32)]">
+                            <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-4">
                                 <span className="text-sm text-slate-400">Dataset performance</span>
-                                <span className="px-2 py-1 rounded-full text-xs border border-emerald-400/60 bg-emerald-500/10 text-emerald-200">
+                                <span className="rounded-full border border-emerald-400/60 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-200">
                                     Healthy
                                 </span>
                             </div>
-                            <div className="text-3xl font-semibold text-emerald-300 mb-1">{performanceSummary.uptime} uptime</div>
-                            <p className="text-sm text-slate-400">Freshness {performanceSummary.freshness}; {performanceSummary.anomalies} anomaly flagged this week.</p>
-                        </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="rounded-xl border border-slate-800 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-slate-900 p-4 shadow-lg">
-                            <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">Total datasets</div>
-                            <div className="text-3xl font-semibold">{totalDatasets}</div>
-                            <div className="text-xs text-slate-400">Uploaded</div>
-                        </div>
-                        <div className="rounded-xl border border-slate-800 bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-slate-900 p-4 shadow-lg">
-                            <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">Active requests</div>
-                            <div className="text-3xl font-semibold">{activeRequests}</div>
-                            <div className="text-xs text-slate-400">Awaiting action</div>
-                        </div>
-                        <div className="rounded-xl border border-slate-800 bg-gradient-to-br from-emerald-500/20 via-emerald-400/10 to-slate-900 p-4 shadow-lg">
-                            <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">Approved accesses</div>
-                            <div className="text-3xl font-semibold">{approvedAccesses}</div>
-                            <div className="text-xs text-slate-400">Provisioned</div>
-                        </div>
-                        <div className="rounded-xl border border-slate-800 bg-gradient-to-br from-cyan-500/20 via-cyan-400/10 to-slate-900 p-4 shadow-lg">
-                            <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">Avg confidence</div>
-                            <div className="text-3xl font-semibold text-cyan-300">{performanceSummary.avgConfidence}%</div>
-                            <div className="text-xs text-slate-400">Quality signal</div>
-                        </div>
-                    </div>
-
-                    <section className="rounded-2xl border border-cyan-500/20 bg-slate-950/65 p-6 shadow-[0_20px_50px_rgba(2,8,20,0.24)]">
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
-                                    Commercial snapshot
-                                </div>
-                                <h2 className="mt-4 text-xl font-semibold text-white">Provider economics at a glance</h2>
-                                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-                                    Mock commercial values for the current protected-evaluation pipeline. These numbers are demo-only, but they make the fee path and provider payout structure visible.
-                                </p>
+                            <div className="pt-5">
+                                <div className="mb-2 text-4xl font-semibold tracking-tight text-emerald-300">{performanceSummary.uptime} uptime</div>
+                                <p className="text-sm leading-6 text-slate-400">Freshness {performanceSummary.freshness}; {performanceSummary.anomalies} anomaly flagged this week.</p>
                             </div>
-                            <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
-                                {economicsSummary.currentFeeTier}
-                            </span>
-                        </div>
-
-                        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                            <div className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
-                                <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Gross contract value</div>
-                                <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.grossContractValue}</div>
-                                <div className="mt-1 text-xs text-slate-400">Current protected-evaluation book</div>
-                            </div>
-                            <div className="rounded-xl border border-white/10 bg-slate-900/70 p-4">
-                                <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Redoubt platform fee</div>
-                                <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.platformFee}</div>
-                                <div className="mt-1 text-xs text-slate-400">Applied after successful engagement</div>
-                            </div>
-                            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                                <div className="text-xs uppercase tracking-[0.12em] text-emerald-200/80">Provider net payout</div>
-                                <div className="mt-3 text-2xl font-semibold text-emerald-100">{economicsSummary.netPayout}</div>
-                                <div className="mt-1 text-xs text-emerald-100/75">Net after current fee tier</div>
-                            </div>
-                            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
-                                <div className="text-xs uppercase tracking-[0.12em] text-cyan-200/80">Current fee tier</div>
-                                <div className="mt-3 text-lg font-semibold text-cyan-100">{economicsSummary.currentFeeTier}</div>
-                                <div className="mt-1 text-xs text-cyan-100/75">Repeat-provider economics</div>
-                            </div>
-                        </div>
-
-                        <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-slate-200">
-                                <span className="font-semibold text-white">Pilot Cohort:</span> fee-waived buyer evaluations are reserved for selected design partners with LOI-backed intent, feedback participation, and a credible production pathway.
-                            </div>
-                            <div className="rounded-xl border border-cyan-500/20 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
-                                <span className="font-semibold text-white">Expansion path:</span> successful evaluations can expand into production or API access pricing without restarting provider onboarding.
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-
-            <div className="container mx-auto px-4 py-10 space-y-10">
-                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-                        <div>
-                            <h2 className="text-xl font-semibold">Dataset management</h2>
-                            <p className="text-slate-400 text-sm">Control status, review requests, and keep confidence high.</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 transition-colors">
-                                Bulk actions
-                            </button>
-                            <button className="px-3 py-2 rounded-lg border border-slate-700 hover:border-slate-500 text-xs font-semibold text-slate-200 transition-colors">
-                                Export
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm">
-                            <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
-                                <tr>
-                                    <th className="py-3 pr-4 text-left font-medium">Dataset</th>
-                                    <th className="py-3 px-4 text-left font-medium">Confidence</th>
-                                    <th className="py-3 px-4 text-left font-medium">Requests</th>
-                                    <th className="py-3 px-4 text-left font-medium">Status</th>
-                                    <th className="py-3 px-4 text-left font-medium">Updated</th>
-                                    <th className="py-3 pl-4 text-right font-medium">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800">
-                                {datasets.map(dataset => (
-                                    <tr key={dataset.id} className="hover:bg-slate-800/60 transition-colors">
-                                        <td className="py-4 pr-4">
-                                            <div className="font-semibold">{dataset.name}</div>
-                                            <div className="text-slate-400 text-xs">ID: {dataset.id}</div>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <div className={`text-base font-semibold ${confidenceColor(dataset.confidence)}`}>
-                                                {dataset.confidence}%
-                                            </div>
-                                            <div className="mt-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-emerald-500"
-                                                    style={{ width: `${dataset.confidence}%` }}
-                                                />
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 text-slate-200">{dataset.requests}</td>
-                                        <td className="py-4 px-4">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge[dataset.status]}`}>
-                                                {dataset.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-4 text-slate-300">{dataset.lastUpdated}</td>
-                                        <td className="py-4 pl-4 text-right">
-                                            <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
-                                                Manage dataset
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        </aside>
                     </div>
                 </section>
 
-                <section className="grid xl:grid-cols-3 gap-6">
-                        <div className="xl:col-span-2 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+                <section className="grid gap-8 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.72fr)] xl:items-start">
+                    <section className={`${primaryPanelClass} overflow-hidden`}>
+                        <div className="flex flex-col gap-4 border-b border-white/10 px-6 py-6 lg:flex-row lg:items-start lg:justify-between lg:px-7">
                             <div>
-                                <h2 className="text-xl font-semibold">Incoming access requests</h2>
-                                <p className="text-slate-400 text-sm">Buyer identity stays hidden, but purpose, legal basis, rights fit, and risk posture stay visible before you act.</p>
+                                <h2 className="text-xl font-semibold text-white">Dataset management</h2>
+                                <p className="mt-1 text-sm text-slate-400">Control status, review requests, and keep confidence high.</p>
                             </div>
-                            <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/40 text-xs text-blue-100">
-                                {activeRequests} awaiting provider action
-                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                <button className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500">
+                                    Bulk actions
+                                </button>
+                                <button className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-slate-500">
+                                    Export
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
-                            {actionedReviewCount} request{actionedReviewCount === 1 ? '' : 's'} already have an action recorded in the shared review log. This queue stays focused on items that still need a provider decision or clarification.
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                                <thead className="border-b border-white/10 bg-slate-900/50 text-xs uppercase tracking-[0.08em] text-slate-400">
+                                    <tr>
+                                        <th className="py-4 pr-4 pl-6 text-left font-medium lg:pl-7">Dataset</th>
+                                        <th className="px-4 py-4 text-left font-medium">Confidence</th>
+                                        <th className="px-4 py-4 text-left font-medium">Requests</th>
+                                        <th className="px-4 py-4 text-left font-medium">Status</th>
+                                        <th className="px-4 py-4 text-left font-medium">Updated</th>
+                                        <th className="py-4 pl-4 pr-6 text-right font-medium lg:pr-7">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {datasets.map(dataset => (
+                                        <tr key={dataset.id} className="transition-colors hover:bg-white/[0.03]">
+                                            <td className="py-5 pr-4 pl-6 align-top lg:pl-7">
+                                                <div className="font-semibold text-white">{dataset.name}</div>
+                                                <div className="mt-1 text-xs text-slate-400">ID: {dataset.id}</div>
+                                            </td>
+                                            <td className="px-4 py-5 align-top">
+                                                <div className={`text-base font-semibold ${confidenceColor(dataset.confidence)}`}>
+                                                    {dataset.confidence}%
+                                                </div>
+                                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                                                    <div className="h-full rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-emerald-500" style={{ width: `${dataset.confidence}%` }} />
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-5 align-top text-slate-200">{dataset.requests}</td>
+                                            <td className="px-4 py-5 align-top">
+                                                <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge[dataset.status]}`}>
+                                                    {dataset.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-5 align-top text-slate-300">{dataset.lastUpdated}</td>
+                                            <td className="py-5 pl-4 pr-6 text-right align-top lg:pr-7">
+                                                <button className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
+                                                    Manage dataset
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
+                    </section>
 
-                        <div className="space-y-4">
-                            {providerReviewRequests.map(request => (
-                                <ProviderRequestCard key={request.id} request={request} />
-                            ))}
+                    <aside className={`${secondaryPanelClass} p-6 lg:p-7 xl:sticky xl:top-24`}>
+                        <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Performance summary</h2>
+                                <p className="mt-1 text-sm text-slate-400">Monitor delivery signals.</p>
+                            </div>
+                        </div>
+                        <div className="mt-5 space-y-3">
+                            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3">
+                                <div className="text-sm text-slate-300">Freshness</div>
+                                <div className="text-sm text-emerald-200">{performanceSummary.freshness}</div>
+                            </div>
+                            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3">
+                                <div className="text-sm text-slate-300">Uptime</div>
+                                <div className="text-sm text-emerald-200">{performanceSummary.uptime}</div>
+                            </div>
+                            <div className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3">
+                                <div className="text-sm text-slate-300">Anomalies this week</div>
+                                <div className="text-sm text-amber-200">{performanceSummary.anomalies}</div>
+                            </div>
+                            <div className="rounded-[20px] border border-cyan-500/20 bg-cyan-500/10 p-5">
+                                <div className="mb-2 text-xs uppercase tracking-[0.12em] text-cyan-200/80">Confidence trend</div>
+                                <div className="text-3xl font-semibold text-cyan-300">{performanceSummary.avgConfidence}%</div>
+                                <p className="mt-1 text-sm text-cyan-100/75">Rolling average across active datasets.</p>
+                            </div>
+                        </div>
+                    </aside>
+                </section>
+
+                <section className={`${primaryPanelClass} p-6 lg:p-7`}>
+                    <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-white">Incoming access requests</h2>
+                            <p className="mt-1 text-sm text-slate-400">Buyer identity stays hidden, but purpose, legal basis, rights fit, and risk posture stay visible before you act.</p>
+                        </div>
+                        <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs text-blue-100">
+                            {activeRequests} awaiting provider action
+                        </span>
+                    </div>
+
+                    <div className="mt-5 rounded-xl border border-white/10 bg-slate-900/55 px-4 py-3 text-sm text-slate-300">
+                        {actionedReviewCount} request{actionedReviewCount === 1 ? '' : 's'} already have an action recorded in the shared review log. This queue stays focused on items that still need a provider decision or clarification.
+                    </div>
+
+                    <div className={`mt-5 grid gap-5 ${providerReviewRequests.length > 1 ? '2xl:grid-cols-2' : ''}`}>
+                        {providerReviewRequests.map(request => (
+                            <ProviderRequestCard key={request.id} request={request} />
+                        ))}
+                    </div>
+                </section>
+
+                <section className={`${secondaryPanelClass} p-6 lg:p-7`}>
+                    <div className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                Commercial snapshot
+                            </div>
+                            <h2 className="mt-4 text-xl font-semibold text-white">Provider economics at a glance</h2>
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                Mock commercial values for the current protected-evaluation pipeline. These numbers are demo-only, but they make the fee path and provider payout structure visible.
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                            {economicsSummary.currentFeeTier}
+                        </span>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+                        <div className="rounded-[20px] border border-white/10 bg-slate-950/70 p-4">
+                            <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Gross contract value</div>
+                            <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.grossContractValue}</div>
+                            <div className="mt-1 text-xs text-slate-400">Current protected-evaluation book</div>
+                        </div>
+                        <div className="rounded-[20px] border border-white/10 bg-slate-950/70 p-4">
+                            <div className="text-xs uppercase tracking-[0.12em] text-slate-500">Redoubt platform fee</div>
+                            <div className="mt-3 text-2xl font-semibold text-white">{economicsSummary.platformFee}</div>
+                            <div className="mt-1 text-xs text-slate-400">Applied after successful engagement</div>
+                        </div>
+                        <div className="rounded-[20px] border border-emerald-500/20 bg-emerald-500/10 p-4">
+                            <div className="text-xs uppercase tracking-[0.12em] text-emerald-200/80">Provider net payout</div>
+                            <div className="mt-3 text-2xl font-semibold text-emerald-100">{economicsSummary.netPayout}</div>
+                            <div className="mt-1 text-xs text-emerald-100/75">Net after current fee tier</div>
+                        </div>
+                        <div className="rounded-[20px] border border-cyan-500/20 bg-cyan-500/10 p-4">
+                            <div className="text-xs uppercase tracking-[0.12em] text-cyan-200/80">Current fee tier</div>
+                            <div className="mt-3 text-lg font-semibold text-cyan-100">{economicsSummary.currentFeeTier}</div>
+                            <div className="mt-1 text-xs text-cyan-100/75">Repeat-provider economics</div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <h2 className="text-xl font-semibold">Performance summary</h2>
-                                <p className="text-slate-400 text-sm">Monitor delivery signals.</p>
-                            </div>
+                    <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                        <div className="rounded-[18px] border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-slate-200">
+                            <span className="font-semibold text-white">Pilot Cohort:</span> fee-waived buyer evaluations are reserved for selected design partners with LOI-backed intent, feedback participation, and a credible production pathway.
                         </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-300 text-sm">Freshness</div>
-                                <div className="text-sm text-emerald-200">{performanceSummary.freshness}</div>
-                            </div>
-                            <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-300 text-sm">Uptime</div>
-                                <div className="text-sm text-emerald-200">{performanceSummary.uptime}</div>
-                            </div>
-                            <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-300 text-sm">Anomalies this week</div>
-                                <div className="text-sm text-amber-200">{performanceSummary.anomalies}</div>
-                            </div>
-                            <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
-                                <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-2">Confidence trend</div>
-                                <div className="text-3xl font-semibold text-cyan-300">{performanceSummary.avgConfidence}%</div>
-                                <p className="text-slate-400 text-sm mt-1">Rolling average across active datasets.</p>
-                            </div>
+                        <div className="rounded-[18px] border border-cyan-500/20 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
+                            <span className="font-semibold text-white">Expansion path:</span> successful evaluations can expand into production or API access pricing without restarting provider onboarding.
                         </div>
                     </div>
                 </section>
@@ -300,57 +292,59 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
     const complianceFields = buildRequestComplianceFields(request)
 
     return (
-        <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 space-y-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <article className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_18px_48px_rgba(2,8,20,0.24)]">
+            <div className="flex flex-col gap-4 border-b border-white/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-1">Dataset</p>
-                    <h3 className="text-lg font-semibold">{request.name}</h3>
+                    <p className="mb-1 text-xs uppercase tracking-[0.12em] text-slate-400">Dataset</p>
+                    <h3 className="text-lg font-semibold text-white">{request.name}</h3>
                     <p className="text-xs text-slate-400">Request ID: {request.requestNumber}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${providerReviewStatusStyles[providerReviewStatus]}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${providerReviewStatusStyles[providerReviewStatus]}`}>
                         {providerReviewStatus}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[request.status]}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[request.status]}`}>
                         {requestStatusLabel(request.status)}
                     </span>
                 </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2">
-                {basisFields.map(field => (
-                    <RequestFieldCard key={`${request.id}-${field.label}`} label={field.label} value={field.value} />
-                ))}
-            </div>
-
-            <div className="rounded-xl border border-slate-700 bg-slate-950/55 p-4">
-                <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-3">Compliance posture</div>
+            <div className="mt-5 space-y-5">
                 <div className="grid gap-3 md:grid-cols-2">
-                    {complianceFields.map(field => (
-                        <RequestFieldCard key={`${request.id}-compliance-${field.label}`} label={field.label} value={field.value} />
+                    {basisFields.map(field => (
+                        <RequestFieldCard key={`${request.id}-${field.label}`} label={field.label} value={field.value} />
                     ))}
+                </div>
+
+                <div className="rounded-[20px] border border-white/10 bg-slate-900/60 p-4">
+                    <div className="mb-3 text-xs uppercase tracking-[0.12em] text-slate-400">Compliance posture</div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                        {complianceFields.map(field => (
+                            <RequestFieldCard key={`${request.id}-compliance-${field.label}`} label={field.label} value={field.value} />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="rounded-[20px] border border-amber-400/20 bg-amber-500/8 px-4 py-3">
+                    <div className="text-xs uppercase tracking-[0.12em] text-slate-400">Reviewer rationale</div>
+                    <p className="mt-2 text-sm leading-6 text-amber-50/95">{request.reviewerRationale}</p>
                 </div>
             </div>
 
-            <div className="rounded-xl border border-amber-400/20 bg-amber-500/8 px-4 py-3">
-                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">Reviewer rationale</div>
-                <p className="mt-2 text-sm leading-6 text-amber-50/95">{request.reviewerRationale}</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/10 pt-4 text-sm">
                 <Link
                     to={`/access-requests/${request.id}`}
-                    className="px-3 py-2 rounded-lg border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+                    className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:text-white"
                 >
                     Open review detail
                 </Link>
-                <button className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white transition-colors">
+                <button className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700">
                     Approve access
                 </button>
-                <button className="px-3 py-2 rounded-lg border border-rose-500 text-rose-100 hover:bg-rose-500/10 text-xs font-semibold transition-colors">
+                <button className="rounded-lg border border-rose-500 px-3 py-2 text-xs font-semibold text-rose-100 transition-colors hover:bg-rose-500/10">
                     Reject request
                 </button>
-                <button className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
+                <button className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
                     Ask clarification
                 </button>
             </div>
@@ -360,9 +354,31 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
 
 function RequestFieldCard({ label, value }: { label: string; value: string }) {
     return (
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-3">
-            <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-1">{label}</div>
+        <div className="h-full rounded-xl border border-white/10 bg-slate-950/70 p-3.5">
+            <div className="mb-1 text-xs uppercase tracking-[0.12em] text-slate-400">{label}</div>
             <div className="text-sm leading-6 text-slate-100">{value}</div>
+        </div>
+    )
+}
+
+function SummaryMetricCard({
+    label,
+    value,
+    hint,
+    valueClass = 'text-white',
+    toneClass = ''
+}: {
+    label: string
+    value: string | number
+    hint: string
+    valueClass?: string
+    toneClass?: string
+}) {
+    return (
+        <div className={`rounded-[22px] border border-white/10 bg-slate-950/55 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${toneClass}`}>
+            <div className="mb-3 text-xs uppercase tracking-[0.12em] text-slate-400">{label}</div>
+            <div className={`text-3xl font-semibold tracking-tight ${valueClass}`}>{value}</div>
+            <div className="mt-1 text-xs text-slate-400">{hint}</div>
         </div>
     )
 }
