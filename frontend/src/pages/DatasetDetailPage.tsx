@@ -631,13 +631,9 @@ export default function DatasetDetailPage() {
                                             </p>
                                         </div>
 
-                                        <Link
-                                            to={`/datasets/${dataset.id}/escrow-checkout`}
-                                            state={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
-                                            className="mt-4 inline-flex items-center rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
-                                        >
-                                            Enter Protected Evaluation
-                                        </Link>
+                                        <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-100/90">
+                                            Start checkout from the main <span className="font-semibold text-white">Escrow-Native Checkout</span> action in the Access section. Any saved quote context will carry into the governed evaluation flow automatically.
+                                        </div>
                                     </article>
                                 </div>
                             </section>
@@ -1078,13 +1074,6 @@ export default function DatasetDetailPage() {
                                             })}
                                         </div>
                                         <div className="mt-4 flex flex-wrap gap-2">
-                                            <Link
-                                                to={`/datasets/${dataset.id}/escrow-checkout`}
-                                                state={{ quoteId: latestSavedQuote.id }}
-                                                className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
-                                            >
-                                                Checkout Quote
-                                            </Link>
                                             <button
                                                 onClick={() => {
                                                     applyRequestPrefill(buildRequestPrefillFromQuote(latestSavedQuote, compliancePassport))
@@ -1104,6 +1093,9 @@ export default function DatasetDetailPage() {
                                         <div className="mt-4 text-[11px] leading-5 text-slate-500">
                                             Quote terms describe licensed use in this demo. They do not prove ownership, lawful basis, or chain-of-title.
                                         </div>
+                                        <div className="text-[11px] leading-5 text-slate-500">
+                                            When you are ready to proceed, use the main <span className="font-semibold text-slate-300">Escrow-Native Checkout</span> action above so this quote is applied through the single checkout path.
+                                        </div>
                                     </>
                                 ) : (
                                     <div className="mt-3">
@@ -1116,12 +1108,9 @@ export default function DatasetDetailPage() {
                                         >
                                             Build Evaluation Terms
                                         </Link>
-                                        <Link
-                                            to={`/datasets/${dataset.id}/escrow-checkout`}
-                                            className="mt-2 inline-flex rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20"
-                                        >
-                                            Start Protected Evaluation
-                                        </Link>
+                                        <p className="mt-3 text-[11px] leading-5 text-slate-500">
+                                            After terms are ready, continue from the main <span className="font-semibold text-slate-300">Escrow-Native Checkout</span> action in the Access section.
+                                        </p>
                                     </div>
                                 )}
                             </div>

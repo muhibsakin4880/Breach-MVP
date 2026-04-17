@@ -42,6 +42,111 @@ type EscrowCheckoutLocationState = {
     quoteId?: string
 } | null
 
+type JurisdictionStatusTone = 'emerald' | 'cyan' | 'amber'
+
+type JurisdictionStatus = {
+    label: string
+    status: string
+    detail: string
+    tone: JurisdictionStatusTone
+}
+
+const geographyLabelMap = {
+    single_region: 'Single region',
+    dual_region: 'Dual region',
+    global: 'Global'
+} as const
+
+const accessRegionLabelMap = {
+    single_region: 'Single-region governed lane',
+    dual_region: 'Dual-region reviewed lane',
+    global: 'Cross-region reviewed lane'
+} as const
+
+const providerJurisdictionLabelMap = {
+    single_region: 'Provider regional entity',
+    dual_region: 'Provider multi-market entity',
+    global: 'Provider multi-region entity'
+} as const
+
+const getTransferPostureLabel = (accessMode: EscrowCheckoutAccessMode) => {
+    if (accessMode === 'clean_room') return 'Local processing preferred'
+    if (accessMode === 'aggregated_export') return 'Conditional transfer review'
+    return 'Export-restricted encrypted release'
+}
+
+const buildJurisdictionStatuses = (
+    accessMode: EscrowCheckoutAccessMode,
+    geography: keyof typeof geographyLabelMap
+): JurisdictionStatus[] => {
+    const localProcessing: JurisdictionStatus =
+        accessMode === 'clean_room'
+            ? {
+                label: 'Local processing',
+                status: 'Primary',
+                detail: 'Evaluation stays inside the governed workspace by default.',
+                tone: 'emerald'
+            }
+            : accessMode === 'aggregated_export'
+                ? {
+                    label: 'Local processing',
+                    status: 'Preferred',
+                    detail: 'Primary analysis remains workspace-bound before any reviewed aggregate transfer.',
+                    tone: 'cyan'
+                }
+                : {
+                    label: 'Local processing',
+                    status: 'Scoped',
+                    detail: 'The workspace remains the first control point before any encrypted release.',
+                    tone: 'amber'
+                }
+
+    const conditionalTransferReview: JurisdictionStatus =
+        accessMode === 'clean_room' && geography === 'single_region'
+            ? {
+                label: 'Conditional transfer review',
+                status: 'Standby',
+                detail: 'Cross-region review is not part of the standard checkout path.',
+                tone: 'emerald'
+            }
+            : {
+                label: 'Conditional transfer review',
+                status: 'Required',
+                detail: 'Any transfer outside the governed lane is held for review before release.',
+                tone: accessMode === 'encrypted_download' ? 'amber' : 'cyan'
+            }
+
+    const exportRestricted: JurisdictionStatus =
+        accessMode === 'clean_room'
+            ? {
+                label: 'Export restricted',
+                status: 'Blocked',
+                detail: 'Raw export stays disabled in the clean-room configuration.',
+                tone: 'emerald'
+            }
+            : accessMode === 'aggregated_export'
+                ? {
+                    label: 'Export restricted',
+                    status: 'Aggregate only',
+                    detail: 'Only reviewed aggregate outputs can leave the workspace.',
+                    tone: 'cyan'
+                }
+                : {
+                    label: 'Export restricted',
+                    status: 'Encrypted only',
+                    detail: 'Release is time-boxed, watermarked, and limited to the approved package.',
+                    tone: 'amber'
+                }
+
+    return [localProcessing, conditionalTransferReview, exportRestricted]
+}
+
+const getJurisdictionToneClasses = (tone: JurisdictionStatusTone) => {
+    if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+}
+
 export default function EscrowCheckoutPage() {
     const { id } = useParams()
     const location = useLocation()
@@ -127,6 +232,14 @@ export default function EscrowCheckoutPage() {
     const acceptedForFunding = checkoutRecord ? checkoutRecord.dua.accepted : duaAccepted
     const workspaceReady = checkoutRecord?.workspace.status === 'ready'
     const credentialsIssued = checkoutRecord?.credentials.status === 'issued'
+    const buyerJurisdiction = passport.organization.country || 'Pending buyer jurisdiction'
+    const accessRegion = accessRegionLabelMap[selectedQuote.input.geography]
+    const providerJurisdiction = providerJurisdictionLabelMap[selectedQuote.input.geography]
+    const transferPosture = getTransferPostureLabel(config.accessMode)
+    const jurisdictionStatuses = useMemo(
+        () => buildJurisdictionStatuses(config.accessMode, selectedQuote.input.geography),
+        [config.accessMode, selectedQuote.input.geography]
+    )
     const outcomeStage = checkoutRecord?.outcomeProtection.stage ?? 'evaluation_pending'
     const outcomeStatus = outcomeStageMeta[outcomeStage]
     const evaluationFeeUsd = checkoutRecord?.outcomeProtection.evaluationFeeUsd ?? getOutcomeEvaluationFee(selectedQuote)
@@ -738,6 +851,52 @@ export default function EscrowCheckoutPage() {
                                 <SummaryStat label="Payment rail" value={paymentMethodMeta[config.paymentMethod].label} />
                             </div>
 
+                            <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(34,211,238,0.08),rgba(8,15,28,0.92))] p-4">
+                                <div className="flex flex-col gap-2">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-200/80">
+                                        Jurisdiction Summary
+                                    </div>
+                                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                        <div>
+                                            <div className="text-base font-semibold text-white">Region-aware checkout posture</div>
+                                            <div className="mt-1 max-w-md text-xs text-slate-400">
+                                                Operational routing summary for this governed evaluation transaction.
+                                            </div>
+                                        </div>
+                                        <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                                            {transferPosture}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                    <CompactJurisdictionRow label="Buyer organization jurisdiction" value={buyerJurisdiction} />
+                                    <CompactJurisdictionRow label="Provider jurisdiction" value={providerJurisdiction} />
+                                    <CompactJurisdictionRow label="Access region" value={accessRegion} />
+                                    <CompactJurisdictionRow
+                                        label="Transfer posture"
+                                        value={`${transferPosture} · ${geographyLabelMap[selectedQuote.input.geography]}`}
+                                    />
+                                </div>
+
+                                <div className="mt-4 grid gap-3">
+                                    {jurisdictionStatuses.map(item => (
+                                        <div
+                                            key={item.label}
+                                            className={`rounded-2xl border px-4 py-3 ${getJurisdictionToneClasses(item.tone)}`}
+                                        >
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="text-sm font-semibold text-white">{item.label}</div>
+                                                <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[11px] font-semibold text-current">
+                                                    {item.status}
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 text-xs text-current/80">{item.detail}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="mt-4 grid gap-3">
                                 <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
                                     <span className="font-semibold text-white">Standard Path:</span> buyers are charged for protected evaluation here, and successful programs can move into downstream API or production access pricing.
@@ -882,6 +1041,15 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
         <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
             <div className="mt-2 text-sm font-semibold text-slate-100">{value}</div>
+        </div>
+    )
+}
+
+function CompactJurisdictionRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className="mt-2 text-sm font-semibold text-white">{value}</div>
         </div>
     )
 }
