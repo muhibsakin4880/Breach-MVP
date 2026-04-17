@@ -32,6 +32,122 @@ import {
     type RightsQuoteForm
 } from '../domain/rightsQuoteBuilder'
 
+type SavedPackageTemplate = {
+    id: string
+    title: string
+    eyebrow: string
+    summary: string
+    signalTone: string
+    signals: string[]
+    form: RightsQuoteForm
+}
+
+const savedPackageTemplates: SavedPackageTemplate[] = [
+    {
+        id: 'uae-local-only-evaluation',
+        title: 'UAE local-only evaluation',
+        eyebrow: 'Residency-bound',
+        summary: 'Single-region governed evaluation for local-only review with no redistribution and visible audit controls.',
+        signalTone: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100',
+        signals: ['Secure clean room', 'Single region', 'Mandatory audit', '24h validation'],
+        form: {
+            deliveryMode: 'clean_room',
+            fieldPack: 'analytics',
+            usageRight: 'research',
+            duration: '90_days',
+            geography: 'single_region',
+            exclusivity: 'none',
+            support: 'priority',
+            seatBand: 'team',
+            validationWindowHours: 24,
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'mandatory',
+            attributionRequirement: 'required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: 0,
+            volumePricingUnit: 'tb'
+        }
+    },
+    {
+        id: 'regulated-buyer-evaluation-package',
+        title: 'Regulated buyer evaluation package',
+        eyebrow: 'Review-first',
+        summary: 'A stricter evaluation pack for regulated buyers who need sensitive-review scope before any broader delivery discussion.',
+        signalTone: 'border-cyan-500/35 bg-cyan-500/10 text-cyan-100',
+        signals: ['Sensitive review pack', 'Dual region', 'Priority support', '48h validation'],
+        form: {
+            deliveryMode: 'clean_room',
+            fieldPack: 'sensitive_review',
+            usageRight: 'internal_ai',
+            duration: '90_days',
+            geography: 'dual_region',
+            exclusivity: 'none',
+            support: 'priority',
+            seatBand: 'department',
+            validationWindowHours: 48,
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'mandatory',
+            attributionRequirement: 'required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: 0,
+            volumePricingUnit: 'tb'
+        }
+    },
+    {
+        id: 'cross-border-review-required-package',
+        title: 'Cross-border review required package',
+        eyebrow: 'Safeguarded transfer',
+        summary: 'Use this package when external review needs a higher-friction approval lane, tighter safeguards, and a longer validation window.',
+        signalTone: 'border-amber-500/35 bg-amber-500/10 text-amber-100',
+        signals: ['Aggregated export', 'Global geography', 'Mandatory audit', '72h validation'],
+        form: {
+            deliveryMode: 'aggregated_export',
+            fieldPack: 'analytics',
+            usageRight: 'commercial_analytics',
+            duration: '90_days',
+            geography: 'global',
+            exclusivity: 'none',
+            support: 'priority',
+            seatBand: 'department',
+            validationWindowHours: 72,
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'mandatory',
+            attributionRequirement: 'required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: 0,
+            volumePricingUnit: 'tb'
+        }
+    },
+    {
+        id: 'provider-shielded-evaluation-package',
+        title: 'Provider-shielded evaluation package',
+        eyebrow: 'Shielded intake',
+        summary: 'A controlled evaluation path for early-stage buyers where provider identity and direct release stay protected during review.',
+        signalTone: 'border-blue-500/35 bg-blue-500/10 text-blue-100',
+        signals: ['Core fields', 'Single region', 'Standard support', 'Provider-shielded'],
+        form: {
+            deliveryMode: 'clean_room',
+            fieldPack: 'core',
+            usageRight: 'research',
+            duration: '30_days',
+            geography: 'single_region',
+            exclusivity: 'none',
+            support: 'standard',
+            seatBand: 'team',
+            validationWindowHours: 48,
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'mandatory',
+            attributionRequirement: 'required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: 0,
+            volumePricingUnit: 'tb'
+        }
+    }
+]
+
+const doesFormMatchTemplate = (form: RightsQuoteForm, templateForm: RightsQuoteForm) =>
+    (Object.keys(templateForm) as Array<keyof RightsQuoteForm>).every(key => form[key] === templateForm[key])
+
 const AdvancedConditionsDrawer = ({
     isOpen,
     onClose,
@@ -211,6 +327,18 @@ export default function RightsQuoteBuilderPage() {
     const usageGuidance = useMemo(() => buildRightsUsageGuidance(dataset, quote), [dataset, quote])
     const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, quoteVersion])
     const persistedCheckout = useMemo(() => loadEscrowCheckoutByQuoteId(quote.id), [quote.id, quoteVersion])
+    const templateQuotes = useMemo(
+        () =>
+            savedPackageTemplates.map(template => ({
+                ...template,
+                quote: buildRightsQuote(dataset, template.form, passport)
+            })),
+        [dataset, passport]
+    )
+    const activeTemplateId = useMemo(
+        () => savedPackageTemplates.find(template => doesFormMatchTemplate(form, template.form))?.id ?? null,
+        [form]
+    )
     const dealProgress = useMemo(
         () =>
             buildDealProgressModel({
@@ -224,6 +352,13 @@ export default function RightsQuoteBuilderPage() {
     const updateForm = <T extends keyof RightsQuoteForm>(field: T, value: RightsQuoteForm[T]) => {
         setForm(current => ({ ...current, [field]: value }))
         setNotice(null)
+    }
+
+    const handleApplyTemplate = (templateId: string) => {
+        const template = savedPackageTemplates.find(item => item.id === templateId)
+        if (!template) return
+        setForm({ ...template.form })
+        setNotice(`Applied demo template: ${template.title}. Review the populated terms before saving.`)
     }
 
     const persistQuote = () => {
@@ -310,6 +445,63 @@ export default function RightsQuoteBuilderPage() {
                                 </Link>
                             </div>
                         </div>
+
+                        <BuilderSection
+                            title="Saved Package Templates"
+                            description="Apply a saved commercial starting point for regulated workflows, then fine-tune the terms below."
+                        >
+                            <div className="grid gap-4 xl:grid-cols-2">
+                                {templateQuotes.map(template => (
+                                    <article
+                                        key={template.id}
+                                        className={`rounded-2xl border px-5 py-5 transition-colors ${
+                                            activeTemplateId === template.id
+                                                ? 'border-cyan-400/40 bg-cyan-500/10'
+                                                : 'border-white/10 bg-slate-950/45'
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <div className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${template.signalTone}`}>
+                                                    {template.eyebrow}
+                                                </div>
+                                                <h3 className="mt-3 text-lg font-semibold text-white">{template.title}</h3>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-semibold text-cyan-100">{formatUsd(template.quote.totalUsd)}</div>
+                                                <div className="mt-1 text-[11px] uppercase tracking-[0.12em] text-slate-500">{template.quote.riskBand}</div>
+                                            </div>
+                                        </div>
+
+                                        <p className="mt-3 text-sm leading-6 text-slate-300">{template.summary}</p>
+
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            {template.signals.map(signal => (
+                                                <span key={signal} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-200">
+                                                    {signal}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-4 rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-xs leading-5 text-slate-400">
+                                            {template.quote.rightsSummary.slice(0, 3).join(' · ')}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleApplyTemplate(template.id)}
+                                            className={`mt-4 inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                                                activeTemplateId === template.id
+                                                    ? 'bg-cyan-400 text-slate-950 hover:bg-cyan-300'
+                                                    : 'border border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
+                                            }`}
+                                        >
+                                            {activeTemplateId === template.id ? 'Applied Template' : 'Apply Template'}
+                                        </button>
+                                    </article>
+                                ))}
+                            </div>
+                        </BuilderSection>
 
                         <BuilderSection
                             title="Delivery Mode"
