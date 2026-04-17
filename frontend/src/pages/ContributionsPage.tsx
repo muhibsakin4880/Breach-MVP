@@ -2207,6 +2207,85 @@ export default function ContributionsPage() {
                         </div>
                     </section>
 
+                    <section className="grid xl:grid-cols-12 gap-6">
+                        <div className="xl:col-span-9 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+                                <div>
+                                    <h2 className="text-xl font-semibold">Contribution dashboard</h2>
+                                    <p className="text-slate-400 text-sm">Uploaded datasets, validation status, access activity, and performance summary.</p>
+                                </div>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="min-w-[920px] w-full text-sm">
+                                    <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
+                                        <tr>
+                                            <th className="py-3 pr-4 text-left font-medium">Dataset</th>
+                                            <th className="py-3 px-4 text-left font-medium min-w-[150px] whitespace-nowrap">Status</th>
+                                            <th className="py-3 px-4 text-left font-medium">Uploaded</th>
+                                            <th className="py-3 px-4 text-left font-medium">Access activity</th>
+                                            <th className="py-3 pl-4 text-right font-medium">Records</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800">
+                                        {uploadedDatasets.map(dataset => (
+                                            <tr
+                                                key={dataset.id}
+                                                onClick={() => setSelectedDatasetId(dataset.id)}
+                                                className={`cursor-pointer transition-colors ${
+                                                    selectedDataset.id === dataset.id ? 'bg-slate-800/80' : 'hover:bg-slate-800/60'
+                                                }`}
+                                            >
+                                                <td className="py-4 pr-4">
+                                                    <div className="font-semibold text-white">{dataset.title}</div>
+                                                    <div className="text-xs text-slate-400">ID: {dataset.id} - {dataset.size}</div>
+                                                </td>
+                                                <td className="py-4 px-4 min-w-[150px]">
+                                                    <Link
+                                                        to={getContributionStatusPath(dataset.id)}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium hover:brightness-110 transition ${statusStyles[dataset.status]}`}
+                                                    >
+                                                        {dataset.status}
+                                                    </Link>
+                                                </td>
+                                                <td className="py-4 px-4 text-slate-300">{dataset.uploadedAt}</td>
+                                                <td className="py-4 px-4 text-slate-300">{dataset.accessActivity}</td>
+                                                <td className="py-4 pl-4 text-right text-slate-200">{dataset.records}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="xl:col-span-3 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                            <div>
+                                <h2 className="text-xl font-semibold">Dataset performance summary</h2>
+                                <p className="text-slate-400 text-sm">Selected dataset: {selectedDataset.title}</p>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                                    <div className="text-slate-300 text-sm">Total requests</div>
+                                    <div className="text-sm text-slate-100">{selectedDataset.performance.totalRequests}</div>
+                                </div>
+                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                                    <div className="text-slate-300 text-sm">Approved requests</div>
+                                    <div className="text-sm text-emerald-200">{selectedDataset.performance.approvedRequests}</div>
+                                </div>
+                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                                    <div className="text-slate-300 text-sm">Access events</div>
+                                    <div className="text-sm text-cyan-200">{selectedDataset.performance.accessEvents}</div>
+                                </div>
+                                <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                                    <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-2">Reliability score</div>
+                                    <div className="text-3xl font-semibold text-cyan-300">{selectedDataset.performance.avgReliability}%</div>
+                                    <p className="text-slate-400 text-sm mt-1">Rolling quality + access reliability metric.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 shadow-xl">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div>
@@ -2315,84 +2394,6 @@ export default function ContributionsPage() {
                         </div>
                     </section>
 
-                    <section className="grid xl:grid-cols-12 gap-6">
-                        <div className="xl:col-span-9 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-                                <div>
-                                    <h2 className="text-xl font-semibold">Contribution dashboard</h2>
-                                    <p className="text-slate-400 text-sm">Uploaded datasets, validation status, access activity, and performance summary.</p>
-                                </div>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="min-w-[920px] w-full text-sm">
-                                    <thead className="text-xs uppercase tracking-[0.08em] text-slate-400 border-b border-slate-700">
-                                        <tr>
-                                            <th className="py-3 pr-4 text-left font-medium">Dataset</th>
-                                            <th className="py-3 px-4 text-left font-medium min-w-[150px] whitespace-nowrap">Status</th>
-                                            <th className="py-3 px-4 text-left font-medium">Uploaded</th>
-                                            <th className="py-3 px-4 text-left font-medium">Access activity</th>
-                                            <th className="py-3 pl-4 text-right font-medium">Records</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-800">
-                                        {uploadedDatasets.map(dataset => (
-                                            <tr
-                                                key={dataset.id}
-                                                onClick={() => setSelectedDatasetId(dataset.id)}
-                                                className={`cursor-pointer transition-colors ${
-                                                    selectedDataset.id === dataset.id ? 'bg-slate-800/80' : 'hover:bg-slate-800/60'
-                                                }`}
-                                            >
-                                                <td className="py-4 pr-4">
-                                                    <div className="font-semibold text-white">{dataset.title}</div>
-                                                    <div className="text-xs text-slate-400">ID: {dataset.id} - {dataset.size}</div>
-                                                </td>
-                                                <td className="py-4 px-4 min-w-[150px]">
-                                                    <Link
-                                                        to={getContributionStatusPath(dataset.id)}
-                                                        onClick={(event) => event.stopPropagation()}
-                                                        className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium hover:brightness-110 transition ${statusStyles[dataset.status]}`}
-                                                    >
-                                                        {dataset.status}
-                                                    </Link>
-                                                </td>
-                                                <td className="py-4 px-4 text-slate-300">{dataset.uploadedAt}</td>
-                                                <td className="py-4 px-4 text-slate-300">{dataset.accessActivity}</td>
-                                                <td className="py-4 pl-4 text-right text-slate-200">{dataset.records}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="xl:col-span-3 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                            <div>
-                                <h2 className="text-xl font-semibold">Dataset performance summary</h2>
-                                <p className="text-slate-400 text-sm">Selected dataset: {selectedDataset.title}</p>
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                    <div className="text-slate-300 text-sm">Total requests</div>
-                                    <div className="text-sm text-slate-100">{selectedDataset.performance.totalRequests}</div>
-                                </div>
-                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                    <div className="text-slate-300 text-sm">Approved requests</div>
-                                    <div className="text-sm text-emerald-200">{selectedDataset.performance.approvedRequests}</div>
-                                </div>
-                                <div className="flex items-center justify-between bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                                    <div className="text-slate-300 text-sm">Access events</div>
-                                    <div className="text-sm text-cyan-200">{selectedDataset.performance.accessEvents}</div>
-                                </div>
-                                <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
-                                    <div className="text-slate-400 text-xs uppercase tracking-[0.12em] mb-2">Reliability score</div>
-                                    <div className="text-3xl font-semibold text-cyan-300">{selectedDataset.performance.avgReliability}%</div>
-                                    <p className="text-slate-400 text-sm mt-1">Rolling quality + access reliability metric.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
                 </>
             )}
 
