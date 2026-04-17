@@ -42,13 +42,30 @@ type EscrowCheckoutLocationState = {
     quoteId?: string
 } | null
 
-type JurisdictionStatusTone = 'emerald' | 'cyan' | 'amber'
+type JurisdictionStatusTone = 'emerald' | 'cyan' | 'amber' | 'rose'
 
 type JurisdictionStatus = {
     label: string
     status: string
     detail: string
     tone: JurisdictionStatusTone
+}
+
+type TransferSafeguardState = 'active' | 'review' | 'blocked'
+
+type TransferSafeguard = {
+    label: string
+    detail: string
+    state: TransferSafeguardState
+}
+
+type TransferReviewModule = {
+    destination: string
+    transferStatus: string
+    reviewState: string
+    explanation: string
+    tone: JurisdictionStatusTone
+    safeguards: TransferSafeguard[]
 }
 
 const geographyLabelMap = {
@@ -74,6 +91,21 @@ const getTransferPostureLabel = (accessMode: EscrowCheckoutAccessMode) => {
     if (accessMode === 'aggregated_export') return 'Conditional transfer review'
     return 'Export-restricted encrypted release'
 }
+
+const transferStateExplainers = [
+    {
+        title: 'Blocked',
+        detail: 'No approved external destination is open, or the checkout stays workspace-only.'
+    },
+    {
+        title: 'Conditional',
+        detail: 'A destination exists, but transfer waits for safeguard review before release.'
+    },
+    {
+        title: 'Allowed',
+        detail: 'The destination stays inside the approved operating lane with active controls.'
+    }
+] as const
 
 const buildJurisdictionStatuses = (
     accessMode: EscrowCheckoutAccessMode,
@@ -144,7 +176,170 @@ const buildJurisdictionStatuses = (
 const getJurisdictionToneClasses = (tone: JurisdictionStatusTone) => {
     if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
     if (tone === 'cyan') return 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+    if (tone === 'rose') return 'border-rose-500/30 bg-rose-500/10 text-rose-100'
     return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+}
+
+const buildTransferReviewModule = (
+    accessMode: EscrowCheckoutAccessMode,
+    geography: keyof typeof geographyLabelMap
+): TransferReviewModule => {
+    const commonSafeguards: TransferSafeguard[] = [
+        {
+            label: 'Governed workspace',
+            detail: 'Evaluation remains inside a monitored workspace before any release decision.',
+            state: 'active'
+        },
+        {
+            label: 'Audit logging',
+            detail: 'Destination, reviewer actions, and release events stay recorded.',
+            state: 'active'
+        },
+        {
+            label: 'Restricted credentials',
+            detail: 'Access stays scoped to the approved recipient and review window.',
+            state: 'active'
+        }
+    ]
+
+    if (accessMode === 'clean_room' && geography === 'single_region') {
+        return {
+            destination: 'No external transfer destination opened',
+            transferStatus: 'Blocked',
+            reviewState: 'Workspace-only lane',
+            explanation: 'This checkout is configured for local governed evaluation, so cross-border transfer remains blocked unless the package is re-scoped first.',
+            tone: 'rose',
+            safeguards: [
+                ...commonSafeguards,
+                {
+                    label: 'Restricted export',
+                    detail: 'Raw export is disabled for this clean-room configuration.',
+                    state: 'blocked'
+                },
+                {
+                    label: 'Watermarking',
+                    detail: 'Standing by until a transferable package is formally reviewed.',
+                    state: 'review'
+                }
+            ]
+        }
+    }
+
+    if (accessMode === 'aggregated_export' && geography === 'single_region') {
+        return {
+            destination: 'Approved in-market aggregate output lane',
+            transferStatus: 'Allowed',
+            reviewState: 'Condition set',
+            explanation: 'This package can move through the approved lane because the destination stays inside the licensed region and only reviewed aggregate outputs are eligible.',
+            tone: 'emerald',
+            safeguards: [
+                ...commonSafeguards,
+                {
+                    label: 'Restricted export',
+                    detail: 'Only reviewed aggregate outputs can leave the workspace.',
+                    state: 'active'
+                },
+                {
+                    label: 'Watermarking',
+                    detail: 'Applied if the reviewed output is converted into a delivered package.',
+                    state: 'review'
+                }
+            ]
+        }
+    }
+
+    if (accessMode === 'clean_room') {
+        return {
+            destination:
+                geography === 'dual_region'
+                    ? 'Reviewed secondary regional workspace'
+                    : 'Reviewed cross-region governed workspace',
+            transferStatus: 'Conditional approval',
+            reviewState: 'Review required',
+            explanation: 'Processing remains governed, but opening a second regional workspace requires transfer review before that destination activates.',
+            tone: 'cyan',
+            safeguards: [
+                ...commonSafeguards,
+                {
+                    label: 'Restricted export',
+                    detail: 'External release is still blocked; only reviewed workspace routing can expand.',
+                    state: 'review'
+                },
+                {
+                    label: 'Watermarking',
+                    detail: 'Prepared if the transaction later shifts into a released package path.',
+                    state: 'review'
+                }
+            ]
+        }
+    }
+
+    if (accessMode === 'aggregated_export') {
+        return {
+            destination:
+                geography === 'dual_region'
+                    ? 'Reviewed aggregate lane to an approved secondary region'
+                    : 'Reviewed aggregate lane to an approved cross-region endpoint',
+            transferStatus: 'Conditional approval',
+            reviewState: 'Review required',
+            explanation: 'Aggregate transfer can proceed only after destination and safeguard checks clear for the selected operating scope.',
+            tone: geography === 'global' ? 'amber' : 'cyan',
+            safeguards: [
+                ...commonSafeguards,
+                {
+                    label: 'Restricted export',
+                    detail: 'Transfer is limited to approved aggregate outputs after review.',
+                    state: 'review'
+                },
+                {
+                    label: 'Watermarking',
+                    detail: 'Applied when reviewed outputs are packaged for delivery.',
+                    state: 'review'
+                }
+            ]
+        }
+    }
+
+    return {
+        destination:
+            geography === 'single_region'
+                ? 'Named recipient vault in the licensed region'
+                : geography === 'dual_region'
+                    ? 'Named recipient vault after regional review'
+                    : 'Named recipient vault after cross-border review',
+        transferStatus: geography === 'single_region' ? 'Conditional approval' : 'Review required',
+        reviewState: 'Review required',
+        explanation:
+            geography === 'single_region'
+                ? 'The release path is available, but the recipient, package scope, and safeguards still need transfer review before delivery.'
+                : 'This package can move only after transfer review confirms the destination, recipient controls, and release safeguards.',
+        tone: geography === 'single_region' ? 'cyan' : 'amber',
+        safeguards: [
+            ...commonSafeguards,
+            {
+                label: 'Restricted export',
+                detail: 'Release remains limited to the named encrypted package.',
+                state: 'review'
+            },
+            {
+                label: 'Watermarking',
+                detail: 'Applied to the delivered package before transfer clearance.',
+                state: 'active'
+            }
+        ]
+    }
+}
+
+const getTransferSafeguardStateClasses = (state: TransferSafeguardState) => {
+    if (state === 'active') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (state === 'review') return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+    return 'border-rose-500/30 bg-rose-500/10 text-rose-100'
+}
+
+const getTransferSafeguardStateLabel = (state: TransferSafeguardState) => {
+    if (state === 'active') return 'Active'
+    if (state === 'review') return 'Review'
+    return 'Blocked'
 }
 
 export default function EscrowCheckoutPage() {
@@ -238,6 +433,10 @@ export default function EscrowCheckoutPage() {
     const transferPosture = getTransferPostureLabel(config.accessMode)
     const jurisdictionStatuses = useMemo(
         () => buildJurisdictionStatuses(config.accessMode, selectedQuote.input.geography),
+        [config.accessMode, selectedQuote.input.geography]
+    )
+    const transferReviewModule = useMemo(
+        () => buildTransferReviewModule(config.accessMode, selectedQuote.input.geography),
         [config.accessMode, selectedQuote.input.geography]
     )
     const outcomeStage = checkoutRecord?.outcomeProtection.stage ?? 'evaluation_pending'
@@ -897,6 +1096,58 @@ export default function EscrowCheckoutPage() {
                                 </div>
                             </div>
 
+                            <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                    <div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                            Cross-Border Transfer Review
+                                        </div>
+                                        <div className="mt-2 text-base font-semibold text-white">Transfer routing module</div>
+                                        <div className="mt-1 max-w-md text-xs text-slate-400">
+                                            Mock review surface for regulated transfer handling inside checkout.
+                                        </div>
+                                    </div>
+                                    <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getJurisdictionToneClasses(transferReviewModule.tone)}`}>
+                                        {transferReviewModule.transferStatus}
+                                    </span>
+                                </div>
+
+                                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                                    <CompactJurisdictionRow label="Transfer destination" value={transferReviewModule.destination} />
+                                    <CompactJurisdictionRow label="Transfer status" value={transferReviewModule.transferStatus} />
+                                    <CompactJurisdictionRow label="Review state" value={transferReviewModule.reviewState} />
+                                </div>
+
+                                <div className="mt-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                        Safeguard checklist
+                                    </div>
+                                    <div className="mt-3 grid gap-2">
+                                        {transferReviewModule.safeguards.map(item => (
+                                            <TransferSafeguardRow
+                                                key={item.label}
+                                                label={item.label}
+                                                detail={item.detail}
+                                                state={item.state}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${getJurisdictionToneClasses(transferReviewModule.tone)}`}>
+                                    {transferReviewModule.explanation}
+                                </div>
+
+                                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                                    {transferStateExplainers.map(item => (
+                                        <div key={item.title} className="rounded-2xl border border-white/8 bg-slate-900/60 px-4 py-3">
+                                            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">{item.title}</div>
+                                            <div className="mt-2 text-xs text-slate-300">{item.detail}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="mt-4 grid gap-3">
                                 <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
                                     <span className="font-semibold text-white">Standard Path:</span> buyers are charged for protected evaluation here, and successful programs can move into downstream API or production access pricing.
@@ -1050,6 +1301,28 @@ function CompactJurisdictionRow({ label, value }: { label: string; value: string
         <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
             <div className="mt-2 text-sm font-semibold text-white">{value}</div>
+        </div>
+    )
+}
+
+function TransferSafeguardRow({
+    label,
+    detail,
+    state
+}: {
+    label: string
+    detail: string
+    state: TransferSafeguardState
+}) {
+    return (
+        <div className="rounded-2xl border border-white/8 bg-slate-900/60 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-sm font-semibold text-white">{label}</div>
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getTransferSafeguardStateClasses(state)}`}>
+                    {getTransferSafeguardStateLabel(state)}
+                </span>
+            </div>
+            <div className="mt-2 text-xs text-slate-400">{detail}</div>
         </div>
     )
 }
