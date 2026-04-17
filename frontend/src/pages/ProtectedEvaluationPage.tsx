@@ -70,6 +70,90 @@ const publicReviewSignals = [
     'Shared-responsibility cloud models support the infrastructure baseline; Redoubt governs the access workflow on top.'
 ]
 
+const controlMatrix = [
+    {
+        eyebrow: 'Buyers can do',
+        title: 'Operate inside governed evaluation',
+        toneClassName: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-100',
+        items: [
+            {
+                label: 'Controlled evaluation',
+                detail: 'Review the dataset inside a bounded workspace rather than through direct file delivery.'
+            },
+            {
+                label: 'Temporary credentials',
+                detail: 'Use short-lived access scoped to the current evaluation window and reviewed task.'
+            },
+            {
+                label: 'Monitored workspace',
+                detail: 'Work inside a visible session with audit activity and policy events attached to the review.'
+            },
+            {
+                label: 'Approved outputs',
+                detail: 'Generate permitted findings and aggregate outputs through governed export paths.'
+            },
+            {
+                label: 'Validated progression',
+                detail: 'Move toward broader release only after validation and commitment checks are satisfied.'
+            }
+        ]
+    },
+    {
+        eyebrow: 'Buyers cannot do',
+        title: 'Bypass the protection layer',
+        toneClassName: 'border-amber-500/20 bg-amber-500/8 text-amber-100',
+        items: [
+            {
+                label: 'No uncontrolled export',
+                detail: 'Raw rows, unrestricted copies, and open-ended extraction stay blocked during evaluation.'
+            },
+            {
+                label: 'No standing access',
+                detail: 'Credentials do not persist beyond the temporary review window.'
+            },
+            {
+                label: 'No off-scope sharing',
+                detail: 'Data, credentials, and outputs cannot be redistributed outside approved reviewers or systems.'
+            },
+            {
+                label: 'No invisible evaluation',
+                detail: 'Protected work does not move outside the monitored workspace and its policy controls.'
+            },
+            {
+                label: 'No production path first',
+                detail: 'Production delivery or API access does not precede approval, validation, and release readiness.'
+            }
+        ]
+    },
+    {
+        eyebrow: 'Sellers remain protected from',
+        title: 'Exposure before trust is earned',
+        toneClassName: 'border-cyan-500/20 bg-cyan-500/8 text-cyan-100',
+        items: [
+            {
+                label: 'Identity leakage',
+                detail: 'Early review can stay provider-shielded until the evaluation path is ready to expand.'
+            },
+            {
+                label: 'Unbounded extraction',
+                detail: 'Egress controls and output constraints reduce copy-out risk during governed review.'
+            },
+            {
+                label: 'Unverified release',
+                detail: 'Dataset release and payout wait until the governed outcome has been validated.'
+            },
+            {
+                label: 'Scope drift',
+                detail: 'Commitment checks keep the buyer aligned to the reviewed use case and operating boundary.'
+            },
+            {
+                label: 'Evidence gaps',
+                detail: 'Audit visibility preserves a stronger record if questions arise during or after evaluation.'
+            }
+        ]
+    }
+]
+
 export default function ProtectedEvaluationPage() {
     return (
         <div className="min-h-screen bg-slate-950 text-white">
@@ -149,6 +233,40 @@ export default function ProtectedEvaluationPage() {
                                     {layer.points.map(point => (
                                         <div key={point} className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-sm text-slate-200">
                                             {point}
+                                        </div>
+                                    ))}
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-3xl border border-white/10 bg-slate-900/70 p-8">
+                    <div className="max-w-3xl">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                            Buyer / Seller Control Matrix
+                        </div>
+                        <h2 className="mt-4 text-2xl font-semibold text-white">What governed evaluation allows, blocks, and protects</h2>
+                        <p className="mt-3 text-slate-300">
+                            A compact product summary of the buyer actions that remain available, the paths that stay blocked, and the protections that continue to matter for sellers.
+                        </p>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 xl:grid-cols-3">
+                        {controlMatrix.map(column => (
+                            <article key={column.title} className="rounded-2xl border border-white/10 bg-slate-950/45 p-5">
+                                <div className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${column.toneClassName}`}>
+                                    {column.eyebrow}
+                                </div>
+                                <h3 className="mt-4 text-lg font-semibold text-white">{column.title}</h3>
+                                <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                                    {column.items.map((item, index) => (
+                                        <div
+                                            key={item.label}
+                                            className={`px-4 py-4 ${index !== column.items.length - 1 ? 'border-b border-white/10' : ''}`}
+                                        >
+                                            <div className="text-sm font-semibold text-white">{item.label}</div>
+                                            <p className="mt-1 text-sm leading-6 text-slate-300">{item.detail}</p>
                                         </div>
                                     ))}
                                 </div>
