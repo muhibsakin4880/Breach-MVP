@@ -172,7 +172,7 @@ const summaryChecklist = [
 ] as const
 
 const fieldSectionClassName =
-    'rounded-[24px] border border-slate-800 bg-slate-950/70 p-5 shadow-[0_18px_36px_rgba(2,6,23,0.18)]'
+    'rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-sm'
 
 function cx(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(' ')
@@ -190,7 +190,7 @@ function SelectCardGroup({
     selectedValues: string[]
 }) {
     return (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
             {options.map((option) => {
                 const active = selectedValues.includes(option.value)
 
@@ -200,20 +200,20 @@ function SelectCardGroup({
                         type="button"
                         onClick={() => onSelect(option.value)}
                         className={cx(
-                            'rounded-2xl border p-4 text-left transition-all duration-200',
+                            'rounded-[28px] border p-5 text-left transition-all duration-300 backdrop-blur-sm',
                             active
-                                ? 'border-blue-500/70 bg-blue-500/10 shadow-[0_14px_30px_rgba(37,99,235,0.12)]'
-                                : 'border-slate-800 bg-slate-950/85 hover:border-blue-500/40 hover:bg-slate-900'
+                                ? 'border-blue-400/60 bg-[linear-gradient(180deg,rgba(37,99,235,0.18)_0%,rgba(15,23,42,0.9)_100%)] shadow-[0_22px_48px_rgba(37,99,235,0.16)]'
+                                : 'border-white/10 bg-white/[0.03] shadow-[0_18px_40px_rgba(2,6,23,0.18)] hover:border-blue-500/35 hover:bg-white/[0.05]'
                         )}
                     >
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="pr-2">
                                 <div className="text-sm font-semibold text-white">{option.title}</div>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">{option.description}</p>
+                                <p className="mt-3 text-sm leading-7 text-slate-400">{option.description}</p>
                             </div>
                             <span
                                 className={cx(
-                                    'mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold',
+                                    'mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold',
                                     active
                                         ? 'border-blue-400 bg-blue-400 text-slate-950'
                                         : 'border-slate-700 bg-slate-900 text-slate-500'
@@ -308,19 +308,19 @@ export default function OnboardingStep2() {
     }
 
     const helperPanel = (
-        <div className="space-y-4">
-            <section className="rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.95)_100%)] p-5 shadow-[0_22px_50px_rgba(8,47,73,0.24)]">
+        <div className="space-y-6">
+            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
                     Reviewer Snapshot
                 </div>
-                <h2 className="mt-3 text-xl font-semibold text-white">How this request currently reads</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-200">
+                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">How this request currently reads</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-200">
                     Reviewers use the structured fields first to understand scope, then the summary to confirm intent
                     and operating context.
                 </p>
 
-                <div className="mt-5 grid gap-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="mt-6 space-y-4">
+                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="flex items-center justify-between gap-3">
                             <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                 Structured coverage
@@ -334,7 +334,7 @@ export default function OnboardingStep2() {
                         </p>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="grid gap-3">
                             <div>
                                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Primary goal</div>
@@ -367,7 +367,7 @@ export default function OnboardingStep2() {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="flex items-center justify-between gap-3">
                             <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                 Narrative summary
@@ -383,52 +383,59 @@ export default function OnboardingStep2() {
                 </div>
             </section>
 
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/75 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.22)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    What Good Summaries Include
+            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                <div className="border-b border-white/10 px-6 py-6">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                        What Good Summaries Include
+                    </div>
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        {summaryChecklist.map((item) => (
+                            <div key={item} className="flex gap-3">
+                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                    {summaryChecklist.map((item) => (
-                        <div key={item} className="flex gap-3">
-                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
-                            <span>{item}</span>
-                        </div>
-                    ))}
-                </div>
-            </section>
 
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/72 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Example Summaries
-                </div>
-                <div className="mt-4 space-y-3">
+                <div className="space-y-6 px-6 py-6">
+                    <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            Example Summaries
+                        </div>
+                        <div className="mt-4 space-y-4">
                     {strongSummaryExamples.map((example) => (
                         <div
                             key={example}
-                            className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4 text-sm leading-6 text-slate-300"
+                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 text-sm leading-7 text-slate-300 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
                         >
                             {example}
                         </div>
                     ))}
-                    <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4 text-sm leading-6 text-rose-100">
+                    <div className="rounded-[24px] border border-rose-400/20 bg-rose-500/10 p-5 text-sm leading-7 text-rose-100">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-200/80">
                             Weak example
                         </div>
                         <p className="mt-2">{weakSummaryExample}</p>
                     </div>
-                </div>
-            </section>
-
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/70 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    What Reviewers Look For
-                </div>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                    {reviewerSignals.map((signal) => (
-                        <div key={signal} className="rounded-2xl border border-slate-800 bg-slate-950/75 px-4 py-3">
-                            {signal}
                         </div>
-                    ))}
+                    </div>
+
+                    <div className="border-t border-white/10 pt-6">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            What Reviewers Look For
+                        </div>
+                        <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {reviewerSignals.map((signal) => (
+                                <div
+                                    key={signal}
+                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                >
+                                    {signal}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -443,57 +450,60 @@ export default function OnboardingStep2() {
                 headerTitle="Intended Platform Usage"
                 headerSubtitle="Describe the request in a way reviewers can quickly understand: what the team wants to do, who will use the access, and what evaluation context Redoubt needs to support."
                 pageEyebrow="Participant onboarding · Use case review"
+                progressVariant="connector"
             >
-                <div className="space-y-6">
-                    <section className="rounded-[28px] border border-slate-800 bg-slate-900/70 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.24)]">
+                <div className="space-y-8 lg:space-y-10">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="max-w-3xl">
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                 Step framing
                             </div>
-                            <h2 className="mt-2 text-2xl font-semibold text-white">Frame the request before governance review</h2>
-                            <p className="mt-3 text-sm leading-6 text-slate-300">
+                            <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
+                                Frame the request before governance review
+                            </h2>
+                            <p className="mt-4 text-sm leading-7 text-slate-300">
                                 This step should make the participation intent legible to a reviewer. Capture the
                                 core goal, requested workflow, expected sensitivity, and the operating context that
                                 explains why access is being requested.
                             </p>
                         </div>
 
-                        <div className="mt-5 grid gap-3 md:grid-cols-3">
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
                                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
                                     Reviewer priority
                                 </div>
-                                <p className="mt-2 text-sm text-slate-300">
+                                <p className="mt-3 text-sm leading-7 text-slate-300">
                                     Understand the operational goal and whether the request fits a governed access lane.
                                 </p>
                             </div>
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
                                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
                                     What helps most
                                 </div>
-                                <p className="mt-2 text-sm text-slate-300">
+                                <p className="mt-3 text-sm leading-7 text-slate-300">
                                     Clear structure plus a concise narrative summary that explains the real workflow.
                                 </p>
                             </div>
-                            <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
                                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
                                     This is not yet
                                 </div>
-                                <p className="mt-2 text-sm text-slate-300">
+                                <p className="mt-3 text-sm leading-7 text-slate-300">
                                     A full legal or compliance review. This step is about access intent and reviewer clarity.
                                 </p>
                             </div>
                         </div>
                     </section>
 
-                    <section className="space-y-6">
+                    <section className="space-y-8">
                         <article className={fieldSectionClassName}>
                             <div className="mb-5">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                     Structured selections
                                 </div>
                                 <h3 className="mt-2 text-lg font-semibold text-white">Primary goal</h3>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">
+                                <p className="mt-3 text-sm leading-7 text-slate-400">
                                     Choose the main outcome this request is meant to support.
                                 </p>
                             </div>
@@ -511,7 +521,7 @@ export default function OnboardingStep2() {
                                     Structured selections
                                 </div>
                                 <h3 className="mt-2 text-lg font-semibold text-white">Requested workflow / usage type</h3>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">
+                                <p className="mt-3 text-sm leading-7 text-slate-400">
                                     Select one or more workflow lanes that best describe how access will be used.
                                 </p>
                             </div>
@@ -524,14 +534,14 @@ export default function OnboardingStep2() {
                             />
                         </article>
 
-                        <div className="grid gap-6 xl:grid-cols-2">
+                        <div className="grid gap-8 xl:grid-cols-2">
                             <article className={fieldSectionClassName}>
                                 <div className="mb-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                         Reviewer context
                                     </div>
                                     <h3 className="mt-2 text-lg font-semibold text-white">Sensitivity level</h3>
-                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">
                                         Indicate how cautious reviewers should be when interpreting this request.
                                     </p>
                                 </div>
@@ -549,7 +559,7 @@ export default function OnboardingStep2() {
                                         Reviewer context
                                     </div>
                                     <h3 className="mt-2 text-lg font-semibold text-white">Who will use the access</h3>
-                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">
                                         Clarify whether the request is for an individual, a small team, or a larger program.
                                     </p>
                                 </div>
@@ -568,7 +578,7 @@ export default function OnboardingStep2() {
                                     Reviewer context
                                 </div>
                                 <h3 className="mt-2 text-lg font-semibold text-white">Requested data type or evaluation context</h3>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">
+                                <p className="mt-3 text-sm leading-7 text-slate-400">
                                     Help reviewers understand the environment or evaluation frame you are asking Redoubt to support.
                                 </p>
                             </div>
@@ -593,7 +603,7 @@ export default function OnboardingStep2() {
                                 </span>
                             </div>
 
-                            <p className="mt-3 text-sm leading-6 text-slate-400">
+                            <p className="mt-4 text-sm leading-7 text-slate-400">
                                 Summarize the real workflow, evaluation, or decision your team wants to run on Redoubt.
                                 Keep it concise but specific enough for a human reviewer to triage quickly.
                             </p>
@@ -621,7 +631,8 @@ export default function OnboardingStep2() {
                         </article>
                     </section>
 
-                    <section className="flex flex-wrap gap-3 rounded-[24px] border border-slate-800 bg-slate-900/60 px-5 py-4">
+                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
                         <button
                             type="button"
                             onClick={fillMockData}
@@ -644,6 +655,7 @@ export default function OnboardingStep2() {
                         >
                             Continue to Step 3
                         </button>
+                        </div>
                     </section>
                 </div>
             </OnboardingPageLayout>

@@ -34,7 +34,7 @@ const initialStep1DraftState: Step1DraftState = {
 
 const fieldLabelClassName = 'mb-2 block text-sm font-medium text-slate-200'
 const fieldInputClassName =
-    'w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none'
+    'w-full rounded-[16px] border border-slate-700 bg-slate-950/85 px-4 py-3.5 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] focus:border-blue-500 focus:outline-none'
 
 const reviewChecks = [
     {
@@ -100,19 +100,19 @@ export default function OnboardingStep1() {
     const stepReady = useMemo(() => isStep1Complete(state), [state])
 
     const helperPanel = (
-        <div className="space-y-4">
-            <section className="rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.94)_100%)] p-5 shadow-[0_22px_50px_rgba(8,47,73,0.24)]">
+        <div className="space-y-6">
+            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.95)_100%)] p-6 shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
                     Identity Review
                 </div>
-                <h2 className="mt-3 text-xl font-semibold text-white">Why this first step matters</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-200">
+                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Why this first step matters</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-200">
                     Redoubt starts by establishing the corporate identity behind the request so later governance,
                     verification, and reviewer routing all begin from a trusted organization record.
                 </p>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div className="border-b border-white/10 px-5 py-5">
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                             Typical approval timing
                         </div>
@@ -123,7 +123,7 @@ export default function OnboardingStep1() {
                             Review may move faster when identity and organization details are consistent.
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="px-5 py-5">
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                             Invite code
                         </div>
@@ -135,31 +135,37 @@ export default function OnboardingStep1() {
                 </div>
             </section>
 
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/75 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.24)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    What Gets Checked
+            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                <div className="border-b border-white/10 px-6 py-6">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                        What Gets Checked
+                    </div>
                 </div>
-                <div className="mt-4 space-y-4">
+
+                <div className="space-y-4 px-6 py-6">
                     {reviewChecks.map((check) => (
-                        <div key={check.title} className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                        <div
+                            key={check.title}
+                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
+                        >
                             <div className="text-sm font-semibold text-white">{check.title}</div>
                             <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
                         </div>
                     ))}
-                </div>
-            </section>
 
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/70 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Invite Code Guidance
-                </div>
-                <p className="mt-3 text-sm leading-6 text-slate-300">
-                    If your organization received an invite code, enter it exactly as issued. If not, leave the
-                    field blank and continue. The current review flow still accepts the request without one.
-                </p>
-                <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                    This step records your identity and organization context first. Verification depth increases in
-                    later stages, not here.
+                    <div className="border-t border-white/10 pt-6">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            Invite Code Guidance
+                        </div>
+                        <p className="mt-4 text-sm leading-7 text-slate-300">
+                            If your organization received an invite code, enter it exactly as issued. If not, leave the
+                            field blank and continue. The current review flow still accepts the request without one.
+                        </p>
+                        <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                            This step records your identity and organization context first. Verification depth increases in
+                            later stages, not here.
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -183,16 +189,19 @@ export default function OnboardingStep1() {
                 headerTitle="Organization & Identity"
                 headerSubtitle="Establish the verified corporate identity behind this request before deeper governance and verification review begin."
                 pageEyebrow="Participant onboarding · Identity review"
+                progressVariant="connector"
             >
-                <div className="space-y-6">
-                    <section className="rounded-[28px] border border-slate-800 bg-slate-900/70 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.24)]">
+                <div className="space-y-8 lg:space-y-10">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div className="max-w-2xl">
+                            <div className="max-w-3xl">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                     Step 1 intake
                                 </div>
-                                <h2 className="mt-2 text-2xl font-semibold text-white">Start with trusted organization details</h2>
-                                <p className="mt-3 text-sm leading-6 text-slate-300">
+                                <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
+                                    Start with trusted organization details
+                                </h2>
+                                <p className="mt-4 text-sm leading-7 text-slate-300">
                                     This opening step anchors the onboarding request to a legitimate organization and
                                     an accountable representative. Complete the required fields now so the rest of the
                                     workflow can build on a clean trust record.
@@ -208,7 +217,7 @@ export default function OnboardingStep1() {
                             </button>
                         </div>
 
-                        <div className="mt-5 flex flex-wrap gap-3">
+                        <div className="mt-7 flex flex-wrap gap-3">
                             <div className="rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
                                 Corporate identity required
                             </div>
@@ -221,21 +230,21 @@ export default function OnboardingStep1() {
                         </div>
                     </section>
 
-                    <section className="rounded-[28px] border border-slate-800 bg-slate-900/65 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.22)]">
-                        <div className="grid gap-6 xl:grid-cols-2">
-                            <article className="rounded-[24px] border border-slate-800 bg-slate-950/70 p-5">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.8)_0%,rgba(2,6,23,0.72)_100%)] p-7 shadow-[0_28px_72px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-8 lg:p-10">
+                        <div className="grid gap-8 xl:grid-cols-2">
+                            <article className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-sm">
                                 <div className="mb-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                         Organization profile
                                     </div>
                                     <h3 className="mt-2 text-lg font-semibold text-white">Corporate details</h3>
-                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">
                                         These fields help reviewers identify the organization behind the request and
                                         resolve the correct operating context early.
                                     </p>
                                 </div>
 
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="grid gap-5 md:grid-cols-2">
                                     <div className="md:col-span-2">
                                         <label className={fieldLabelClassName}>Organization name</label>
                                         <input
@@ -282,19 +291,19 @@ export default function OnboardingStep1() {
                                 </div>
                             </article>
 
-                            <article className="rounded-[24px] border border-slate-800 bg-slate-950/70 p-5">
+                            <article className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-sm">
                                 <div className="mb-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                         Submitting representative
                                     </div>
                                     <h3 className="mt-2 text-lg font-semibold text-white">Participant identity</h3>
-                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">
                                         Use the business contact information reviewers should associate with this
                                         application package.
                                     </p>
                                 </div>
 
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="grid gap-5 md:grid-cols-2">
                                     <div className="md:col-span-2">
                                         <label className={fieldLabelClassName}>Official work email</label>
                                         <input
@@ -343,7 +352,7 @@ export default function OnboardingStep1() {
                         </div>
 
                         {showError && !stepReady && (
-                            <div className="mt-6 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                            <div className="mt-8 rounded-[24px] border border-amber-400/40 bg-amber-500/10 px-5 py-4 text-sm text-amber-200">
                                 To continue, complete the organization identity fields and provide a valid corporate
                                 email. Invite codes remain optional, but if you enter one it should match the issued
                                 code format.
@@ -351,7 +360,8 @@ export default function OnboardingStep1() {
                         )}
                     </section>
 
-                    <section className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-slate-800 bg-slate-900/60 px-5 py-4">
+                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                         <div>
                             <div className="text-sm font-semibold text-white">Next step</div>
                             <p className="mt-1 text-sm text-slate-400">
@@ -366,6 +376,7 @@ export default function OnboardingStep1() {
                         >
                             Continue to Step 2
                         </button>
+                        </div>
                     </section>
                 </div>
             </OnboardingPageLayout>

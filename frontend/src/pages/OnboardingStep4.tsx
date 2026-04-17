@@ -335,18 +335,18 @@ export default function OnboardingStep4() {
     }
 
     const helperPanel = (
-        <div className="space-y-4">
-            <section className="rounded-[28px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-5 shadow-[0_22px_50px_rgba(8,47,73,0.24)]">
+        <div className="sticky top-6 space-y-6">
+            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_70px_rgba(8,47,73,0.22)] backdrop-blur-sm">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
                     Verification Packet
                 </div>
-                <h2 className="mt-3 text-xl font-semibold text-white">Current packet status</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-200">
+                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Current packet status</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-200">
                     Reviewers use this packet to confirm identity, organization authority, and login-readiness before any protected access is approved.
                 </p>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div className="border-b border-white/10 px-5 py-5">
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                             Packet completion
                         </div>
@@ -358,7 +358,7 @@ export default function OnboardingStep4() {
                         </p>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="px-5 py-5">
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                             Privacy note
                         </div>
@@ -372,7 +372,7 @@ export default function OnboardingStep4() {
                     {packetChecklist.map((item) => (
                         <div
                             key={item.label}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                            className="flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-3"
                         >
                             <span className="text-sm text-slate-200">{item.label}</span>
                             <StatusChip label={item.statusLabel} tone={item.tone} />
@@ -381,13 +381,15 @@ export default function OnboardingStep4() {
                 </div>
             </section>
 
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/75 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.22)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Accepted evidence examples
+            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                <div className="border-b border-white/10 px-6 py-6">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                        Accepted evidence examples
+                    </div>
                 </div>
 
-                <div className="mt-4 space-y-4 text-sm text-slate-300">
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                <div className="space-y-6 px-6 py-6 text-sm text-slate-300">
+                    <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
                         <div className="font-semibold text-white">Affiliation evidence</div>
                         <ul className="mt-3 space-y-2 text-slate-400">
                             {affiliationExamples.map((example) => (
@@ -396,7 +398,7 @@ export default function OnboardingStep4() {
                         </ul>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                    <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
                         <div className="font-semibold text-white">Authorization evidence</div>
                         <ul className="mt-3 space-y-2 text-slate-400">
                             {authorizationExamples.map((example) => (
@@ -404,36 +406,41 @@ export default function OnboardingStep4() {
                             ))}
                         </ul>
                     </div>
-                </div>
-            </section>
-
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/72 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    What reviewers look for
-                </div>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                    {helperPanelNotes.map((note) => (
-                        <div key={note} className="rounded-2xl border border-slate-800 bg-slate-950/75 px-4 py-3">
-                            {note}
+                    <div className="border-t border-white/10 pt-6">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            What reviewers look for
                         </div>
-                    ))}
-                </div>
-            </section>
-
-            <section className="rounded-[26px] border border-white/10 bg-slate-900/72 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    What happens after verification succeeds
-                </div>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                    {afterVerificationSteps.map((step) => (
-                        <div key={step} className="rounded-2xl border border-slate-800 bg-slate-950/75 px-4 py-3">
-                            {step}
+                        <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {helperPanelNotes.map((note) => (
+                                <div
+                                    key={note}
+                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                >
+                                    {note}
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
 
-                <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                    Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.
+                    <div className="border-t border-white/10 pt-6">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            What happens after verification succeeds
+                        </div>
+                        <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {afterVerificationSteps.map((step) => (
+                                <div
+                                    key={step}
+                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                >
+                                    {step}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                            Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -448,16 +455,19 @@ export default function OnboardingStep4() {
                 headerTitle="Verification & Evidence Packet"
                 headerSubtitle="Complete identity checks, organization evidence, and access-identity setup so reviewers can validate this request as a protected-access packet."
                 pageEyebrow="Participant onboarding · Verification packet"
+                progressVariant="connector"
             >
-                <div className="space-y-6">
-                    <section className="rounded-[30px] border border-slate-800 bg-slate-900/72 p-6 shadow-[0_22px_50px_rgba(2,6,23,0.24)]">
+                <div className="space-y-8 lg:space-y-10">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="max-w-3xl">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                     Zone 1 · why verification exists
                                 </div>
-                                <h2 className="mt-2 text-2xl font-semibold text-white">Build the reviewer verification packet</h2>
-                                <p className="mt-3 text-sm leading-6 text-slate-300">
+                                <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
+                                    Build the reviewer verification packet
+                                </h2>
+                                <p className="mt-4 text-sm leading-7 text-slate-300">
                                     {participantOnboardingVerificationSummary} This packet protects access governance by verifying the person, the organization, and the identity controls behind the request before protected access review begins.
                                 </p>
                             </div>
@@ -472,23 +482,23 @@ export default function OnboardingStep4() {
                             </div>
                         </div>
 
-                        <div className="mt-5 grid gap-3 md:grid-cols-3">
+                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
                             {topReviewCards.map((card) => (
-                                <div key={card.title} className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4">
+                                <div key={card.title} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
                                     <div className="text-sm font-semibold text-white">{card.title}</div>
-                                    <p className="mt-2 text-sm leading-6 text-slate-400">{card.description}</p>
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">{card.description}</p>
                                 </div>
                             ))}
                         </div>
                     </section>
 
-                    <section className="rounded-[30px] border border-slate-800 bg-slate-900/68 p-6 shadow-[0_22px_50px_rgba(2,6,23,0.22)]">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.8)_0%,rgba(2,6,23,0.72)_100%)] p-7 shadow-[0_28px_72px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="mb-5">
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                 Zone 2 · identity verification
                             </div>
                             <h3 className="mt-2 text-xl font-semibold text-white">Verify identity and corporate domain control</h3>
-                            <p className="mt-3 text-sm leading-6 text-slate-400">
+                            <p className="mt-4 text-sm leading-7 text-slate-400">
                                 These checks confirm the person submitting the request and the corporate domain behind the organization identity.
                             </p>
                         </div>
@@ -652,13 +662,13 @@ export default function OnboardingStep4() {
                         </div>
                     </section>
 
-                    <section className="rounded-[30px] border border-slate-800 bg-slate-900/66 p-6 shadow-[0_22px_50px_rgba(2,6,23,0.22)]">
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.78)_0%,rgba(2,6,23,0.7)_100%)] p-7 shadow-[0_28px_72px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="mb-5">
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                 Zone 3 · organization evidence
                             </div>
                             <h3 className="mt-2 text-xl font-semibold text-white">Add affiliation evidence, authorization evidence, and access identity</h3>
-                            <p className="mt-3 text-sm leading-6 text-slate-400">
+                            <p className="mt-4 text-sm leading-7 text-slate-400">
                                 This zone turns your verification inputs into a review packet. Upload clear evidence, identify an approving authority, and confirm how access will be authenticated if approval is granted.
                             </p>
                         </div>
@@ -967,7 +977,8 @@ export default function OnboardingStep4() {
                         )}
                     </section>
 
-                    <section className="flex flex-wrap gap-3 rounded-[24px] border border-slate-800 bg-slate-900/60 px-5 py-4">
+                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
                         <button
                             type="button"
                             onClick={fillMockData}
@@ -990,6 +1001,7 @@ export default function OnboardingStep4() {
                         >
                             Continue to Step 5
                         </button>
+                        </div>
                     </section>
                 </div>
             </OnboardingPageLayout>
