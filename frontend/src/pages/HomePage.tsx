@@ -757,6 +757,7 @@ const joinSegments = [
                                 <a href="#how-it-works" className="text-slate-300 hover:text-white transition-colors">How it Works</a>
                                 <a href="#security" className="text-slate-300 hover:text-white transition-colors">Security</a>
                                 <Link to="/solutions" className="text-slate-300 hover:text-white transition-colors">Solutions</Link>
+                                <Link to="/protected-evaluation" className="text-slate-300 hover:text-white transition-colors">Protected Evaluation</Link>
                                 <a href="#join" className="text-slate-300 hover:text-white transition-colors">Join</a>
                             </nav>
                             <div className="flex items-center gap-3">
