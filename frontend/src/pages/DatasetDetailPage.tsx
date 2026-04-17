@@ -69,6 +69,99 @@ type DatasetDetailLocationState = {
     prefillAccessRequest?: AccessRequestPrefill
 } | null
 
+type UaeDatasetPosture = 'UAE local only' | 'GCC limited' | 'Cross-border review required'
+
+type UaeJurisdictionResidencyPanel = {
+    accessRegion: string
+    operatingRegion: string
+    residencyPosture: string
+    datasetPosture: UaeDatasetPosture
+    postureSummary: string
+    badgeClassName: string
+}
+
+const UAE_COMPATIBILITY_BADGES = ['Federal', 'DIFC', 'ADGM'] as const
+
+const UAE_POSTURE_SUMMARY_BY_GEOGRAPHY: Record<string, UaeJurisdictionResidencyPanel> = {
+    'Residency constrained': {
+        accessRegion: 'UAE local boundary',
+        operatingRegion: 'UAE-governed review workspace',
+        residencyPosture: 'Local review and export-constrained',
+        datasetPosture: 'UAE local only',
+        postureSummary: 'Best aligned to UAE-local evaluation routing with tightly held movement boundaries.',
+        badgeClassName: 'border-emerald-400/35 bg-emerald-500/12 text-emerald-100'
+    },
+    'Residency reviewed': {
+        accessRegion: 'UAE local boundary',
+        operatingRegion: 'UAE-governed review workspace',
+        residencyPosture: 'Local review with explicit handling checks',
+        datasetPosture: 'UAE local only',
+        postureSummary: 'Best aligned to UAE-local evaluation routing when residency review remains central to approval.',
+        badgeClassName: 'border-emerald-400/35 bg-emerald-500/12 text-emerald-100'
+    },
+    'Dual region': {
+        accessRegion: 'UAE and approved GCC surfaces',
+        operatingRegion: 'GCC-limited governed workspace',
+        residencyPosture: 'Regional review boundary',
+        datasetPosture: 'GCC limited',
+        postureSummary: 'Suitable for regional evaluation programs that stay inside an approved GCC operating path.',
+        badgeClassName: 'border-cyan-400/35 bg-cyan-500/12 text-cyan-100'
+    },
+    'Region-scoped': {
+        accessRegion: 'UAE and approved GCC surfaces',
+        operatingRegion: 'GCC-limited governed workspace',
+        residencyPosture: 'Regional review boundary',
+        datasetPosture: 'GCC limited',
+        postureSummary: 'Suitable for regional evaluation programs that keep reviewer access and delivery inside GCC scope.',
+        badgeClassName: 'border-cyan-400/35 bg-cyan-500/12 text-cyan-100'
+    },
+    Global: {
+        accessRegion: 'Cross-region access path',
+        operatingRegion: 'Transfer-reviewed workspace',
+        residencyPosture: 'Cross-border review gate',
+        datasetPosture: 'Cross-border review required',
+        postureSummary: 'Global scope is available, but UAE-oriented review programs should expect explicit transfer review before release.',
+        badgeClassName: 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+    },
+    'North America': {
+        accessRegion: 'Non-GCC regional scope',
+        operatingRegion: 'Transfer-reviewed workspace',
+        residencyPosture: 'Cross-border review gate',
+        datasetPosture: 'Cross-border review required',
+        postureSummary: 'The current package sits outside GCC-local operating scope and should route through cross-border review first.',
+        badgeClassName: 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+    },
+    'US / EU venue scope': {
+        accessRegion: 'US / EU venue boundary',
+        operatingRegion: 'Transfer-reviewed workspace',
+        residencyPosture: 'Cross-border review gate',
+        datasetPosture: 'Cross-border review required',
+        postureSummary: 'Venue-bound delivery is operationally strong, but UAE-directed evaluation should treat it as a cross-border review case.',
+        badgeClassName: 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+    },
+    'US / EU utility scope': {
+        accessRegion: 'US / EU utility boundary',
+        operatingRegion: 'Transfer-reviewed workspace',
+        residencyPosture: 'Cross-border review gate',
+        datasetPosture: 'Cross-border review required',
+        postureSummary: 'Utility delivery remains outside GCC-local scope and should be evaluated through a cross-border review path.',
+        badgeClassName: 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+    }
+}
+
+function getUaeJurisdictionResidencyPanel(geographyLabel: string): UaeJurisdictionResidencyPanel {
+    return (
+        UAE_POSTURE_SUMMARY_BY_GEOGRAPHY[geographyLabel] ?? {
+            accessRegion: geographyLabel || 'Cross-region access path',
+            operatingRegion: 'Transfer-reviewed workspace',
+            residencyPosture: 'Cross-border review gate',
+            datasetPosture: 'Cross-border review required',
+            postureSummary: 'This package should be treated as a cross-border review case until a narrower regional operating path is confirmed.',
+            badgeClassName: 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+        }
+    )
+}
+
 export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
@@ -198,6 +291,7 @@ export default function DatasetDetailPage() {
         accessPackage.accessMethod.buyerSummary,
         accessPackage.deliveryDetail.buyerSummary
     ].filter(Boolean).join(' ')
+    const uaeJurisdictionResidencyPanel = getUaeJurisdictionResidencyPanel(accessPackage.geography.label)
     const minimumTrustState = getMinimumTrustClarificationState(dataset.trustProfile)
     const minimumTrustNeedsReview = minimumTrustState !== 'documented'
     const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
@@ -663,6 +757,50 @@ export default function DatasetDetailPage() {
                                         ? `${trustSignalStateLabel(minimumTrustState)} before live access can be approved. The request stays open, but it routes to review-first handling.`
                                         : 'Minimum trust fields are documented in the current demo packet, but access still follows provider review and configured controls.'}
                                 </div>
+
+                                <section className="mt-7 rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.12),transparent_32%),linear-gradient(180deg,rgba(2,6,23,0.94)_0%,rgba(15,23,42,0.9)_100%)] p-5 shadow-[0_14px_34px_rgba(8,47,73,0.16)]">
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="max-w-2xl">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                                                Jurisdiction & Residency
+                                            </div>
+                                            <h3 className="mt-3 text-xl font-semibold text-white">UAE operating posture</h3>
+                                            <p className="mt-2 text-sm leading-6 text-slate-300">
+                                                Product posture summary for regulated evaluation routing across UAE-relevant operating boundaries.
+                                            </p>
+                                        </div>
+                                        <div className={`inline-flex w-fit items-center rounded-full border px-3 py-1.5 text-xs font-semibold ${uaeJurisdictionResidencyPanel.badgeClassName}`}>
+                                            {uaeJurisdictionResidencyPanel.datasetPosture}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                                        <DecisionValue label="Access region" value={uaeJurisdictionResidencyPanel.accessRegion} />
+                                        <DecisionValue label="Operating region" value={uaeJurisdictionResidencyPanel.operatingRegion} />
+                                        <DecisionValue label="Residency posture" value={uaeJurisdictionResidencyPanel.residencyPosture} />
+                                    </div>
+
+                                    <div className="mt-4 rounded-xl border border-white/8 bg-slate-950/45 px-4 py-4">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Dataset classification</div>
+                                        <div className="mt-2 text-base font-semibold text-white">{uaeJurisdictionResidencyPanel.datasetPosture}</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{uaeJurisdictionResidencyPanel.postureSummary}</p>
+                                    </div>
+
+                                    <div className="mt-4 flex flex-wrap gap-2.5">
+                                        {UAE_COMPATIBILITY_BADGES.map(badge => (
+                                            <span
+                                                key={badge}
+                                                className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-200"
+                                            >
+                                                {badge}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <p className="mt-4 text-xs leading-6 text-slate-400">
+                                        This summarizes Redoubt&apos;s operating posture for regulated evaluation workflows and does not constitute legal advice.
+                                    </p>
+                                </section>
 
                                 <div className="mt-7 grid gap-4 xl:grid-cols-2">
                                     <DetailSummaryCard
