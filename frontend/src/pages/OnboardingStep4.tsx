@@ -638,23 +638,24 @@ export default function OnboardingStep4() {
                                         )}
 
                                         {domainVerificationStep === 2 && (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDomainVerificationStep(3)}
-                                                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-blue-500"
-                                                >
-                                                    I added the TXT record
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleDNSVerification}
-                                                    disabled={isDNSVerifying}
-                                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    {isDNSVerifying ? 'Verifying…' : 'Verify domain'}
-                                                </button>
-                                            </>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDomainVerificationStep(3)}
+                                                className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-blue-500"
+                                            >
+                                                I added the TXT record
+                                            </button>
+                                        )}
+
+                                        {domainVerificationStep >= 2 && !isDomainVerified && (
+                                            <button
+                                                type="button"
+                                                onClick={handleDNSVerification}
+                                                disabled={isDNSVerifying}
+                                                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {isDNSVerifying ? 'Verifying…' : 'Verify domain'}
+                                            </button>
                                         )}
                                     </div>
                                 </div>
