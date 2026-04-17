@@ -37,6 +37,7 @@ type SavedPackageTemplate = {
     title: string
     eyebrow: string
     summary: string
+    operatingRegion: string
     signalTone: string
     signals: string[]
     form: RightsQuoteForm
@@ -48,6 +49,7 @@ const savedPackageTemplates: SavedPackageTemplate[] = [
         title: 'UAE local-only evaluation',
         eyebrow: 'Residency-bound',
         summary: 'Single-region governed evaluation for local-only review with no redistribution and visible audit controls.',
+        operatingRegion: 'UAE local-only operating lane',
         signalTone: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100',
         signals: ['Secure clean room', 'Single region', 'Mandatory audit', '24h validation'],
         form: {
@@ -73,6 +75,7 @@ const savedPackageTemplates: SavedPackageTemplate[] = [
         title: 'Regulated buyer evaluation package',
         eyebrow: 'Review-first',
         summary: 'A stricter evaluation pack for regulated buyers who need sensitive-review scope before any broader delivery discussion.',
+        operatingRegion: 'Dual-region regulated review lane',
         signalTone: 'border-cyan-500/35 bg-cyan-500/10 text-cyan-100',
         signals: ['Sensitive review pack', 'Dual region', 'Priority support', '48h validation'],
         form: {
@@ -98,6 +101,7 @@ const savedPackageTemplates: SavedPackageTemplate[] = [
         title: 'Cross-border review required package',
         eyebrow: 'Safeguarded transfer',
         summary: 'Use this package when external review needs a higher-friction approval lane, tighter safeguards, and a longer validation window.',
+        operatingRegion: 'Cross-border review subject to safeguards',
         signalTone: 'border-amber-500/35 bg-amber-500/10 text-amber-100',
         signals: ['Aggregated export', 'Global geography', 'Mandatory audit', '72h validation'],
         form: {
@@ -123,6 +127,7 @@ const savedPackageTemplates: SavedPackageTemplate[] = [
         title: 'Provider-shielded evaluation package',
         eyebrow: 'Shielded intake',
         summary: 'A controlled evaluation path for early-stage buyers where provider identity and direct release stay protected during review.',
+        operatingRegion: 'Provider-shielded review lane',
         signalTone: 'border-blue-500/35 bg-blue-500/10 text-blue-100',
         signals: ['Core fields', 'Single region', 'Standard support', 'Provider-shielded'],
         form: {
@@ -147,6 +152,9 @@ const savedPackageTemplates: SavedPackageTemplate[] = [
 
 const doesFormMatchTemplate = (form: RightsQuoteForm, templateForm: RightsQuoteForm) =>
     (Object.keys(templateForm) as Array<keyof RightsQuoteForm>).every(key => form[key] === templateForm[key])
+
+const getOptionLabel = <T extends { value: string; label: string }>(options: T[], value: string) =>
+    options.find(option => option.value === value)?.label ?? value
 
 const AdvancedConditionsDrawer = ({
     isOpen,
@@ -339,6 +347,10 @@ export default function RightsQuoteBuilderPage() {
         () => savedPackageTemplates.find(template => doesFormMatchTemplate(form, template.form))?.id ?? null,
         [form]
     )
+    const activeTemplate = useMemo(
+        () => templateQuotes.find(template => template.id === activeTemplateId) ?? null,
+        [activeTemplateId, templateQuotes]
+    )
     const dealProgress = useMemo(
         () =>
             buildDealProgressModel({
@@ -347,6 +359,86 @@ export default function RightsQuoteBuilderPage() {
                 checkoutRecord: persistedCheckout
             }),
         [passport, persistedCheckout, quote]
+    )
+    const deliveryModeLabel = useMemo(() => getOptionLabel(deliveryModeOptions, form.deliveryMode), [form.deliveryMode])
+    const geographyLabel = useMemo(() => getOptionLabel(geographyOptions, form.geography), [form.geography])
+    const durationLabel = useMemo(() => getOptionLabel(durationOptions, form.duration), [form.duration])
+    const seatBandLabel = useMemo(() => getOptionLabel(seatBandOptions, form.seatBand), [form.seatBand])
+    const operatingRegionLabel = useMemo(() => {
+        if (activeTemplate) return activeTemplate.operatingRegion
+        if (form.geography === 'single_region' && form.deliveryMode === 'clean_room') return 'Single-region governed evaluation'
+        if (form.geography === 'single_region') return 'Single-region controlled package'
+        if (form.geography === 'dual_region') return 'Dual-region review posture'
+        if (form.deliveryMode === 'aggregated_export') return 'Cross-border review with controlled outputs'
+        return 'Cross-border review posture'
+    }, [activeTemplate, form.deliveryMode, form.geography])
+    const accessStageValue = useMemo(
+        () =>
+            form.deliveryMode === 'metadata_only'
+                ? 'Evaluation-first metadata review'
+                : 'Evaluation-only access',
+        [form.deliveryMode]
+    )
+    const rightsSummaryRows = useMemo(
+        () => [
+            {
+                label: 'Operating region',
+                value: operatingRegionLabel,
+                detail: activeTemplate ? `Aligned to ${activeTemplate.title.toLowerCase()}.` : 'Derived from the current geography and delivery posture.'
+            },
+            {
+                label: 'Permitted geography',
+                value: geographyLabel,
+                detail: 'Use remains bounded to the selected regional rights scope.'
+            },
+            {
+                label: 'Access stage',
+                value: accessStageValue,
+                detail: 'Production or API access follows separate approval and commercial terms.'
+            },
+            {
+                label: 'Validation window',
+                value: `${form.validationWindowHours} hours`,
+                detail: 'Active buyer confirmation period before release can progress.'
+            },
+            {
+                label: 'Dispute / review window',
+                value: `${form.validationWindowHours} hours pre-release review`,
+                detail: 'The same window governs pre-release review, confirmation, and dispute escalation.'
+            }
+        ],
+        [accessStageValue, activeTemplate, form.validationWindowHours, geographyLabel, operatingRegionLabel]
+    )
+    const packagingSummaryRows = useMemo(
+        () => [
+            {
+                label: 'Who can access',
+                value: `${seatBandLabel} approved reviewers via ${deliveryModeLabel.toLowerCase()}.`
+            },
+            {
+                label: 'For how long',
+                value: `${durationLabel} rights with a ${form.validationWindowHours}-hour release check.`
+            },
+            {
+                label: 'Where',
+                value: `${geographyLabel} scope under ${operatingRegionLabel.toLowerCase()}.`
+            },
+            {
+                label: 'Under what conditions',
+                value: `${form.redistributionRights === 'not_allowed' ? 'No redistribution' : 'Redistribution allowed'} · ${form.auditLoggingRequirement === 'mandatory' ? 'audit logged' : 'audit optional'} · ${form.attributionRequirement === 'required' ? 'attribution required' : 'attribution optional'} · review before release.`
+            }
+        ],
+        [
+            deliveryModeLabel,
+            durationLabel,
+            form.attributionRequirement,
+            form.auditLoggingRequirement,
+            form.redistributionRights,
+            form.validationWindowHours,
+            geographyLabel,
+            operatingRegionLabel,
+            seatBandLabel
+        ]
     )
 
     const updateForm = <T extends keyof RightsQuoteForm>(field: T, value: RightsQuoteForm[T]) => {
@@ -731,6 +823,46 @@ export default function RightsQuoteBuilderPage() {
                                 >
                                     Proceed To Protected Evaluation
                                 </button>
+                            </div>
+                        </section>
+
+                        <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">Jurisdiction-aware rights summary</h2>
+                                    <p className="mt-1 text-sm text-slate-400">A fast read of region, stage, and pre-release review posture for the current package.</p>
+                                </div>
+                                <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                                    {operatingRegionLabel}
+                                </span>
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                                {rightsSummaryRows.map(row => (
+                                    <div key={row.label} className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{row.label}</div>
+                                            <div className="text-sm font-semibold text-white text-right">{row.value}</div>
+                                        </div>
+                                        <div className="mt-2 text-xs leading-5 text-slate-400">{row.detail}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Plain-language packaging</h2>
+                                <p className="mt-1 text-sm text-slate-400">A concise buyer-facing summary of who gets access, for how long, where, and under what conditions.</p>
+                            </div>
+
+                            <div className="mt-4 grid gap-3">
+                                {packagingSummaryRows.map(row => (
+                                    <div key={row.label} className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{row.label}</div>
+                                        <div className="mt-2 text-sm leading-6 text-slate-200">{row.value}</div>
+                                    </div>
+                                ))}
                             </div>
                         </section>
 
