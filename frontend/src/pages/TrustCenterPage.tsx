@@ -96,6 +96,30 @@ const deploymentPatterns = [
     }
 ]
 
+const uaeRegulatoryCoverage = [
+    {
+        jurisdiction: 'UAE Federal PDPL',
+        summary: 'Redoubt supports a jurisdiction-aware review posture for federal privacy-sensitive data evaluation.',
+        policyScope: 'Set purpose, geography, handling conditions, and dataset boundaries before protected review begins.',
+        reviewControls: 'Apply bounded sessions, approval routing, and output controls before access expands beyond evaluation.',
+        evidenceVisibility: 'Keep policy state, reviewer approvals, and evaluation activity visible in one decision trail.'
+    },
+    {
+        jurisdiction: 'DIFC',
+        summary: 'Redoubt supports review programs that need a clear DIFC operating posture for regulated data evaluation.',
+        policyScope: 'Define review scope around DIFC-governed data handling, approved users, and evaluation-specific conditions.',
+        reviewControls: 'Route stakeholders through explicit checkpoints with session limits and controlled evaluation boundaries.',
+        evidenceVisibility: 'Surface control decisions, review events, and posture changes as part of a shared evidence view.'
+    },
+    {
+        jurisdiction: 'ADGM',
+        summary: 'Redoubt supports regulated data evaluation with an ADGM-aware control posture and visible governance steps.',
+        policyScope: 'Align evaluation scope to approved use, locality expectations, and the data categories under review.',
+        reviewControls: 'Enforce protected review conditions, reviewer sequencing, and constrained outputs within the evaluation flow.',
+        evidenceVisibility: 'Preserve an auditable record of approvals, evaluation history, and operating-boundary decisions.'
+    }
+]
+
 const riskReductionOutcomes = [
     'Reduce late-stage surprises around classification, residency, or approval requirements.',
     'Make protected evaluation a visible decision gate instead of an opaque technical handoff.',
@@ -221,6 +245,44 @@ export default function TrustCenterPage() {
                             <article key={pattern.title} className="rounded-2xl border border-white/10 bg-slate-950/55 p-5">
                                 <h3 className="text-lg font-semibold text-white">{pattern.title}</h3>
                                 <p className="mt-3 text-sm leading-7 text-slate-300">{pattern.detail}</p>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-[2rem] border border-cyan-500/15 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.14),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.94)_0%,rgba(2,8,20,0.98)_100%)] p-8 shadow-[0_0_70px_rgba(13,148,136,0.08)]">
+                    <div className="max-w-3xl">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                            UAE Regulatory Coverage
+                        </div>
+                        <h2 className="mt-5 text-3xl font-semibold text-white">Operating jurisdictions for regulated data evaluation</h2>
+                        <p className="mt-3 text-slate-300">
+                            Redoubt supports a jurisdiction-aware review posture for regulated data evaluation across UAE federal and financial-centre operating contexts.
+                        </p>
+                    </div>
+
+                    <div className="mt-8 grid gap-5 lg:grid-cols-3">
+                        {uaeRegulatoryCoverage.map(item => (
+                            <article key={item.jurisdiction} className="flex h-full flex-col rounded-3xl border border-white/10 bg-slate-950/55 p-6 shadow-[0_18px_45px_rgba(2,8,20,0.22)]">
+                                <div className="inline-flex w-fit items-center rounded-full border border-cyan-400/15 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                                    {item.jurisdiction}
+                                </div>
+                                <p className="mt-4 text-base font-semibold leading-7 text-white">{item.summary}</p>
+
+                                <div className="mt-6 space-y-3">
+                                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300">Policy scope</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{item.policyScope}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300">Review controls</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{item.reviewControls}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300">Evidence visibility</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{item.evidenceVisibility}</p>
+                                    </div>
+                                </div>
                             </article>
                         ))}
                     </div>
