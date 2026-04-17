@@ -25,7 +25,7 @@ const publicNav: PublicNavItem[] = [
     { label: 'How it Works', href: '/#how-it-works' },
     { label: 'Security', href: '/#security' },
     { label: 'Solutions', to: '/solutions' },
-    { label: 'Protected Evaluation', href: '/#how-it-works' }
+    { label: 'Protected Evaluation', to: '/protected-evaluation' }
 ]
 
 const onboardingNav: PublicNavItem[] = [

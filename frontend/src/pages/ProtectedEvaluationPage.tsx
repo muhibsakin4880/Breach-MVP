@@ -27,26 +27,21 @@ const controlSurfaces = [
     }
 ]
 
-const sessionPhases = [
+const protectedEvaluationModel = [
     {
         step: '01',
-        title: 'Provision',
-        description: 'Create a bounded evaluation environment with approved controls, credentials, and session duration.'
+        title: 'Review metadata',
+        description: 'Inspect schema shape, coverage, freshness, and trust context before any protected dataset use begins.'
     },
     {
         step: '02',
-        title: 'Constrain',
-        description: 'Apply egress, masking, and output rules before the dataset is used inside the protected session.'
+        title: 'Run governed evaluation',
+        description: 'Evaluate the dataset inside a bounded workspace with scoped credentials, visible controls, and audit-aware review.'
     },
     {
         step: '03',
-        title: 'Observe',
-        description: 'Track the evaluation through activity logs, audit records, and policy events while the session remains active.'
-    },
-    {
-        step: '04',
-        title: 'Close',
-        description: 'Terminate or extend the session based on policy, review state, and the outcome of the protected evaluation.'
+        title: 'Release only after validation',
+        description: 'Broader access, delivery, or payout follows only after validation confirms the governed evaluation outcome.'
     }
 ]
 
@@ -127,15 +122,20 @@ export default function ProtectedEvaluationPage() {
 
                 <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-8">
-                        <h2 className="text-2xl font-semibold text-white">Protected session lifecycle</h2>
-                        <div className="mt-6 space-y-4">
-                            {sessionPhases.map(phase => (
-                                <article key={phase.step} className="rounded-2xl border border-white/5 bg-white/5 p-5">
+                        <div className="max-w-3xl">
+                            <h2 className="text-2xl font-semibold text-white">3-step protected evaluation model</h2>
+                            <p className="mt-3 text-slate-300">
+                                Suitable for regulated data evaluation where controlled review, visible policy boundaries, and validated release matter before broader access expands.
+                            </p>
+                        </div>
+                        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                            {protectedEvaluationModel.map(step => (
+                                <article key={step.step} className="rounded-2xl border border-white/5 bg-white/5 p-5">
                                     <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">
-                                        {phase.step}
+                                        {step.step}
                                     </div>
-                                    <h3 className="mt-4 text-lg font-semibold text-white">{phase.title}</h3>
-                                    <p className="mt-3 text-sm leading-7 text-slate-300">{phase.description}</p>
+                                    <h3 className="mt-4 text-lg font-semibold text-white">{step.title}</h3>
+                                    <p className="mt-3 text-sm leading-7 text-slate-300">{step.description}</p>
                                 </article>
                             ))}
                         </div>
