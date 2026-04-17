@@ -39,6 +39,15 @@ type RequestFlag = {
     tone: RequestFlagTone
 }
 
+type ProviderOperationalTone = 'emerald' | 'cyan' | 'amber'
+
+type ProviderOperationalItem = {
+    label: string
+    status: string
+    detail: string
+    tone: ProviderOperationalTone
+}
+
 const datasets: ProviderDataset[] = [
     { id: 'dp-01', name: 'Anonymized Retail Transactions 2024', confidence: 94, requests: 18, status: 'Active', lastUpdated: '2026-02-14' },
     { id: 'dp-02', name: 'Urban Mobility Sensor Streams', confidence: 90, requests: 11, status: 'Active', lastUpdated: '2026-02-13' },
@@ -103,6 +112,12 @@ const getScreeningToneClasses = (tone: ScreeningTone) => {
 }
 
 const getRequestFlagToneClasses = (tone: RequestFlagTone) => {
+    if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+}
+
+const getOperationalToneClasses = (tone: ProviderOperationalTone) => {
     if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
     if (tone === 'cyan') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
     return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
@@ -203,6 +218,46 @@ export default function ProviderDashboardPage() {
     const actionedReviewCount = datasetRequests.length - providerReviewRequests.length
     const activeRequests = providerReviewRequests.length
     const approvedAccesses = approvedDatasets.length
+    const protectionStatusItems: ProviderOperationalItem[] = [
+        {
+            label: 'Identity shielded',
+            status: 'Active',
+            detail: 'Buyer identity stays masked in the provider workflow while purpose, controls, and reviewer signals remain visible.',
+            tone: 'emerald'
+        },
+        {
+            label: 'Preview only',
+            status: activeRequests > 0 ? 'Metadata first' : 'Standby',
+            detail: 'Request triage stays in preview mode until governed evaluation or approved delivery is formally opened.',
+            tone: 'cyan'
+        },
+        {
+            label: 'Release pending validation',
+            status: approvedAccesses > 0 ? 'Conditional' : 'Guarded',
+            detail: 'Provider-side release remains held behind evaluation checks, validation, and final release conditions.',
+            tone: 'amber'
+        }
+    ]
+    const commercialReadinessItems: ProviderOperationalItem[] = [
+        {
+            label: 'Evaluation stage',
+            status: activeRequests > 0 ? `${activeRequests} live review${activeRequests === 1 ? '' : 's'}` : 'Ready',
+            detail: 'Protected-evaluation requests are already present in the queue and can move without restarting provider onboarding.',
+            tone: 'cyan'
+        },
+        {
+            label: 'Production expansion possible',
+            status: approvedAccesses > 0 ? 'Yes' : 'Available',
+            detail: 'Successful evaluations can expand into production or API access with the same provider posture and controls.',
+            tone: 'emerald'
+        },
+        {
+            label: 'Release conditions summary',
+            status: 'Validation gated',
+            detail: 'Commercial release waits for buyer validation, configured controls, and no blocking dispute in the transaction path.',
+            tone: 'amber'
+        }
+    ]
 
     return (
         <div className="min-h-screen bg-slate-900 text-white">
@@ -348,6 +403,33 @@ export default function ProviderDashboardPage() {
                 </section>
 
                 <section className={`${primaryPanelClass} p-6 lg:p-7`}>
+                    <div className="flex flex-col gap-3 border-b border-white/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                Provider posture
+                            </div>
+                            <h2 className="mt-4 text-xl font-semibold text-white">Protection and commercial readiness</h2>
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                Operational trust surfaces for how provider exposure stays controlled while commercial readiness advances through governed evaluation.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                        <OperationalSummaryCard
+                            title="Protection status"
+                            description="Provider-facing controls that keep review posture safe before release."
+                            items={protectionStatusItems}
+                        />
+                        <OperationalSummaryCard
+                            title="Commercial readiness"
+                            description="Signals that show when protected evaluation can expand into revenue-bearing delivery."
+                            items={commercialReadinessItems}
+                        />
+                    </div>
+                </section>
+
+                <section className={`${primaryPanelClass} p-6 lg:p-7`}>
                     <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-white">Incoming access requests</h2>
@@ -436,6 +518,38 @@ export default function ProviderDashboardPage() {
                         </div>
                     </div>
                 </section>
+            </div>
+        </div>
+    )
+}
+
+function OperationalSummaryCard({
+    title,
+    description,
+    items
+}: {
+    title: string
+    description: string
+    items: ProviderOperationalItem[]
+}) {
+    return (
+        <div className="rounded-[24px] border border-white/10 bg-slate-900/60 p-5 shadow-[0_18px_48px_rgba(2,8,20,0.2)]">
+            <div className="border-b border-white/10 pb-4">
+                <div className="text-base font-semibold text-white">{title}</div>
+                <div className="mt-1 text-sm text-slate-400">{description}</div>
+            </div>
+            <div className="mt-4 grid gap-3">
+                {items.map(item => (
+                    <div key={`${title}-${item.label}`} className="rounded-[18px] border border-white/10 bg-slate-950/70 px-4 py-3.5">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="text-sm font-semibold text-white">{item.label}</div>
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getOperationalToneClasses(item.tone)}`}>
+                                {item.status}
+                            </span>
+                        </div>
+                        <div className="mt-2 text-xs leading-5 text-slate-400">{item.detail}</div>
+                    </div>
+                ))}
             </div>
         </div>
     )
@@ -545,9 +659,9 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
 function BuyerScreeningCard({ item }: { item: BuyerScreeningItem }) {
     return (
         <div className="rounded-xl border border-white/10 bg-slate-950/70 p-3.5">
-            <div className="flex items-start justify-between gap-3">
-                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">{item.label}</div>
-                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getScreeningToneClasses(item.tone)}`}>
+            <div className="flex flex-col items-start gap-2">
+                <div className="text-xs uppercase tracking-[0.12em] leading-5 text-slate-400">{item.label}</div>
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getScreeningToneClasses(item.tone)}`}>
                     {item.status}
                 </span>
             </div>
