@@ -68,6 +68,14 @@ type TransferReviewModule = {
     safeguards: TransferSafeguard[]
 }
 
+type TransactionTimelineStepState = 'complete' | 'current' | 'upcoming' | 'issue'
+
+type TransactionTimelineStep = {
+    label: string
+    detail: string
+    state: TransactionTimelineStepState
+}
+
 const geographyLabelMap = {
     single_region: 'Single region',
     dual_region: 'Dual region',
@@ -342,6 +350,98 @@ const getTransferSafeguardStateLabel = (state: TransferSafeguardState) => {
     return 'Blocked'
 }
 
+const buildTransactionTimelineSteps = ({
+    checkoutRecordPresent,
+    workspaceReady,
+    credentialsIssued,
+    lifecycleState,
+    validationStatus,
+    creditIssued
+}: {
+    checkoutRecordPresent: boolean
+    workspaceReady: boolean
+    credentialsIssued: boolean
+    lifecycleState: EscrowCheckoutRecord['lifecycleState'] | null
+    validationStatus: EscrowCheckoutRecord['outcomeProtection']['validation']['status']
+    creditIssued: boolean
+}): TransactionTimelineStep[] => {
+    const releasePending = lifecycleState === 'RELEASE_PENDING'
+    const released = lifecycleState === 'RELEASED_TO_PROVIDER'
+    const disputeOpen = lifecycleState === 'DISPUTE_OPEN'
+    const refundTriggered = creditIssued || disputeOpen
+
+    return [
+        {
+            label: 'Funded',
+            detail: checkoutRecordPresent
+                ? 'Escrow now holds funds before any live evaluation access can broaden.'
+                : 'Checkout is waiting for escrow funding to open the governed path.',
+            state: checkoutRecordPresent ? 'complete' : 'current'
+        },
+        {
+            label: 'Workspace active',
+            detail: workspaceReady
+                ? 'The governed workspace is provisioned and ready for scoped evaluation.'
+                : checkoutRecordPresent
+                    ? 'Workspace provisioning is the next control point after funding.'
+                    : 'Workspace activation starts only after funding clears.',
+            state: workspaceReady ? 'complete' : checkoutRecordPresent ? 'current' : 'upcoming'
+        },
+        {
+            label: 'Validation open',
+            detail: refundTriggered
+                ? 'Validation closed through the protection path because commitments did not clear.'
+                : validationStatus === 'confirmed' || releasePending || released
+                    ? 'Buyer validation cleared the contracted outcome before release.'
+                    : credentialsIssued
+                        ? 'Evaluation is active and validation remains open inside the governed workspace.'
+                        : 'Validation opens once scoped credentials activate the evaluation workspace.',
+            state:
+                refundTriggered
+                    ? 'issue'
+                    : validationStatus === 'confirmed' || releasePending || released
+                        ? 'complete'
+                        : credentialsIssued
+                            ? 'current'
+                            : 'upcoming'
+        },
+        {
+            label: 'Release pending',
+            detail: refundTriggered
+                ? 'Release is bypassed while refund or dispute handling resolves the missed commitment.'
+                : released
+                    ? 'Buyer validation completed and escrow has already released to the provider.'
+                    : releasePending
+                        ? 'Validation passed and escrow is queued for provider release.'
+                        : 'Provider release stays locked until validation clears.',
+            state: released ? 'complete' : releasePending ? 'current' : 'upcoming'
+        },
+        {
+            label: 'Refund / dispute if commitments fail',
+            detail: creditIssued
+                ? 'A commitment miss triggered the refund-credit path and payout remains frozen.'
+                : disputeOpen
+                    ? 'A dispute is open, so release remains paused until review closes.'
+                    : 'This fallback lane activates only if schema, freshness, or delivery commitments miss.',
+            state: refundTriggered ? 'issue' : 'upcoming'
+        }
+    ]
+}
+
+const getTransactionTimelineStateClasses = (state: TransactionTimelineStepState) => {
+    if (state === 'complete') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (state === 'current') return 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+    if (state === 'issue') return 'border-rose-500/30 bg-rose-500/10 text-rose-100'
+    return 'border-white/10 bg-white/5 text-slate-300'
+}
+
+const getTransactionTimelineStateLabel = (state: TransactionTimelineStepState) => {
+    if (state === 'complete') return 'Done'
+    if (state === 'current') return 'Active'
+    if (state === 'issue') return 'Fallback'
+    return 'Standby'
+}
+
 export default function EscrowCheckoutPage() {
     const { id } = useParams()
     const location = useLocation()
@@ -459,6 +559,47 @@ export default function EscrowCheckoutPage() {
         reason: undefined,
         issuedAt: undefined
     }
+    const transactionTimelineSteps = useMemo(
+        () =>
+            buildTransactionTimelineSteps({
+                checkoutRecordPresent: checkoutRecord !== null,
+                workspaceReady,
+                credentialsIssued,
+                lifecycleState: checkoutRecord?.lifecycleState ?? null,
+                validationStatus: outcomeValidation.status,
+                creditIssued: outcomeCredits.status === 'issued'
+            }),
+        [checkoutRecord, credentialsIssued, outcomeCredits.status, outcomeValidation.status, workspaceReady]
+    )
+    const transactionSafetyItems = useMemo(
+        () => [
+            {
+                label: 'Governed evaluation first',
+                detail: 'Live review begins in the governed workspace before payout or broad delivery can move.'
+            },
+            {
+                label: 'No broad exposure before release',
+                detail:
+                    config.accessMode === 'clean_room'
+                        ? 'Raw exposure stays blocked while evaluation remains workspace-only.'
+                        : config.accessMode === 'aggregated_export'
+                            ? 'Only reviewed aggregate outputs can move before any release decision.'
+                            : 'Delivered packages stay encrypted, scoped, and unreleased until review clears.'
+            },
+            {
+                label: 'Auditability',
+                detail: 'Credentials, workspace activity, and release decisions remain logged throughout the transaction.'
+            },
+            {
+                label: 'Conditional release',
+                detail:
+                    outcomeCredits.status === 'issued'
+                        ? 'A commitment miss already froze release and shifted the transaction into the refund-credit lane.'
+                        : 'Provider payout remains conditional on buyer validation and the configured release path.'
+            }
+        ],
+        [config.accessMode, outcomeCredits.status]
+    )
 
     useEffect(() => {
         if (!checkoutRecord || checkoutRecord.credentials.status !== 'issued') return
@@ -1163,37 +1304,39 @@ export default function EscrowCheckoutPage() {
                                 </div>
                             )}
 
-                            <div className="mt-5 space-y-3">
-                                <StepRow
-                                    label="DUA accepted"
-                                    complete={checkoutRecord?.dua.accepted ?? duaAccepted}
-                                    detail="The rights package, review window, and access controls are contract-ready."
-                                />
-                                <StepRow
-                                    label="Escrow funded"
-                                    complete={checkoutRecord !== null}
-                                    detail="Funds are held before access activates."
-                                />
-                                <StepRow
-                                    label="Workspace provisioned"
-                                    complete={workspaceReady}
-                                    detail="Governed workspace is created with the selected access path."
-                                />
-                                <StepRow
-                                    label="Scoped credentials issued"
-                                    complete={credentialsIssued}
-                                    detail="Ephemeral credentials activate access with audit and TTL enforcement."
-                                />
-                                <StepRow
-                                    label="Outcome engine run"
-                                    complete={outcomeEngine.status !== 'not_started'}
-                                    detail="Schema count and freshness commitments are checked automatically inside the workspace."
-                                />
-                                <StepRow
-                                    label="Buyer validation"
-                                    complete={outcomeValidation.status === 'confirmed' || outcomeCredits.status === 'issued'}
-                                    detail="Buyer confirms a passing outcome or the platform resolves the miss with automatic credits."
-                                />
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="flex flex-col gap-2">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                        Transaction Lifecycle
+                                    </div>
+                                    <div className="text-base font-semibold text-white">Release / refund / dispute timeline</div>
+                                    <div className="text-xs text-slate-400">
+                                        A fast view of how funding, evaluation, validation, and fallback handling move this transaction forward.
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 space-y-3">
+                                    {transactionTimelineSteps.map((step, index) => (
+                                        <TransactionTimelineRow
+                                            key={step.label}
+                                            label={step.label}
+                                            detail={step.detail}
+                                            state={step.state}
+                                            isLast={index === transactionTimelineSteps.length - 1}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100/80">
+                                    Why This Transaction Is Safe
+                                </div>
+                                <div className="mt-3 grid gap-3">
+                                    {transactionSafetyItems.map(item => (
+                                        <SafetyPrincipleRow key={item.label} label={item.label} detail={item.detail} />
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="mt-5 grid gap-3">
@@ -1327,30 +1470,48 @@ function TransferSafeguardRow({
     )
 }
 
-function StepRow({
+function TransactionTimelineRow({
     label,
-    complete,
-    detail
+    detail,
+    state,
+    isLast
 }: {
     label: string
-    complete: boolean
     detail: string
+    state: TransactionTimelineStepState
+    isLast: boolean
 }) {
     return (
-        <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-semibold text-white">{label}</div>
-                <span
-                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                        complete
-                            ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
-                            : 'border-slate-600 bg-slate-800 text-slate-300'
-                    }`}
-                >
-                    {complete ? 'Done' : 'Pending'}
-                </span>
+        <div className="relative pl-10">
+            {!isLast && <div className="absolute left-[11px] top-6 h-[calc(100%+0.75rem)] w-px bg-white/10" />}
+            <span className={`absolute left-0 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${getTransactionTimelineStateClasses(state)}`}>
+                <span className="h-2.5 w-2.5 rounded-full bg-current" />
+            </span>
+            <div className="rounded-2xl border border-white/8 bg-slate-900/60 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-white">{label}</div>
+                    <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getTransactionTimelineStateClasses(state)}`}>
+                        {getTransactionTimelineStateLabel(state)}
+                    </span>
+                </div>
+                <div className="mt-2 text-xs text-slate-400">{detail}</div>
             </div>
-            <div className="mt-2 text-xs text-slate-400">{detail}</div>
+        </div>
+    )
+}
+
+function SafetyPrincipleRow({ label, detail }: { label: string; detail: string }) {
+    return (
+        <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+            <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-200">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                </span>
+                <div>
+                    <div className="text-sm font-semibold text-white">{label}</div>
+                    <div className="mt-1 text-xs text-slate-400">{detail}</div>
+                </div>
+            </div>
         </div>
     )
 }
