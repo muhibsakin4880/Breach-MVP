@@ -22,6 +22,23 @@ type ProviderDataset = {
     lastUpdated: string
 }
 
+type ScreeningTone = 'emerald' | 'amber' | 'cyan'
+
+type BuyerScreeningItem = {
+    label: string
+    status: string
+    detail: string
+    tone: ScreeningTone
+}
+
+type RequestFlagTone = 'emerald' | 'cyan' | 'amber'
+
+type RequestFlag = {
+    label: 'UAE local-only' | 'GCC limited' | 'Cross-border review needed'
+    detail: string
+    tone: RequestFlagTone
+}
+
 const datasets: ProviderDataset[] = [
     { id: 'dp-01', name: 'Anonymized Retail Transactions 2024', confidence: 94, requests: 18, status: 'Active', lastUpdated: '2026-02-14' },
     { id: 'dp-02', name: 'Urban Mobility Sensor Streams', confidence: 90, requests: 11, status: 'Active', lastUpdated: '2026-02-13' },
@@ -60,6 +77,125 @@ const primaryPanelClass =
 
 const secondaryPanelClass =
     'rounded-[24px] border border-white/10 bg-slate-900/70 shadow-[0_18px_56px_rgba(2,8,20,0.24)] backdrop-blur-sm'
+
+const requestFlagGuide: RequestFlag[] = [
+    {
+        label: 'UAE local-only',
+        detail: 'Use when provider review should stay inside a UAE-controlled operating lane.',
+        tone: 'emerald'
+    },
+    {
+        label: 'GCC limited',
+        detail: 'Use when the request can be evaluated inside an approved GCC review boundary.',
+        tone: 'cyan'
+    },
+    {
+        label: 'Cross-border review needed',
+        detail: 'Use when destination, evaluator scope, or delivery posture extends beyond the default regional lane.',
+        tone: 'amber'
+    }
+] as const
+
+const getScreeningToneClasses = (tone: ScreeningTone) => {
+    if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+}
+
+const getRequestFlagToneClasses = (tone: RequestFlagTone) => {
+    if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+}
+
+const buildBuyerScreeningItems = (request: DatasetRequest): BuyerScreeningItem[] => {
+    const clarificationOpen = Boolean(request.reviewerFeedback)
+    const verifiedByDefault = request.status === 'REQUEST_APPROVED' || request.status === 'REVIEW_IN_PROGRESS'
+    const domainNeedsReview = ['nlp-118', 'med-441'].includes(request.id)
+    const evaluatorNeedsReview = clarificationOpen || request.status === 'REQUEST_REJECTED'
+
+    return [
+        {
+            label: 'Verified organization',
+            status: verifiedByDefault ? 'Verified' : 'Review',
+            detail: verifiedByDefault ? 'Organization profile is present in the request packet.' : 'Provider review should re-check organizational standing.',
+            tone: verifiedByDefault ? 'emerald' : 'amber'
+        },
+        {
+            label: 'Domain verified',
+            status: domainNeedsReview ? 'Review' : 'Verified',
+            detail: domainNeedsReview ? 'Domain or institutional routing still needs confirmation.' : 'Request is packaged with a verified organizational domain signal.',
+            tone: domainNeedsReview ? 'amber' : 'emerald'
+        },
+        {
+            label: 'Authorized evaluator',
+            status: evaluatorNeedsReview ? 'Review' : 'Verified',
+            detail: evaluatorNeedsReview ? 'Evaluator authority or scope still needs clarification before approval.' : 'Evaluator scope is aligned to the submitted operating purpose.',
+            tone: evaluatorNeedsReview ? 'amber' : 'emerald'
+        },
+        {
+            label: 'Clarification required',
+            status: clarificationOpen ? 'Open' : 'Clear',
+            detail: clarificationOpen ? request.reviewerFeedback ?? 'Clarification is still pending.' : 'No outstanding clarification is blocking provider action.',
+            tone: clarificationOpen ? 'cyan' : 'emerald'
+        }
+    ]
+}
+
+const getRequestFlags = (request: DatasetRequest): RequestFlag[] => {
+    if (request.id === 'cl-204') {
+        return [
+            {
+                label: 'GCC limited',
+                detail: 'Regional control checks are already called out in the request and should keep review inside an approved GCC lane first.',
+                tone: 'cyan'
+            },
+            {
+                label: 'Cross-border review needed',
+                detail: 'Any broader delivery or output expansion should route through transfer review before provider approval.',
+                tone: 'amber'
+            }
+        ]
+    }
+
+    if (request.id === 'nlp-118') {
+        return [
+            {
+                label: 'UAE local-only',
+                detail: 'Sensitive text review should stay inside a tighter local safe-haven posture until retention controls are clarified.',
+                tone: 'emerald'
+            }
+        ]
+    }
+
+    if (request.id === 'med-441') {
+        return [
+            {
+                label: 'UAE local-only',
+                detail: 'Clinical evaluation should remain in a local-only reviewed lane before any broader transfer is considered.',
+                tone: 'emerald'
+            }
+        ]
+    }
+
+    if (request.id === 'urb-147') {
+        return [
+            {
+                label: 'GCC limited',
+                detail: 'Region-scoped streaming controls support an approved GCC-bounded operating path.',
+                tone: 'cyan'
+            }
+        ]
+    }
+
+    return [
+        {
+            label: 'Cross-border review needed',
+            detail: 'Delivery route and evaluator scope should clear transfer review before provider release.',
+            tone: 'amber'
+        }
+    ]
+}
 
 export default function ProviderDashboardPage() {
     const totalDatasets = datasets.length
@@ -226,6 +362,25 @@ export default function ProviderDashboardPage() {
                         {actionedReviewCount} request{actionedReviewCount === 1 ? '' : 's'} already have an action recorded in the shared review log. This queue stays focused on items that still need a provider decision or clarification.
                     </div>
 
+                    <div className="mt-5 rounded-[22px] border border-white/10 bg-slate-900/60 p-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">Jurisdiction-aware request flags</div>
+                                <div className="mt-2 text-sm text-slate-300">Fast routing cues for regulated review handling inside the provider queue.</div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {requestFlagGuide.map(flag => (
+                                    <span
+                                        key={flag.label}
+                                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${getRequestFlagToneClasses(flag.tone)}`}
+                                    >
+                                        {flag.label}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className={`mt-5 grid gap-5 ${providerReviewRequests.length > 1 ? '2xl:grid-cols-2' : ''}`}>
                         {providerReviewRequests.map(request => (
                             <ProviderRequestCard key={request.id} request={request} />
@@ -290,6 +445,8 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
     const providerReviewStatus = getProviderReviewStatus(request)
     const basisFields = buildRequestBasisFields(request)
     const complianceFields = buildRequestComplianceFields(request)
+    const screeningItems = buildBuyerScreeningItems(request)
+    const requestFlags = getRequestFlags(request)
 
     return (
         <article className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_18px_48px_rgba(2,8,20,0.24)]">
@@ -325,6 +482,39 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
                     </div>
                 </div>
 
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)]">
+                    <div className="rounded-[20px] border border-white/10 bg-slate-900/60 p-4">
+                        <div className="mb-3 text-xs uppercase tracking-[0.12em] text-slate-400">Buyer screening status</div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {screeningItems.map(item => (
+                                <BuyerScreeningCard key={`${request.id}-${item.label}`} item={item} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="rounded-[20px] border border-cyan-500/15 bg-slate-900/60 p-4">
+                        <div className="mb-3 text-xs uppercase tracking-[0.12em] text-slate-400">Request flags</div>
+                        <div className="flex flex-wrap gap-2">
+                            {requestFlags.map(flag => (
+                                <span
+                                    key={`${request.id}-${flag.label}`}
+                                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${getRequestFlagToneClasses(flag.tone)}`}
+                                >
+                                    {flag.label}
+                                </span>
+                            ))}
+                        </div>
+                        <div className="mt-4 space-y-2">
+                            {requestFlags.map(flag => (
+                                <div key={`${request.id}-${flag.label}-detail`} className="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2.5">
+                                    <div className="text-xs font-semibold text-white">{flag.label}</div>
+                                    <div className="mt-1 text-xs leading-5 text-slate-400">{flag.detail}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="rounded-[20px] border border-amber-400/20 bg-amber-500/8 px-4 py-3">
                     <div className="text-xs uppercase tracking-[0.12em] text-slate-400">Reviewer rationale</div>
                     <p className="mt-2 text-sm leading-6 text-amber-50/95">{request.reviewerRationale}</p>
@@ -349,6 +539,20 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
                 </button>
             </div>
         </article>
+    )
+}
+
+function BuyerScreeningCard({ item }: { item: BuyerScreeningItem }) {
+    return (
+        <div className="rounded-xl border border-white/10 bg-slate-950/70 p-3.5">
+            <div className="flex items-start justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.12em] text-slate-400">{item.label}</div>
+                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getScreeningToneClasses(item.tone)}`}>
+                    {item.status}
+                </span>
+            </div>
+            <div className="mt-2 text-xs leading-5 text-slate-300">{item.detail}</div>
+        </div>
     )
 }
 
