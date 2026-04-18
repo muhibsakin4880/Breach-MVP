@@ -4,10 +4,10 @@ import {
     emptyLegalAcknowledgment,
     emptyStep1FormState,
     emptyUseCaseSummary,
-    emptyVerificationSnapshot,
     hasStoredOnboardingValue,
     onboardingStorageKeys,
-    readOnboardingValue
+    readOnboardingValue,
+    readVerificationSnapshot
 } from './storage'
 import type {
     ComplianceCommitment,
@@ -24,7 +24,7 @@ export const readOnboardingSnapshot = (): OnboardingSnapshot => ({
     useCaseSummary: readOnboardingValue(onboardingStorageKeys.useCaseSummary, emptyUseCaseSummary),
     participationIntent: readOnboardingValue(onboardingStorageKeys.participationIntent, []),
     legalAcknowledgment: readOnboardingValue(onboardingStorageKeys.legalAcknowledgment, emptyLegalAcknowledgment),
-    verification: readOnboardingValue(onboardingStorageKeys.verification, emptyVerificationSnapshot),
+    verification: readVerificationSnapshot(),
     compliance: readOnboardingValue(onboardingStorageKeys.compliance, emptyComplianceCommitment)
 })
 

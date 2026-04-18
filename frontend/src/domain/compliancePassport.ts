@@ -78,7 +78,10 @@ const defaultVerification: VerificationSnapshot = {
     affiliationFileName: 'northbridge-affiliation.pdf',
     authorizationFileName: 'northbridge-compliance-letter.pdf',
     authenticationMethod: 'hardware_key',
-    ssoDomain: ''
+    ssoDomain: '',
+    corporateDomain: 'northbridgehealth.org',
+    verificationKey: 'redoubt-verify=RDT-NB7K4P2Q',
+    verificationKeySaved: true
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,

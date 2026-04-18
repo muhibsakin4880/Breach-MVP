@@ -22,6 +22,9 @@ export type VerificationSnapshot = {
     authorizationFileName: string | null
     authenticationMethod: AuthenticationMethod | null
     ssoDomain: string
+    corporateDomain: string
+    verificationKey: string
+    verificationKeySaved: boolean
 }
 
 export type ComplianceCommitment = {

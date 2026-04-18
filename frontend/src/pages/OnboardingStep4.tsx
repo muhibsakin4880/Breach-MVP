@@ -12,7 +12,7 @@ import { isStep4Complete } from '../onboarding/flow'
 import {
     emptyVerificationSnapshot,
     onboardingStorageKeys,
-    readOnboardingValue,
+    readVerificationSnapshot,
     writeOnboardingValue
 } from '../onboarding/storage'
 import type { AuthenticationMethod } from '../onboarding/types'
@@ -22,6 +22,7 @@ type VerificationFileTarget = 'affiliation' | 'authorization'
 
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
+const verificationKeyCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 const topReviewCards = [
     {
@@ -128,11 +129,33 @@ function getAuthenticationStatus(authenticationMethod: AuthenticationMethod | nu
     return { label: 'Missing', tone: 'neutral' as const }
 }
 
+function generateVerificationKey() {
+    let suffix = ''
+    for (let index = 0; index < 8; index += 1) {
+        suffix += verificationKeyCharacters[Math.floor(Math.random() * verificationKeyCharacters.length)]
+    }
+    return `redoubt-verify=RDT-${suffix}`
+}
+
+async function copyToClipboard(value: string) {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+        return false
+    }
+
+    try {
+        await navigator.clipboard.writeText(value)
+        return true
+    } catch {
+        return false
+    }
+}
+
 export default function OnboardingStep4() {
     const navigate = useNavigate()
-    const snapshot = readOnboardingValue(onboardingStorageKeys.verification, emptyVerificationSnapshot)
+    const snapshot = readVerificationSnapshot()
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const dnsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const [isLinkedInLoading, setIsLinkedInLoading] = useState(false)
     const [isLinkedInConnected, setIsLinkedInConnected] = useState(snapshot.linkedInConnected)
@@ -146,18 +169,13 @@ export default function OnboardingStep4() {
     const [authorizationError, setAuthorizationError] = useState<string | null>(null)
     const [dragTarget, setDragTarget] = useState<VerificationFileTarget | null>(null)
     const [showError, setShowError] = useState(false)
-    const [corporateDomain, setCorporateDomain] = useState('')
+    const [corporateDomain, setCorporateDomain] = useState(snapshot.corporateDomain)
     const [domainVerificationStep, setDomainVerificationStep] = useState<1 | 2 | 3>(() =>
-        snapshot.domainVerified ? 3 : 1
+        snapshot.domainVerified ? 3 : snapshot.corporateDomain.trim().length > 0 ? 2 : 1
     )
-    const [verificationCode, setVerificationCode] = useState('')
-
-    useEffect(() => {
-        if (!verificationCode) {
-            const randomCode = 'RDT-' + Math.random().toString(36).substring(2, 10)
-            setVerificationCode(randomCode)
-        }
-    }, [verificationCode])
+    const [verificationKey, setVerificationKey] = useState(() => snapshot.verificationKey || generateVerificationKey())
+    const [isVerificationKeySaved, setIsVerificationKeySaved] = useState(snapshot.verificationKeySaved)
+    const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
 
     useEffect(() => {
         return () => {
@@ -167,6 +185,10 @@ export default function OnboardingStep4() {
 
             if (dnsTimerRef.current) {
                 clearTimeout(dnsTimerRef.current)
+            }
+
+            if (copyTimerRef.current) {
+                clearTimeout(copyTimerRef.current)
             }
         }
     }, [])
@@ -178,9 +200,22 @@ export default function OnboardingStep4() {
             affiliationFileName,
             authorizationFileName,
             authenticationMethod,
-            ssoDomain
+            ssoDomain,
+            corporateDomain,
+            verificationKey,
+            verificationKeySaved: isVerificationKeySaved
         })
-    }, [isLinkedInConnected, isDomainVerified, affiliationFileName, authorizationFileName, authenticationMethod, ssoDomain])
+    }, [
+        affiliationFileName,
+        authenticationMethod,
+        authorizationFileName,
+        corporateDomain,
+        isDomainVerified,
+        isLinkedInConnected,
+        isVerificationKeySaved,
+        ssoDomain,
+        verificationKey
+    ])
 
     const handleLinkedInConnect = () => {
         if (isLinkedInLoading || isLinkedInConnected) return
@@ -203,6 +238,24 @@ export default function OnboardingStep4() {
             setIsDomainVerified(true)
             setShowError(false)
         }, 2000)
+    }
+
+    const handleCopyVerificationKey = async () => {
+        const copied = await copyToClipboard(verificationKey)
+        setCopyStatus(copied ? 'copied' : 'failed')
+
+        if (copyTimerRef.current) {
+            clearTimeout(copyTimerRef.current)
+        }
+
+        copyTimerRef.current = setTimeout(() => {
+            setCopyStatus('idle')
+        }, 2200)
+    }
+
+    const handleSaveVerificationKey = () => {
+        setIsVerificationKeySaved(true)
+        setCopyStatus('idle')
     }
 
     const handleFileSelection = (file: File | null | undefined, target: VerificationFileTarget) => {
@@ -253,7 +306,10 @@ export default function OnboardingStep4() {
         affiliationFileName,
         authorizationFileName,
         authenticationMethod,
-        ssoDomain
+        ssoDomain,
+        corporateDomain,
+        verificationKey,
+        verificationKeySaved: isVerificationKeySaved
     })
 
     const linkedInStatus = isLinkedInConnected
@@ -329,6 +385,9 @@ export default function OnboardingStep4() {
         setAuthorizationFileName('authorization-letter.pdf')
         setAuthenticationMethod('hardware_key')
         setSSODomain('')
+        setVerificationKey((current) => current || generateVerificationKey())
+        setIsVerificationKeySaved(true)
+        setCopyStatus('idle')
         setAffiliationError(null)
         setAuthorizationError(null)
         setShowError(false)
@@ -581,7 +640,11 @@ export default function OnboardingStep4() {
                                             <input
                                                 type="text"
                                                 value={corporateDomain}
-                                                onChange={(event) => setCorporateDomain(event.target.value)}
+                                                onChange={(event) => {
+                                                    setCorporateDomain(event.target.value)
+                                                    setIsVerificationKeySaved(false)
+                                                    setCopyStatus('idle')
+                                                }}
                                                 placeholder="yourcompany.com"
                                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                                             />
@@ -600,7 +663,7 @@ export default function OnboardingStep4() {
                                                 Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:
                                             </p>
                                             <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
-                                                redoubt-verify={verificationCode}
+                                                {verificationKey}
                                             </div>
                                             <p className="mt-3 text-xs leading-6 text-slate-500">
                                                 Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.
@@ -623,6 +686,69 @@ export default function OnboardingStep4() {
                                                     Domain verification succeeded. This domain proof is now included in your reviewer packet.
                                                 </div>
                                             ) : null}
+                                        </div>
+                                    )}
+
+                                    {isDomainVerified && (
+                                        <div className="rounded-2xl border border-amber-400/35 bg-[linear-gradient(180deg,rgba(180,83,9,0.18)_0%,rgba(15,23,42,0.82)_100%)] p-5 shadow-[0_18px_42px_rgba(180,83,9,0.14)]">
+                                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-base font-semibold text-amber-100">⚠️ Save This Key Now</div>
+                                                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-50/90">
+                                                        This is your permanent login credential.
+                                                        {'\n'}
+                                                        Store it securely —
+                                                        {'\n'}
+                                                        it cannot be recovered
+                                                        {'\n'}
+                                                        if lost.
+                                                    </p>
+                                                </div>
+                                                {isVerificationKeySaved && <StatusChip label="Saved" tone="success" />}
+                                            </div>
+
+                                            <div className="mt-5">
+                                                <label
+                                                    htmlFor="saved-verification-key"
+                                                    className="block text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70"
+                                                >
+                                                    Permanent login credential
+                                                </label>
+                                                <input
+                                                    id="saved-verification-key"
+                                                    aria-label="Saved verification key"
+                                                    readOnly
+                                                    value={verificationKey}
+                                                    onFocus={(event) => event.currentTarget.select()}
+                                                    className="mt-2 w-full rounded-xl border border-amber-300/20 bg-slate-950 px-4 py-3 font-mono text-sm text-amber-100 focus:border-amber-300/40 focus:outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCopyVerificationKey}
+                                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                >
+                                                    Copy Key
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSaveVerificationKey}
+                                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                                                >
+                                                    I have saved my key
+                                                </button>
+                                            </div>
+
+                                            {copyStatus === 'copied' && (
+                                                <p className="mt-3 text-xs text-emerald-200">Verification key copied to clipboard.</p>
+                                            )}
+                                            {copyStatus === 'failed' && (
+                                                <p className="mt-3 text-xs text-amber-100/80">
+                                                    Clipboard access is unavailable here. Copy the key manually before continuing.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
 

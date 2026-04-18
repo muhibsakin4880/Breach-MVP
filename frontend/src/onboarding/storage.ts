@@ -40,7 +40,10 @@ export const emptyVerificationSnapshot: VerificationSnapshot = {
     affiliationFileName: null,
     authorizationFileName: null,
     authenticationMethod: null,
-    ssoDomain: ''
+    ssoDomain: '',
+    corporateDomain: '',
+    verificationKey: '',
+    verificationKeySaved: false
 }
 
 export const emptyComplianceCommitment: ComplianceCommitment = {
@@ -78,6 +81,11 @@ export const writeOnboardingValue = <T,>(key: string, value: T) => {
     if (!hasWindow()) return
     window.localStorage.setItem(key, JSON.stringify(value))
 }
+
+export const readVerificationSnapshot = (): VerificationSnapshot => ({
+    ...emptyVerificationSnapshot,
+    ...readOnboardingValue<Partial<VerificationSnapshot>>(onboardingStorageKeys.verification, {})
+})
 
 export const clearOnboardingState = () => {
     if (!hasWindow()) return
