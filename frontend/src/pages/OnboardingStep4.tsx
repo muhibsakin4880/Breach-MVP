@@ -1100,7 +1100,7 @@ export default function OnboardingStep4() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-white">Okta / Microsoft Entra (SSO)</h4>
                                                 <p className="mt-1 text-sm text-slate-400">
-                                                    Use the organization SSO route after approval, with the DNS TXT record serving as the login key entered before the SSO step.
+                                                    Use your organization's Okta or Microsoft Entra sign-in route after approval for centralized access control.
                                                 </p>
                                             </div>
                                         </div>
@@ -1131,7 +1131,7 @@ export default function OnboardingStep4() {
                                                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                                                 />
                                                 <p className="text-xs text-slate-500">
-                                                    Your IT or identity team can provide the SSO tenant or domain reference used after the DNS TXT login key is entered.
+                                                    Your IT or identity team can provide the tenant or domain reference used for the approved SSO handoff.
                                                 </p>
                                             </div>
                                         </div>
