@@ -58,7 +58,7 @@ async function expectDatasetDiscoveryShell(page: Page, viewportWidth: number) {
 
     if (viewportWidth >= 1280) {
         expect(Math.abs(firstCardBox.y - secondCardBox.y)).toBeLessThanOrEqual(8)
-        expect(firstCardBox.height).toBeLessThanOrEqual(470)
+        expect(firstCardBox.height).toBeLessThanOrEqual(500)
 
         await resultsRegion.evaluate((node: HTMLElement) => {
             node.scrollIntoView({ block: 'start' })

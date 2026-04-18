@@ -1033,7 +1033,7 @@ function DatasetDecisionCard({
         <article
             aria-label={`Dataset card for ${dataset.title}`}
             data-card-flipped={isFlipped ? 'true' : 'false'}
-            className="relative min-w-0 h-[508px] sm:h-[492px] xl:h-[470px]"
+            className="relative min-w-0 h-[524px] sm:h-[508px] xl:h-[500px]"
             style={prefersReducedMotion ? undefined : { perspective: '1600px' }}
         >
             <div className="relative h-full w-full" style={cardStageStyle}>
@@ -1075,17 +1075,17 @@ function DatasetDecisionCard({
                         </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-5 flex flex-wrap gap-2">
                         {frontBadges.map(badge => (
                             <DiscoveryBadge key={badge.key} badge={badge} />
                         ))}
                     </div>
 
-                    <p className="mt-4 text-sm leading-6 text-slate-200" style={getLineClampStyle(2)}>
+                    <p className="mt-5 text-sm leading-6 text-slate-200" style={getLineClampStyle(2)}>
                         {dataset.bestFor}
                     </p>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="mt-5 grid grid-cols-2 gap-3">
                         <CompactSignalCard
                             label="Confidence"
                             value={`${dataset.confidenceScore}%`}
@@ -1100,7 +1100,7 @@ function DatasetDecisionCard({
                         />
                     </div>
 
-                    <div className={`${subCardSurfaceClass} mt-4 px-4 py-3.5`}>
+                    <div className={`${subCardSurfaceClass} mt-5 px-4 py-3.5`}>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span>Updated {formatDatasetDate(dataset.lastUpdated)}</span>
                             <span className="h-1 w-1 rounded-full bg-slate-600" aria-hidden="true" />
@@ -1110,7 +1110,7 @@ function DatasetDecisionCard({
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-4">
+                    <div className="mt-auto pt-5">
                         <div className="flex flex-wrap gap-3">
                             <Link
                                 to={`/datasets/${dataset.id}`}
@@ -1165,7 +1165,7 @@ function DatasetDecisionCard({
                         </button>
                     </div>
 
-                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <BackfaceInfoCard
                             label="Provider review"
                             value={`${dataset.providerTrustScore}%`}
@@ -1180,22 +1180,22 @@ function DatasetDecisionCard({
                         />
                     </div>
 
-                    <div className="mt-2.5">
+                    <div className="mt-4">
                         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Trust & compliance</div>
-                        <div className="mt-2.5 flex flex-wrap gap-2">
+                        <div className="mt-3 flex flex-wrap gap-2">
                             {backBadges.map(badge => (
                                 <StatusChip key={badge.label} label={badge.label} tone={badge.tone} />
                             ))}
                         </div>
-                        <RiskLabelStrip items={trustRiskLabels} compact className="mt-2.5" />
+                        <RiskLabelStrip items={trustRiskLabels} compact className="mt-3" />
                     </div>
 
-                    <div className="mt-3.5 border-t border-white/8 pt-3">
+                    <div className="mt-5 border-t border-white/8 pt-4">
                         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Quality summary</div>
-                        <p className="mt-2 text-sm leading-6 text-slate-200" style={getLineClampStyle(1)}>
+                        <p className="mt-2 text-sm leading-6 text-slate-200" style={getLineClampStyle(2)}>
                             {dataset.confidenceSummary}
                         </p>
-                        <p className="mt-2 text-xs leading-5 text-slate-400" style={getLineClampStyle(1)}>
+                        <p className="mt-2 text-xs leading-5 text-slate-400" style={getLineClampStyle(2)}>
                             {geoAccessSignal.detail}
                         </p>
                     </div>
