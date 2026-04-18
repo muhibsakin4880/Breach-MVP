@@ -44,7 +44,9 @@ export const emptyVerificationSnapshot: VerificationSnapshot = {
     hardwareKeyType: '',
     hardwareKeyReference: '',
     corporateDomain: '',
-    dnsVerificationToken: ''
+    dnsVerificationToken: '',
+    nodeId: '',
+    nodeIdSaved: false
 }
 
 export const emptyComplianceCommitment: ComplianceCommitment = {

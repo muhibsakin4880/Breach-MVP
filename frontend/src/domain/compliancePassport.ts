@@ -83,7 +83,9 @@ const defaultVerification: VerificationSnapshot = {
     hardwareKeyType: 'YubiKey 5 Series',
     hardwareKeyReference: '',
     corporateDomain: 'northbridgehealth.org',
-    dnsVerificationToken: 'redoubt-verify=RDT-NB7K4P2Q'
+    dnsVerificationToken: 'redoubt-verify=RDT-NB7K4P2Q',
+    nodeId: 'RDT-a3f8b2c1',
+    nodeIdSaved: true
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,

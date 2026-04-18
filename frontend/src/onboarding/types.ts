@@ -26,6 +26,8 @@ export type VerificationSnapshot = {
     hardwareKeyReference: string
     corporateDomain: string
     dnsVerificationToken: string
+    nodeId: string
+    nodeIdSaved: boolean
 }
 
 export type ComplianceCommitment = {

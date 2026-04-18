@@ -27,6 +27,7 @@ const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
 const dnsVerificationTokenCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const nodeIdCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
 const topReviewCards = [
     {
@@ -59,9 +60,6 @@ const hardwareKeyTypeOptions = [
 
 const hardwareKeyReferenceHelpText =
     'This helps reviewers\nprepare the correct enrollment\nflow after approval.'
-
-const hardwareKeyReviewerInfo =
-    'Physical key enrollment and\nbinding happens after approval\nduring access provisioning.\nThis information is for\nreviewer reference only.'
 
 const affiliationExamples = [
     'Employee badge or staff ID',
@@ -155,6 +153,25 @@ function generateDnsVerificationToken() {
     return `redoubt-verify=RDT-${suffix}`
 }
 
+function generateNodeId() {
+    let suffix = ''
+
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const randomValues = new Uint8Array(8)
+        crypto.getRandomValues(randomValues)
+
+        for (const value of randomValues) {
+            suffix += nodeIdCharacters[value % nodeIdCharacters.length]
+        }
+    } else {
+        for (let index = 0; index < 8; index += 1) {
+            suffix += nodeIdCharacters[Math.floor(Math.random() * nodeIdCharacters.length)]
+        }
+    }
+
+    return `RDT-${suffix}`
+}
+
 async function copyToClipboard(value: string) {
     if (typeof navigator === 'undefined' || !navigator.clipboard) {
         return false
@@ -172,9 +189,10 @@ export default function OnboardingStep4() {
     const navigate = useNavigate()
     const step1Snapshot = readOnboardingValue<{ officialWorkEmail: string }>(onboardingStorageKeys.step1, emptyStep1FormState)
     const snapshot = readVerificationSnapshot()
+    const initialNodeId = snapshot.nodeId || (snapshot.domainVerified ? generateNodeId() : '')
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const dnsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const nodeIdCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const [isLinkedInLoading, setIsLinkedInLoading] = useState(false)
     const [isLinkedInConnected, setIsLinkedInConnected] = useState(snapshot.linkedInConnected)
@@ -197,7 +215,9 @@ export default function OnboardingStep4() {
     const [dnsVerificationToken, setDnsVerificationToken] = useState(
         () => snapshot.dnsVerificationToken || generateDnsVerificationToken()
     )
-    const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
+    const [nodeId, setNodeId] = useState(initialNodeId)
+    const [isNodeIdSaved, setIsNodeIdSaved] = useState(snapshot.nodeIdSaved && initialNodeId.length > 0)
+    const [nodeIdCopyStatus, setNodeIdCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
     const submittedWorkEmail = step1Snapshot.officialWorkEmail.trim()
     const expectedDomain = getEmailDomain(submittedWorkEmail)
     const normalizedCorporateDomain = normalizeCorporateDomain(corporateDomain)
@@ -214,8 +234,8 @@ export default function OnboardingStep4() {
                 clearTimeout(dnsTimerRef.current)
             }
 
-            if (copyTimerRef.current) {
-                clearTimeout(copyTimerRef.current)
+            if (nodeIdCopyTimerRef.current) {
+                clearTimeout(nodeIdCopyTimerRef.current)
             }
         }
     }, [])
@@ -231,7 +251,9 @@ export default function OnboardingStep4() {
             hardwareKeyType,
             hardwareKeyReference,
             corporateDomain,
-            dnsVerificationToken
+            dnsVerificationToken,
+            nodeId,
+            nodeIdSaved: isNodeIdSaved
         })
     }, [
         affiliationFileName,
@@ -243,6 +265,8 @@ export default function OnboardingStep4() {
         hardwareKeyType,
         isDomainVerified,
         isLinkedInConnected,
+        isNodeIdSaved,
+        nodeId,
         ssoDomain
     ])
 
@@ -265,21 +289,31 @@ export default function OnboardingStep4() {
         dnsTimerRef.current = setTimeout(() => {
             setIsDNSVerifying(false)
             setIsDomainVerified(true)
+            setNodeId((current) => current || generateNodeId())
+            setIsNodeIdSaved(false)
+            setNodeIdCopyStatus('idle')
             setShowError(false)
         }, 2000)
     }
 
-    const handleCopyVerificationToken = async () => {
-        const copied = await copyToClipboard(dnsVerificationToken)
-        setCopyStatus(copied ? 'copied' : 'failed')
+    const handleCopyNodeId = async () => {
+        if (!nodeId) return
 
-        if (copyTimerRef.current) {
-            clearTimeout(copyTimerRef.current)
+        const copied = await copyToClipboard(nodeId)
+        setNodeIdCopyStatus(copied ? 'copied' : 'failed')
+
+        if (nodeIdCopyTimerRef.current) {
+            clearTimeout(nodeIdCopyTimerRef.current)
         }
 
-        copyTimerRef.current = setTimeout(() => {
-            setCopyStatus('idle')
+        nodeIdCopyTimerRef.current = setTimeout(() => {
+            setNodeIdCopyStatus('idle')
         }, 2200)
+    }
+
+    const handleNodeIdSaved = () => {
+        setIsNodeIdSaved(true)
+        setNodeIdCopyStatus('idle')
     }
 
     const handleFileSelection = (file: File | null | undefined, target: VerificationFileTarget) => {
@@ -338,7 +372,9 @@ export default function OnboardingStep4() {
         hardwareKeyType,
         hardwareKeyReference,
         corporateDomain,
-        dnsVerificationToken
+        dnsVerificationToken,
+        nodeId,
+        nodeIdSaved: isNodeIdSaved
     }, submittedWorkEmail)
 
     const linkedInStatus = isLinkedInConnected
@@ -418,7 +454,9 @@ export default function OnboardingStep4() {
         setAuthenticationMethod('hardware_key')
         setSSODomain('')
         setDnsVerificationToken((current) => current || generateDnsVerificationToken())
-        setCopyStatus('idle')
+        setNodeId((current) => current || generateNodeId())
+        setIsNodeIdSaved(false)
+        setNodeIdCopyStatus('idle')
         setAffiliationError(null)
         setAuthorizationError(null)
         setShowError(false)
@@ -693,7 +731,9 @@ export default function OnboardingStep4() {
                                                 onChange={(event) => {
                                                     setCorporateDomain(event.target.value)
                                                     setIsDomainVerified(false)
-                                                    setCopyStatus('idle')
+                                                    setNodeId('')
+                                                    setIsNodeIdSaved(false)
+                                                    setNodeIdCopyStatus('idle')
                                                 }}
                                                 placeholder="yourcompany.com"
                                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
@@ -734,23 +774,6 @@ export default function OnboardingStep4() {
                                                     ? 'Verification succeeded, but this token remains important for sign-in setup and any future reference in this onboarding flow.'
                                                     : 'Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.'}
                                             </p>
-                                            <div className="mt-4 flex flex-wrap gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCopyVerificationToken}
-                                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                                                >
-                                                    Copy token
-                                                </button>
-                                            </div>
-                                            {copyStatus === 'copied' && (
-                                                <p className="mt-3 text-xs text-emerald-200">DNS verification token copied to clipboard.</p>
-                                            )}
-                                            {copyStatus === 'failed' && (
-                                                <p className="mt-3 text-xs text-amber-100/80">
-                                                    Clipboard access is unavailable here. Copy the DNS verification token manually.
-                                                </p>
-                                            )}
                                         </div>
                                     )}
 
@@ -765,8 +788,56 @@ export default function OnboardingStep4() {
                                                     <span>Checking TXT record…</span>
                                                 </div>
                                             ) : isDomainVerified ? (
-                                                <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                                    Domain verification succeeded. This domain proof is now ready for sign-in setup and reviewer review.
+                                                <div className="space-y-4">
+                                                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                                        <div className="font-semibold text-emerald-50">Domain Verified ✅</div>
+                                                        <p className="mt-2 text-sm text-emerald-100">
+                                                            This domain proof is now ready for sign-in setup and reviewer review.
+                                                        </p>
+                                                    </div>
+                                                    {nodeId && !isNodeIdSaved ? (
+                                                        <div className="rounded-2xl border border-amber-400/45 bg-amber-500/10 px-4 py-4">
+                                                            <div className="text-lg font-semibold text-amber-100">⚠️ Your Node ID</div>
+                                                            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-amber-100">
+                                                                {'This is your permanent\nlogin credential.\nStore it securely —\nit cannot be recovered if lost\nand will not be shown again.'}
+                                                            </p>
+                                                            <div className="mt-4 rounded-xl border border-amber-300/20 bg-slate-950/80 px-4 py-4 font-mono text-xl text-amber-100">
+                                                                {nodeId}
+                                                            </div>
+                                                            <div className="mt-4 flex flex-col gap-3">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleCopyNodeId}
+                                                                    className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                                >
+                                                                    {nodeIdCopyStatus === 'copied' ? 'Copied ✓' : 'Copy Node ID'}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleNodeIdSaved}
+                                                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:self-start"
+                                                                >
+                                                                    I have saved my Node ID
+                                                                </button>
+                                                            </div>
+                                                            {nodeIdCopyStatus === 'failed' && (
+                                                                <p className="mt-3 text-xs text-amber-100/80">
+                                                                    Clipboard access is unavailable here. Copy the Node ID manually.
+                                                                </p>
+                                                            )}
+                                                            <p className="mt-4 whitespace-pre-line text-xs leading-6 text-amber-100/80">
+                                                                {
+                                                                    'Your Node ID is unique to you\nand tied to your verified\ncorporate domain.\nIt is used alongside your\nselected authentication method\nas your primary login credential.'
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-xs leading-6 text-emerald-100">
+                                                            <p className="whitespace-pre-line">
+                                                                {'Node ID saved.\nYou will need this\nto log in to Redoubt.'}
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ) : null}
                                         </div>
@@ -1002,10 +1073,10 @@ export default function OnboardingStep4() {
                                 </div>
                             </div>
 
-                            <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                            <div className="mt-5 grid gap-4 xl:grid-cols-2 xl:items-stretch">
                                 <label
                                     className={cx(
-                                        'cursor-pointer rounded-2xl border p-4 transition-colors',
+                                        'flex h-full min-h-[22rem] cursor-pointer flex-col rounded-2xl border p-4 transition-colors',
                                         authenticationMethod === 'sso'
                                             ? 'border-blue-500/80 bg-blue-500/10'
                                             : 'border-slate-700 bg-slate-950/60 hover:border-blue-500/50'
@@ -1044,7 +1115,7 @@ export default function OnboardingStep4() {
                                     </div>
 
                                     {authenticationMethod === 'sso' && (
-                                        <div className="mt-4 space-y-4 rounded-xl border border-blue-500/30 bg-slate-900/70 p-4">
+                                        <div className="mt-4 flex-1 space-y-4 rounded-xl border border-blue-500/30 bg-slate-900/70 p-4">
                                             <div className="space-y-2 rounded-xl border border-blue-500/20 bg-slate-950/70 p-3">
                                                 <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                                                     SSO domain or tenant reference
@@ -1063,45 +1134,13 @@ export default function OnboardingStep4() {
                                                     Your IT or identity team can provide the SSO tenant or domain reference used after the DNS TXT login key is entered.
                                                 </p>
                                             </div>
-
-                                            <div className="rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-4">
-                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">
-                                                    Save this DNS TXT record
-                                                </div>
-                                                <p className="mt-2 text-sm leading-6 text-amber-100">
-                                                    It will be your login key after approval.
-                                                </p>
-                                                <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
-                                                    {dnsVerificationToken}
-                                                </div>
-                                                <p className="mt-3 text-xs leading-6 text-amber-100/80">
-                                                    In the login flow, users choose the SSO path first and then enter this DNS TXT record as the login key before the SSO handoff completes.
-                                                </p>
-                                                <div className="mt-4 flex flex-wrap gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleCopyVerificationToken}
-                                                        className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                                                    >
-                                                        Copy login key
-                                                    </button>
-                                                </div>
-                                                {copyStatus === 'copied' && (
-                                                    <p className="mt-3 text-xs text-emerald-200">DNS TXT login key copied to clipboard.</p>
-                                                )}
-                                                {copyStatus === 'failed' && (
-                                                    <p className="mt-3 text-xs text-amber-100/80">
-                                                        Clipboard access is unavailable here. Copy the DNS TXT login key manually.
-                                                    </p>
-                                                )}
-                                            </div>
                                         </div>
                                     )}
                                 </label>
 
                                 <label
                                     className={cx(
-                                        'cursor-pointer rounded-2xl border p-4 transition-colors',
+                                        'flex h-full min-h-[22rem] cursor-pointer flex-col rounded-2xl border p-4 transition-colors',
                                         authenticationMethod === 'hardware_key'
                                             ? 'border-emerald-500/70 bg-emerald-500/10'
                                             : 'border-slate-700 bg-slate-950/60 hover:border-emerald-500/40'
@@ -1139,7 +1178,7 @@ export default function OnboardingStep4() {
                                     </div>
 
                                     {authenticationMethod === 'hardware_key' && (
-                                        <div className="mt-5 space-y-5 rounded-2xl border border-emerald-500/30 bg-slate-900/70 p-5">
+                                        <div className="mt-5 flex-1 space-y-5 rounded-2xl border border-emerald-500/30 bg-slate-900/70 p-5">
                                             <div className="grid items-start gap-5 md:grid-cols-2">
                                                 <div className="flex h-full flex-col">
                                                     <label
@@ -1190,24 +1229,6 @@ export default function OnboardingStep4() {
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-[24px] border border-emerald-400/25 bg-emerald-500/10 px-5 py-5">
-                                                <div className="flex flex-col gap-5">
-                                                    <div className="space-y-4">
-                                                        <p className="text-sm font-semibold text-emerald-100">
-                                                            Your physical security key is your credential.
-                                                        </p>
-                                                        <p className="text-sm leading-6 text-emerald-100/85">
-                                                            DNS verification still proves organization control, but the DNS TXT record is not used to sign in when Hardware Key is selected.
-                                                        </p>
-                                                        <p className="whitespace-pre-line text-sm leading-6 text-emerald-100/80">
-                                                            {hardwareKeyReviewerInfo}
-                                                        </p>
-                                                    </div>
-                                                    <div className="pt-1">
-                                                        <StatusChip label="HIGH ASSURANCE" tone="success" />
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
                                 </label>
