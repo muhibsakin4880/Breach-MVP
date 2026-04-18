@@ -174,7 +174,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
                 tone: 'neutral',
                 items: [
                     { label: 'Do not replace files', value: 'Avoid swapping payloads during active review' },
-                    { label: 'Monitor queue only', value: 'Use the contributions table for the next update' },
+                    { label: 'Monitor queue only', value: 'Use the provider dashboard dataset list for the next update' },
                     { label: 'Escalation path', value: 'Contact validation ops only if the status stalls' }
                 ]
             }
@@ -186,7 +186,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
         operationalPosture: 'The submission halted at the quality gate after material completeness and schema consistency issues crossed the acceptance threshold.',
         ownerLabel: 'Quality review operations',
         lastUpdated: 'Updated 2 hours ago',
-        nextAction: 'Correct the flagged source columns, then return to the contributions workspace to begin a clean rerun.',
+        nextAction: 'Correct the flagged source columns, then return to the provider dashboard to begin a clean rerun.',
         actionConsole: [
             {
                 label: 'Current state',
@@ -256,7 +256,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
                 items: [
                     { label: 'Best next move', value: 'Patch the source and relaunch validation' },
                     { label: 'Avoid', value: 'Submitting multiple partial replacements' },
-                    { label: 'Where to return', value: 'Back to the contributions queue' }
+                    { label: 'Where to return', value: 'Back to the provider dashboard' }
                 ]
             }
         ],
@@ -344,7 +344,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
         emptyFindingsLabel: 'No active issues in the current validation window.',
         secondaryAction: {
             label: 'Open approval package detail',
-            to: '/contributions/cn-1003'
+            to: '/provider/datasets/cn-1003'
         }
     },
     Restricted: {
@@ -433,7 +433,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
         operationalPosture: 'The upload cleared intake, but compliance review closed the run after structural and policy-significant issues prevented approval.',
         ownerLabel: 'Compliance review board',
         lastUpdated: 'Updated 3 days ago',
-        nextAction: 'Rework the submission package and return with a fresh contribution once the blocking issues have been materially corrected.',
+        nextAction: 'Rework the submission package and return with a fresh dataset submission once the blocking issues have been materially corrected.',
         actionConsole: [
             {
                 label: 'Current state',
@@ -450,7 +450,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
             {
                 label: 'What happens next',
                 value: 'Prepare a fresh submission',
-                detail: 'Use the contribution workspace for a new package only after the root causes are resolved.',
+                detail: 'Use the upload flow for a new package only after the root causes are resolved.',
                 tone: 'neutral'
             }
         ],
@@ -468,7 +468,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
             },
             {
                 title: 'Return with one coherent package',
-                detail: 'The next review should arrive as a fresh, internally consistent contribution.',
+                detail: 'The next review should arrive as a fresh, internally consistent dataset submission.',
                 tone: 'neutral'
             }
         ],
@@ -501,7 +501,7 @@ export const CONTRIBUTION_STATUS_PAGE_CONTENT: Record<ContributionStatus, Contri
                 description: 'Practical direction after a closed compliance outcome.',
                 tone: 'neutral',
                 items: [
-                    { label: 'Immediate move', value: 'Return to the contributions queue' },
+                    { label: 'Immediate move', value: 'Return to the provider dashboard' },
                     { label: 'Avoid', value: 'Treating the current run as recoverable' },
                     { label: 'Next review path', value: 'Submit a corrected package from scratch' }
                 ]
@@ -596,7 +596,7 @@ export const uploadedDatasets: ContributionRecord[] = [
 ]
 
 export function getContributionStatusPath(contributionId: string) {
-    return `/contributions/${contributionId}/status-details`
+    return `/provider/datasets/${contributionId}/status`
 }
 
 export function getContributionRecordById(contributionId?: string) {

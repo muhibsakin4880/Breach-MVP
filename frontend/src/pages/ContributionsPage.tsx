@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -344,9 +344,10 @@ const createDefaultUploadGovernanceSummary = (): UploadDraftGovernanceSummary =>
 
 export default function ContributionsPage() {
     const { providerAccount } = useAuth()
+    const navigate = useNavigate()
     const [activeStep, setActiveStep] = useState(0)
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
-    const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
+    const [isUploadViewOpen, setIsUploadViewOpen] = useState(true)
     const [uploadDraft, setUploadDraft] = useState<UploadDraft>(() => createInitialUploadDraft())
     const [interrogationAcknowledged, setInterrogationAcknowledged] = useState(false)
     const [privacyAccessTerms, setPrivacyAccessTerms] = useState<PrivacyAccessTerms>(() => createDefaultPrivacyAccessTerms())
@@ -721,7 +722,7 @@ export default function ContributionsPage() {
 
     const closeUploadFlow = () => {
         setIsAdvancedRightsOpen(false)
-        setIsUploadViewOpen(false)
+        navigate('/provider/dashboard')
     }
 
     const handleMockSubmission = () => {
@@ -732,7 +733,7 @@ export default function ContributionsPage() {
     const stepPreview = [
         {
             title: 'Dataset info',
-            description: 'Define the core metadata for the contribution package.',
+            description: 'Define the core metadata for the dataset package.',
             body: (
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
@@ -2116,7 +2117,13 @@ export default function ContributionsPage() {
                                     </div>
                                     {showMockSubmissionNotice && (
                                         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
-                                            Mock submission captured locally. No backend request was sent.
+                                            <div>Mock submission captured locally. No backend request was sent.</div>
+                                            <Link
+                                                to={getContributionStatusPath(selectedDatasetId)}
+                                                className="mt-2 inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
+                                            >
+                                                Open example dataset status page
+                                            </Link>
                                         </div>
                                     )}
                                 </div>
@@ -2134,15 +2141,15 @@ export default function ContributionsPage() {
         <div className="container mx-auto px-4 py-10 text-white space-y-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
-                    <h1 className="text-3xl font-bold">Dataset Contribution & Validation</h1>
-                    <p className="text-slate-400">Onboard participants and datasets at no charge, monitor validation pipeline status, and review quality/compliance feedback before any evaluation begins.</p>
+                    <h1 className="text-3xl font-bold">Upload New Dataset</h1>
+                    <p className="text-slate-400">Create a new provider dataset package, review schema and controls, and submit it into the validation workflow from one focused task flow.</p>
                 </div>
                 {isUploadViewOpen ? (
                     <button
                         onClick={closeUploadFlow}
                         className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-slate-600 bg-slate-800/80 hover:border-blue-400 text-sm font-semibold text-slate-100 transition-colors self-start"
                     >
-                        Back to Dashboard
+                        Back to Provider Dashboard
                     </button>
                 ) : (
                     providerAccount.canCreateDataset ? (
@@ -2402,7 +2409,7 @@ export default function ContributionsPage() {
                     <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
                         <div>
                             <h2 className="text-xl font-semibold">Dataset upload flow</h2>
-                            <p className="text-slate-400 text-sm">Step through the participant contribution flow before validation starts.</p>
+                            <p className="text-slate-400 text-sm">Step through the provider upload flow before validation begins.</p>
                         </div>
 
                         <div className="grid sm:grid-cols-5 gap-2">
@@ -2484,58 +2491,60 @@ export default function ContributionsPage() {
                         </div>
                     </section>
 
-                    <section className="grid xl:grid-cols-3 gap-6">
-                        <div className="xl:col-span-2 bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-5">
+                    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+                        <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
                             <div>
-                                <h2 className="text-xl font-semibold">Validation pipeline</h2>
-                                <p className="text-slate-400 text-sm">Progress tracker for selected dataset: {selectedDataset.title}</p>
+                                <h2 className="text-xl font-semibold">What Happens After Submission</h2>
+                                <p className="text-slate-400 text-sm">
+                                    Validation now lives on a dedicated dataset status page so this upload route stays focused on packaging and submission.
+                                </p>
                             </div>
 
-                            <div className="grid md:grid-cols-5 gap-3">
-                                {validationStages.map((stage, idx) => {
-                                    const state = selectedDataset.validationPipeline[idx]
-                                    const style = pipelineStateStyles[state]
-                                    const statusText = stage === 'Compliance review' && state === 'pending' ? 'AWAITING DPO CLEARANCE' : state.toUpperCase()
-                                    return (
-                                        <div key={stage} className="relative">
-                                            <div className={`h-full min-h-[120px] rounded-lg border border-slate-700 bg-slate-900/60 p-3 ${style.text}`}>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className={`inline-block w-3 h-3 rounded-full border ${style.dot}`} />
-                                                    <span className="text-[11px] uppercase tracking-[0.12em]">{statusText}</span>
-                                                </div>
-                                                <div className="text-sm font-semibold text-slate-100">{stage}</div>
-                                                {stage === 'Compliance review' && state === 'pending' && (
-                                                    <div className="text-[10px] text-slate-500 mt-1">Human DPO reviewing legal packet</div>
-                                                )}
-                                            </div>
-                                            {idx < validationStages.length - 1 && (
-                                                <span className={`hidden md:block absolute top-1/2 -right-2 w-4 h-[2px] ${style.line}`} />
-                                            )}
-                                        </div>
-                                    )
-                                })}
+                            <div className="grid gap-3 md:grid-cols-3">
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">1. Submit</div>
+                                    <div className="mt-2 text-sm font-semibold text-white">Create the dataset package</div>
+                                    <p className="mt-2 text-xs leading-5 text-slate-400">Finish metadata, schema review, and access controls here before the handoff begins.</p>
+                                </article>
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">2. Monitor</div>
+                                    <div className="mt-2 text-sm font-semibold text-white">Track validation separately</div>
+                                    <p className="mt-2 text-xs leading-5 text-slate-400">Use the dataset status page for pipeline progress, reviewer findings, and next-step guidance.</p>
+                                </article>
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">3. Manage</div>
+                                    <div className="mt-2 text-sm font-semibold text-white">Return to the dashboard</div>
+                                    <p className="mt-2 text-xs leading-5 text-slate-400">The provider dashboard remains the main home for uploads, requests, posture, and economics.</p>
+                                </article>
                             </div>
                         </div>
 
                         <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
                             <div>
-                                <h2 className="text-xl font-semibold">Validation feedback</h2>
-                                <p className="text-slate-400 text-sm">Issues detected during validation for the selected dataset.</p>
+                                <h2 className="text-xl font-semibold">Status Page Example</h2>
+                                <p className="text-slate-400 text-sm">Use a dedicated status route after submission instead of keeping validation embedded inside the upload flow.</p>
                             </div>
-                            {selectedDataset.feedback.length === 0 ? (
-                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-sm text-emerald-100">
-                                    No current issues detected. Validation checks are passing for this dataset.
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {selectedDataset.feedback.map(issue => (
-                                        <div key={`${issue.type}-${issue.detail}`} className={`rounded-lg border p-3 text-sm ${feedbackStyles[issue.severity]}`}>
-                                            <div className="font-semibold mb-1">{issue.type}</div>
-                                            <div className="text-xs opacity-90">{issue.detail}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+
+                            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Example dataset</div>
+                                <div className="mt-2 text-sm font-semibold text-white">{selectedDataset.title}</div>
+                                <div className="mt-1 text-xs text-slate-400">{selectedDataset.submissionId} · {selectedDataset.status}</div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                                <Link
+                                    to={getContributionStatusPath(selectedDatasetId)}
+                                    className="inline-flex items-center justify-center rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                >
+                                    Open Example Status Page
+                                </Link>
+                                <Link
+                                    to={`/provider/datasets/${selectedDatasetId}`}
+                                    className="inline-flex items-center justify-center rounded-lg border border-slate-600 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400"
+                                >
+                                    Open Example Dataset Detail
+                                </Link>
+                            </div>
                         </div>
                     </section>
 

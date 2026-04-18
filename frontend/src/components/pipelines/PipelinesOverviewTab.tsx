@@ -56,15 +56,14 @@ export default function PipelinesOverviewTab({
                 </Link>
 
                 <Link
-                    to="/contributions"
+                    to="/provider/datasets/new"
                     className="rounded-3xl border border-cyan-500/30 bg-black/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_#00F0FF30]"
                 >
                     <h3 className="text-lg font-semibold text-white">Need upload or validation workflows?</h3>
                     <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                        Contribution submission, validation pipeline state, and onboarding remain in the Contributions
-                        console.
+                        Start new uploads in the provider flow, then monitor validation from dataset-specific status pages.
                     </p>
-                    <div className="mt-4 text-sm font-semibold text-cyan-300">Go to Contributions</div>
+                    <div className="mt-4 text-sm font-semibold text-cyan-300">Open Upload Flow</div>
                 </Link>
             </div>
 

@@ -7,20 +7,14 @@ import {
     getProviderReviewStatus,
     providerReviewStatusStyles,
     requestStatusLabel,
-    statusStyles,
+    statusStyles as requestStatusStyles,
     type DatasetRequest
 } from '../data/workspaceData'
-
-type DatasetStatus = 'Active' | 'Paused'
-
-type ProviderDataset = {
-    id: string
-    name: string
-    confidence: number
-    requests: number
-    status: DatasetStatus
-    lastUpdated: string
-}
+import {
+    getContributionStatusPath,
+    statusStyles as contributionStatusStyles,
+    uploadedDatasets
+} from '../data/contributionStatusData'
 
 type ScreeningTone = 'emerald' | 'amber' | 'cyan'
 
@@ -48,13 +42,6 @@ type ProviderOperationalItem = {
     tone: ProviderOperationalTone
 }
 
-const datasets: ProviderDataset[] = [
-    { id: 'dp-01', name: 'Anonymized Retail Transactions 2024', confidence: 94, requests: 18, status: 'Active', lastUpdated: '2026-02-14' },
-    { id: 'dp-02', name: 'Urban Mobility Sensor Streams', confidence: 90, requests: 11, status: 'Active', lastUpdated: '2026-02-13' },
-    { id: 'dp-03', name: 'Satellite Imagery - Agriculture Zones', confidence: 92, requests: 7, status: 'Paused', lastUpdated: '2026-02-10' },
-    { id: 'dp-04', name: 'Clinical Trial Outcomes (De-identified)', confidence: 96, requests: 5, status: 'Active', lastUpdated: '2026-02-12' }
-]
-
 const performanceSummary = {
     uptime: '99.4%',
     freshness: 'Updated < 2h',
@@ -67,11 +54,6 @@ const economicsSummary = {
     platformFee: '$22,080',
     netPayout: '$161,920',
     currentFeeTier: '12% repeat-provider tier'
-}
-
-const statusBadge: Record<DatasetStatus, string> = {
-    Active: 'bg-emerald-500/10 text-emerald-200 border border-emerald-400/60',
-    Paused: 'bg-amber-500/10 text-amber-200 border border-amber-400/60'
 }
 
 const confidenceColor = (score: number) => {
@@ -213,7 +195,10 @@ const getRequestFlags = (request: DatasetRequest): RequestFlag[] => {
 }
 
 export default function ProviderDashboardPage() {
-    const totalDatasets = datasets.length
+    const totalDatasets = uploadedDatasets.length
+    const processingDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Processing').length
+    const needsFixesDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Needs fixes').length
+    const approvedDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Approved').length
     const providerReviewRequests = datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS')
     const actionedReviewCount = datasetRequests.length - providerReviewRequests.length
     const activeRequests = providerReviewRequests.length
@@ -278,6 +263,12 @@ export default function ProviderDashboardPage() {
                                     </div>
                                 </div>
                                 <div className="flex shrink-0 flex-wrap gap-3">
+                                    <Link
+                                        to="/provider/datasets/new"
+                                        className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-cyan-400"
+                                    >
+                                        Upload New Dataset
+                                    </Link>
                                     <button className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
                                         Configure delivery
                                     </button>
@@ -312,7 +303,18 @@ export default function ProviderDashboardPage() {
                         <div className="flex flex-col gap-4 border-b border-white/10 px-6 py-6 lg:flex-row lg:items-start lg:justify-between lg:px-7">
                             <div>
                                 <h2 className="text-xl font-semibold text-white">Dataset management</h2>
-                                <p className="mt-1 text-sm text-slate-400">Control status, review requests, and keep confidence high.</p>
+                                <p className="mt-1 text-sm text-slate-400">Track active submissions, spot issues quickly, and jump into upload or status work from one place.</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    <span className="rounded-full border border-blue-500/35 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-100">
+                                        {processingDatasetCount} in validation
+                                    </span>
+                                    <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-100">
+                                        {needsFixesDatasetCount} need fixes
+                                    </span>
+                                    <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                                        {approvedDatasetCount} approved
+                                    </span>
+                                </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 <button className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500">
@@ -329,42 +331,58 @@ export default function ProviderDashboardPage() {
                                 <thead className="border-b border-white/10 bg-slate-900/50 text-xs uppercase tracking-[0.08em] text-slate-400">
                                     <tr>
                                         <th className="py-4 pr-4 pl-6 text-left font-medium lg:pl-7">Dataset</th>
+                                        <th className="px-4 py-4 text-left font-medium">Status</th>
                                         <th className="px-4 py-4 text-left font-medium">Confidence</th>
                                         <th className="px-4 py-4 text-left font-medium">Requests</th>
-                                        <th className="px-4 py-4 text-left font-medium">Status</th>
-                                        <th className="px-4 py-4 text-left font-medium">Updated</th>
+                                        <th className="px-4 py-4 text-left font-medium">Uploaded</th>
                                         <th className="py-4 pl-4 pr-6 text-right font-medium lg:pr-7">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {datasets.map(dataset => (
+                                    {uploadedDatasets.map(dataset => (
                                         <tr key={dataset.id} className="transition-colors hover:bg-white/[0.03]">
                                             <td className="py-5 pr-4 pl-6 align-top lg:pl-7">
-                                                <div className="font-semibold text-white">{dataset.name}</div>
-                                                <div className="mt-1 text-xs text-slate-400">ID: {dataset.id}</div>
+                                                <Link
+                                                    to={`/provider/datasets/${dataset.id}`}
+                                                    className="font-semibold text-white transition-colors hover:text-cyan-200"
+                                                >
+                                                    {dataset.title}
+                                                </Link>
+                                                <div className="mt-1 text-xs text-slate-400">
+                                                    Submission {dataset.submissionId} · {dataset.records}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-5 align-top">
-                                                <div className={`text-base font-semibold ${confidenceColor(dataset.confidence)}`}>
-                                                    {dataset.confidence}%
+                                                <Link
+                                                    to={getContributionStatusPath(dataset.id)}
+                                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium transition-colors hover:brightness-110 ${contributionStatusStyles[dataset.status]}`}
+                                                >
+                                                    {dataset.status}
+                                                </Link>
+                                            </td>
+                                            <td className="px-4 py-5 align-top">
+                                                <div className={`text-base font-semibold ${confidenceColor(dataset.performance.avgReliability)}`}>
+                                                    {dataset.performance.avgReliability}%
                                                 </div>
                                                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                                                    <div className="h-full rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-emerald-500" style={{ width: `${dataset.confidence}%` }} />
+                                                    <div
+                                                        className="h-full rounded-full bg-gradient-to-r from-blue-400 via-emerald-400 to-emerald-500"
+                                                        style={{ width: `${dataset.performance.avgReliability}%` }}
+                                                    />
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-5 align-top text-slate-200">{dataset.requests}</td>
-                                            <td className="px-4 py-5 align-top">
-                                                <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge[dataset.status]}`}>
-                                                    {dataset.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-5 align-top text-slate-300">{dataset.lastUpdated}</td>
+                                            <td className="px-4 py-5 align-top text-slate-200">{dataset.performance.totalRequests}</td>
+                                            <td className="px-4 py-5 align-top text-slate-300">{dataset.uploadedAt}</td>
                                             <td className="py-5 pl-4 pr-6 text-right align-top lg:pr-7">
-                                                <button className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
+                                                <Link
+                                                    to={`/provider/datasets/${dataset.id}`}
+                                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                                                >
                                                     Manage dataset
                                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                     </svg>
-                                                </button>
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}
@@ -574,7 +592,7 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${providerReviewStatusStyles[providerReviewStatus]}`}>
                         {providerReviewStatus}
                     </span>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[request.status]}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${requestStatusStyles[request.status]}`}>
                         {requestStatusLabel(request.status)}
                     </span>
                 </div>

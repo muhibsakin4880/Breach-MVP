@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
 import AppLayout from './layouts/AppLayout'
 import HomePage from './pages/HomePage'
@@ -122,6 +122,30 @@ function AccessIntentModal({
                  </div>
             </div>
         </div>
+    )
+}
+
+function LegacyContributionRedirect({
+    destination
+}: {
+    destination: 'detail' | 'status'
+}) {
+    const { id, datasetId } = useParams<{ id?: string; datasetId?: string }>()
+    const contributionId = id ?? datasetId
+
+    if (!contributionId) {
+        return <Navigate to="/provider/dashboard" replace />
+    }
+
+    return (
+        <Navigate
+            to={
+                destination === 'status'
+                    ? `/provider/datasets/${contributionId}/status`
+                    : `/provider/datasets/${contributionId}`
+            }
+            replace
+        />
     )
 }
 
@@ -265,6 +289,9 @@ function App() {
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="participant-console" element={<ParticipantConsolePage />} />
                     <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
+                    <Route path="provider/datasets/new" element={<ContributionsPage />} />
+                    <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
+                    <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
@@ -278,9 +305,9 @@ function App() {
                     <Route path="trust-profile" element={<TrustProfilePage />} />
                     <Route path="compliance-passport" element={<CompliancePassportPage />} />
                     <Route path="trust-score-history" element={<TrustScoreHistoryPage />} />
-                    <Route path="contributions" element={<ContributionsPage />} />
-                    <Route path="contributions/:id" element={<ContributionDetailPage />} />
-                    <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
+                    <Route path="contributions" element={<Navigate to="/provider/dashboard" replace />} />
+                    <Route path="contributions/:datasetId/status-details" element={<LegacyContributionRedirect destination="status" />} />
+                    <Route path="contributions/:id" element={<LegacyContributionRedirect destination="detail" />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="usage-analytics" element={<UsageAnalyticsPage />} />
                     <Route path="rbac-console" element={<RBACConsolePage />} />

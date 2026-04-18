@@ -67,9 +67,9 @@ export const summaryCards: SummaryCard[] = [
     {
         label: 'Contribution Pipeline',
         value: `${approvedDatasets.length} active dataset routes`,
-        hint: 'Uploads and validation still live in Contributions',
-        to: '/contributions',
-        action: 'Go to contributions'
+        hint: 'Uploads now start in the provider upload flow, with validation on dedicated status pages',
+        to: '/provider/datasets/new',
+        action: 'Open upload flow'
     }
 ]
 

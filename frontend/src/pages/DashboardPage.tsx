@@ -199,7 +199,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <Link
-                                    to={topPriorityAction?.ctaTo ?? '/contributions'}
+                                    to={topPriorityAction?.ctaTo ?? '/provider/datasets/new'}
                                     className={`w-full justify-center xl:w-auto ${dashboardActionButtonTallClass}`}
                                     aria-label="Continue where you left off in the participant dashboard"
                                 >
@@ -286,8 +286,8 @@ export default function DashboardPage() {
                                     empty={
                                         <DashboardEmptyState
                                             icon="priority"
-                                            text="No priority actions right now. Open your contribution queue to create one."
-                                            action={{ label: 'Open contributions', to: '/contributions' }}
+                                            text="No priority actions right now. Open the upload flow to create a new provider dataset package."
+                                            action={{ label: 'Open upload flow', to: '/provider/datasets/new' }}
                                         />
                                     }
                                 >
@@ -428,8 +428,8 @@ export default function DashboardPage() {
                                     empty={
                                         <DashboardEmptyState
                                             icon="spark"
-                                            text="No progress data yet. Upload a contribution to start tracking."
-                                            action={{ label: 'Upload now', to: '/contributions' }}
+                                            text="No progress data yet. Upload a dataset package to start tracking."
+                                            action={{ label: 'Upload now', to: '/provider/datasets/new' }}
                                         />
                                     }
                                 >

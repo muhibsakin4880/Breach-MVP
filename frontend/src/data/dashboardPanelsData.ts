@@ -57,8 +57,8 @@ export const dashboardPriorityActions: DashboardPriorityAction[] = [
     {
         title: 'Finish the climate submission clarification',
         detail: 'Reviewer notes are waiting on a short downstream-model explanation before approval can continue.',
-        ctaLabel: 'Open contribution',
-        ctaTo: '/contributions',
+        ctaLabel: 'Open dataset status',
+        ctaTo: '/provider/datasets/cn-1002/status',
         toneClassName: 'text-cyan-300'
     },
     {

@@ -47,8 +47,8 @@ const statusText = {
 } as const
 
 export default function ContributionStatusDetailsPage() {
-    const { datasetId } = useParams<'datasetId'>()
-    const contribution = getContributionRecordById(datasetId)
+    const { id } = useParams<'id'>()
+    const contribution = getContributionRecordById(id)
 
     if (!contribution) {
         return (
@@ -58,14 +58,14 @@ export default function ContributionStatusDetailsPage() {
                     <section className={statusSectionClass}>
                         <div className={statusHeroClass}>
                             <div className="relative max-w-3xl">
-                                <div className={statusText.heroEyebrow}>Contribution status</div>
-                                <h1 className={`mt-2 ${statusText.heroTitle}`}>Contribution record not found</h1>
+                                <div className={statusText.heroEyebrow}>Dataset status</div>
+                                <h1 className={`mt-2 ${statusText.heroTitle}`}>Dataset record not found</h1>
                                 <p className={`mt-3 max-w-2xl ${statusText.bodyStrong}`}>
-                                    The contribution route is available, but this dataset id does not match an active contribution record in the current demo workspace.
+                                    The provider dataset route is available, but this dataset id does not match an active dataset record in the current demo workspace.
                                 </p>
                                 <div className="mt-6 flex flex-wrap gap-3">
-                                    <Link to="/contributions" className={primaryActionButtonClass}>
-                                        Back to contributions
+                                    <Link to="/provider/dashboard" className={primaryActionButtonClass}>
+                                        Back to Provider Dashboard
                                     </Link>
                                 </div>
                             </div>
@@ -94,16 +94,16 @@ export default function ContributionStatusDetailsPage() {
                         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.92fr)]">
                             <div>
                                 <Link
-                                    to="/contributions"
+                                    to="/provider/dashboard"
                                     className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                     </svg>
-                                    Back to contributions
+                                    Back to Provider Dashboard
                                 </Link>
 
-                                <div className={`mt-5 ${statusText.heroEyebrow}`}>Contribution status</div>
+                                <div className={`mt-5 ${statusText.heroEyebrow}`}>Dataset status</div>
                                 <h1 id="contribution-status-hero" className={`mt-2 ${statusText.heroTitle}`}>
                                     {contribution.title}
                                 </h1>
@@ -126,8 +126,8 @@ export default function ContributionStatusDetailsPage() {
                                 </div>
 
                                 <div className="mt-6 flex flex-wrap gap-3">
-                                    <Link to="/contributions" className={primaryActionButtonClass}>
-                                        Back to contributions
+                                    <Link to="/provider/dashboard" className={primaryActionButtonClass}>
+                                        Back to Provider Dashboard
                                     </Link>
                                     {contribution.statusPage.secondaryAction ? (
                                         <Link to={contribution.statusPage.secondaryAction.to} className={secondaryActionButtonClass}>
@@ -212,7 +212,7 @@ export default function ContributionStatusDetailsPage() {
                                 title={contribution.feedback.length > 0 ? 'Active findings' : 'No active findings'}
                                 description={
                                     contribution.feedback.length > 0
-                                        ? 'The issues or warnings currently attached to this contribution.'
+                                        ? 'The issues or warnings currently attached to this dataset submission.'
                                         : 'The current review run is not carrying an active issue list.'
                                 }
                             >
@@ -237,7 +237,7 @@ export default function ContributionStatusDetailsPage() {
                 <section className={statusSectionClass} aria-labelledby="status-operational-modules">
                     <div className={statusSectionIntroClass}>
                         <h2 id="status-operational-modules" className={statusText.sectionTitle}>Operational modules</h2>
-                        <p className={`mt-2 ${statusText.body}`}>Status-specific operating context so each contribution state feels purposeful rather than generic.</p>
+                        <p className={`mt-2 ${statusText.body}`}>Status-specific operating context so each dataset submission state feels purposeful rather than generic.</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -342,7 +342,7 @@ function FindingsPanel({ contribution }: { contribution: ContributionRecord }) {
                     <div>
                         <div className={statusText.itemTitle}>{contribution.statusPage.emptyFindingsLabel}</div>
                         <p className={`mt-2 ${statusText.body}`}>
-                            Automated validation is not surfacing a current issue list for this contribution status.
+                            Automated validation is not surfacing a current issue list for this dataset submission status.
                         </p>
                     </div>
                 </div>
@@ -399,7 +399,7 @@ function AccessPackagePanel({ contribution }: { contribution: ContributionRecord
                 {contribution.status === 'Restricted' ? 'Restricted route controls' : 'Approved route controls'}
             </h3>
             <p className={`mt-2 ${statusText.body}`}>
-                Live package terms pulled from the contribution-access configuration already attached to this record.
+                Live package terms pulled from the dataset access configuration already attached to this record.
             </p>
 
             <div className="mt-4 grid gap-3">

@@ -4,7 +4,7 @@ import { type ToastType, useToast } from './Toast'
 
 type QuickActionGroupId = 'save' | 'upload' | 'chat' | 'download'
 
-type RouteTarget = '/contributions' | '/audit-trail' | '/compliance-passport' | '/usage-analytics'
+type RouteTarget = '/provider/datasets/new' | '/audit-trail' | '/compliance-passport' | '/usage-analytics'
 
 type QuickAction =
     | {
@@ -69,19 +69,19 @@ const quickActionGroups: QuickActionGroup[] = [
             {
                 id: 'upload-dataset',
                 label: 'Upload dataset',
-                detail: 'Open Contributions to stage a dataset upload.',
+                detail: 'Open the upload flow to stage a new dataset.',
                 kind: 'navigate',
-                to: '/contributions',
-                notice: 'Opening Contributions to stage a dataset upload.',
+                to: '/provider/datasets/new',
+                notice: 'Opening the provider upload flow to stage a dataset.',
                 toastType: 'info'
             },
             {
                 id: 'upload-document',
                 label: 'Upload document',
-                detail: 'Attach supporting files to a submission.',
+                detail: 'Attach supporting files to a new dataset package.',
                 kind: 'navigate',
-                to: '/contributions',
-                notice: 'Use Contributions to add supporting documents.',
+                to: '/provider/datasets/new',
+                notice: 'Use the upload flow to add supporting documents.',
                 toastType: 'info'
             },
             {

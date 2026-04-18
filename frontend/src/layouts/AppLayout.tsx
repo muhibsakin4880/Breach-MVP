@@ -32,10 +32,7 @@ const navGroups: NavGroup[] = [
     },
     {
         title: 'PROVIDER WORKFLOW',
-        items: [
-            { label: 'Provider Dashboard', to: '/provider/dashboard' },
-            { label: 'Contributions', to: '/contributions' }
-        ]
+        items: [{ label: 'Provider Dashboard', to: '/provider/dashboard' }]
     },
     {
         title: 'TRUST & CONSENT',
