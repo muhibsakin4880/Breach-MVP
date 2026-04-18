@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import { RiskLabelStrip } from '../components/trust/TrustLayer'
 import {
@@ -90,6 +90,20 @@ type RegulatedDiscoveryProfile = {
     providerShielded: boolean
     cardBadges: RegulatedCardBadge[]
 }
+
+type DiscoveryCardBadge =
+    | {
+        key: string
+        label: string
+        kind: 'status'
+        statusKind: 'verification' | 'access'
+    }
+    | {
+        key: string
+        label: string
+        kind: 'signal'
+        tone: SignalTone
+    }
 
 const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
@@ -237,7 +251,7 @@ const focusRingClass =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]'
 
 const discoveryPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const discoveryShellClass = 'relative mx-auto max-w-[1920px] px-4 py-5 xl:px-6 xl:py-6 2xl:px-8'
+const discoveryShellClass = 'relative mx-auto max-w-[1920px] px-4 py-4 xl:px-6 xl:py-5 2xl:px-8'
 const topStripClass =
     'sticky top-0 z-40 mb-6 rounded-[24px] border border-white/10 bg-[#101723]/90 shadow-[0_18px_50px_-30px_rgba(0,0,0,0.8)] backdrop-blur-2xl'
 const panelSurfaceClass =
@@ -255,17 +269,17 @@ const filterOptionBaseClass =
 const catalogRowGridClass =
     'grid min-w-[1420px] gap-0 xl:grid-cols-[64px_minmax(380px,2.45fr)_minmax(148px,0.95fr)_minmax(118px,0.72fr)_minmax(118px,0.72fr)_minmax(132px,0.82fr)_minmax(132px,0.82fr)_minmax(132px,0.82fr)_minmax(166px,0.95fr)_132px]'
 const heroSurfaceClass =
-    'relative overflow-hidden rounded-[34px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(8,15,29,0.98),rgba(17,27,47,0.95)_44%,rgba(12,20,36,0.98))] p-6 shadow-[0_40px_120px_-56px_rgba(34,211,238,0.22),0_24px_64px_-38px_rgba(2,6,23,0.94)] sm:p-8 xl:p-10'
+    'relative overflow-hidden rounded-[34px] border border-cyan-400/18 bg-[linear-gradient(135deg,rgba(8,15,29,0.98),rgba(17,27,47,0.95)_44%,rgba(12,20,36,0.98))] p-5 shadow-[0_40px_120px_-56px_rgba(34,211,238,0.22),0_24px_64px_-38px_rgba(2,6,23,0.94)] sm:p-6 xl:p-7'
 const cardSurfaceClass =
-    'relative flex h-full flex-col overflow-hidden rounded-[28px] border border-[#253550] bg-[linear-gradient(180deg,rgba(17,26,44,0.96),rgba(12,19,34,0.94))] p-6 shadow-[0_28px_70px_-48px_rgba(2,6,23,0.95)] sm:p-7 xl:p-8'
+    'absolute inset-0 flex h-full flex-col overflow-hidden rounded-[28px] border border-[#253550] bg-[linear-gradient(180deg,rgba(17,26,44,0.97),rgba(12,19,34,0.95))] p-5 shadow-[0_28px_70px_-48px_rgba(2,6,23,0.95)] sm:p-5 xl:p-6'
 const subCardSurfaceClass =
     'rounded-[24px] border border-white/10 bg-[#10192e]/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
 const controlSurfaceClass =
-    'rounded-[24px] border border-white/10 bg-[#10192e]/82 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+    'rounded-[24px] border border-white/10 bg-[#10192e]/82 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
 const fieldClass =
-    `mt-3 w-full rounded-[18px] border border-white/10 bg-[#0d162a]/95 px-4 py-3.5 text-sm text-slate-100 placeholder:text-slate-500 ${focusRingClass}`
+    `mt-3 w-full rounded-[18px] border border-white/10 bg-[#0d162a]/95 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 ${focusRingClass}`
 const primaryButtonClass =
-    `inline-flex items-center justify-center rounded-[16px] bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#04101d] shadow-[0_18px_44px_-24px_rgba(34,211,238,0.75)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300 ${focusRingClass}`
+    `inline-flex items-center justify-center rounded-[15px] bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-[#04101d] shadow-[0_18px_44px_-24px_rgba(34,211,238,0.75)] transition-all duration-200 hover:-translate-y-px hover:bg-cyan-300 ${focusRingClass}`
 const discoveryText = {
     eyebrow: 'text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500/90',
     heroEyebrow: 'text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200/75',
@@ -273,10 +287,10 @@ const discoveryText = {
     panelTitle: 'text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-50 sm:text-[1.6rem]',
     railTitle: 'text-[1.18rem] font-semibold tracking-[-0.03em] text-slate-50',
     itemTitle: 'text-[1.4rem] font-semibold tracking-[-0.04em] text-slate-50',
-    body: 'text-sm leading-7 text-slate-400',
-    bodyStrong: 'text-[15px] leading-7 text-slate-200',
-    meta: 'text-[13px] leading-6 text-slate-500',
-    metaStrong: 'text-[13px] font-medium leading-6 text-slate-300'
+    body: 'text-sm leading-6 text-slate-400',
+    bodyStrong: 'text-sm leading-6 text-slate-200',
+    meta: 'text-[13px] leading-5 text-slate-500',
+    metaStrong: 'text-[13px] font-medium leading-5 text-slate-300'
 } as const
 
 export default function DatasetsPage() {
@@ -284,6 +298,7 @@ export default function DatasetsPage() {
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
     const [compareIds, setCompareIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_COMPARE))
+    const prefersReducedMotion = usePrefersReducedMotion()
     const buyerOrgCountry = useMemo(
         () => readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState).country.trim(),
         []
@@ -411,33 +426,33 @@ export default function DatasetsPage() {
         <div className={discoveryPageClass}>
             <div className={dashboardComponentTokens['page-background']} />
 
-            <div className={`${discoveryShellClass} space-y-8 xl:space-y-10`}>
+            <div className={`${discoveryShellClass} space-y-6 xl:space-y-8`}>
                 <section aria-labelledby="dataset-discovery-hero">
                     <div className={heroSurfaceClass}>
                         <div className="pointer-events-none absolute -left-10 bottom-0 h-52 w-52 rounded-full bg-cyan-400/10 blur-3xl" />
                         <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
 
-                        <div className="relative grid gap-8 2xl:grid-cols-[minmax(0,1.68fr)_minmax(380px,0.96fr)] 2xl:items-start">
+                        <div className="relative grid gap-6 2xl:grid-cols-[minmax(0,1.68fr)_minmax(360px,0.96fr)] 2xl:items-start">
                             <div className="min-w-0">
                                 <div className={discoveryText.heroEyebrow}>Curated evaluation workspace</div>
                                 <h1 id="dataset-discovery-hero" className={`mt-2 ${discoveryText.heroTitle}`}>
                                     Curated Evaluation Opportunities
                                 </h1>
                                 <p className={`mt-4 max-w-3xl ${discoveryText.bodyStrong}`}>
-                                    Review a curated slate of governed dataset opportunities. Build a priority set, run side-by-side review of trust and access signals, and decide whether an opportunity is ready for protected evaluation.
+                                    Review governed dataset opportunities, build a priority set, and compare trust and access signals before protected evaluation.
                                 </p>
-                                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                                    Sensitive and residency-bound opportunities are surfaced for governed evaluation, controlled disclosure, and review-first access rather than open public marketplace self-serve.
+                                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                                    Discovery stays review-first for sensitive and residency-bound datasets instead of open marketplace self-serve.
                                 </p>
 
-                                <div className="mt-7 flex flex-wrap gap-3.5">
+                                <div className="mt-6 flex flex-wrap gap-3">
                                     <HeroMetricChip label="Attested datasets" value={`${attestedCount}`} />
                                     <HeroMetricChip label="High confidence" value={`${highConfidenceCount}`} />
                                     <HeroMetricChip label="Domains covered" value={`${domainCoverageCount}`} />
                                     <HeroMetricChip label="Restricted access" value={`${restrictedCount}`} />
                                 </div>
 
-                                <div className={`mt-6 max-w-3xl rounded-[22px] border px-5 py-4 ${getSignalToneMeta(geoPolicyNoteTone).surfaceClassName}`}>
+                                <div className={`mt-5 max-w-3xl rounded-[22px] border px-5 py-4 ${getSignalToneMeta(geoPolicyNoteTone).surfaceClassName}`}>
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Geo access policy</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-200">
                                         {hasBuyerGeoProfile
@@ -446,14 +461,14 @@ export default function DatasetsPage() {
                                     </p>
                                 </div>
 
-                                <div className="mt-5 max-w-3xl rounded-[22px] border border-amber-500/25 bg-amber-500/10 px-5 py-4">
+                                <div className="mt-4 max-w-3xl rounded-[22px] border border-amber-500/25 bg-amber-500/10 px-5 py-4">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">Launch posture</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-200">
-                                        Redoubt&apos;s early discovery flow is curated for selected buyers and providers. First sensitive evaluations are handled through a guided, team-assisted process with controlled disclosure before protected-evaluation eligibility is confirmed.
+                                        Early discovery is curated for selected buyers and providers, with guided review and controlled disclosure before protected evaluation is confirmed.
                                     </p>
                                 </div>
 
-                                <div className="mt-8 flex flex-wrap gap-3.5">
+                                <div className="mt-6 flex flex-wrap gap-3">
                                     <a href="#shortlist-panel" className={primaryButtonClass}>
                                         Review priority set
                                     </a>
@@ -472,13 +487,13 @@ export default function DatasetsPage() {
                                     Track what sits in your priority set, what is queued for side-by-side review, and the clearest next move for this guided buyer workflow.
                                 </p>
 
-                                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                                <div className="mt-5 grid gap-3 sm:grid-cols-3">
                                     <DecisionStat label="Priority set" value={`${shortlistDatasets.length}`} />
                                     <DecisionStat label="In review" value={`${compareDatasets.length}`} />
                                     <DecisionStat label="Eligible results" value={`${filteredDatasets.length}`} />
                                 </div>
 
-                                <div className={`mt-6 rounded-[22px] border px-5 py-5 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
+                                <div className={`mt-5 rounded-[22px] border px-5 py-5 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
                                     <div className="flex items-start gap-3">
                                         <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${getSignalToneMeta(decisionAction.tone).dotClassName}`} aria-hidden="true" />
                                         <div className="min-w-0">
@@ -502,16 +517,16 @@ export default function DatasetsPage() {
                 </section>
 
                 <section className={panelSurfaceClass} aria-labelledby="dataset-filter-panel">
-                    <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
+                    <div className="px-6 py-5 sm:px-7 xl:px-8 xl:py-6">
                         <div className={discoveryText.eyebrow}>Search, filter, and sort</div>
                         <h2 id="dataset-filter-panel" className={`mt-3 ${discoveryText.panelTitle}`}>
                             Narrow the curated slate with buyer-relevant signals
                         </h2>
-                        <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                            Search opportunities, choose the trust and freshness thresholds you care about, and use Market coverage for the regions a dataset covers while posture filters handle regulatory and access conditions.
+                        <p className={`mt-2 max-w-4xl ${discoveryText.body}`}>
+                            Search opportunities, dial in trust and freshness thresholds, and use Market coverage plus posture filters to narrow the governed shortlist.
                         </p>
 
-                        <div className="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.82fr)]">
+                        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.82fr)]">
                             <label className={controlSurfaceClass}>
                                 <span className={discoveryText.eyebrow}>Search datasets</span>
                                 <input
@@ -533,7 +548,7 @@ export default function DatasetsPage() {
                             />
                         </div>
 
-                        <div className="mt-8">
+                        <div className="mt-6">
                             <div className={discoveryText.eyebrow}>Priority domains</div>
                             <div className="mt-4 flex flex-wrap gap-2.5">
                                 {domains.map(domain => (
@@ -555,10 +570,10 @@ export default function DatasetsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-8">
+                        <div className="mt-6">
                             <div className={discoveryText.eyebrow}>Regulated discovery</div>
-                            <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                                Use curated posture filters to focus on provider-shielded, residency-aware opportunities that are better suited to governed evaluation for sensitive datasets.
+                            <p className={`mt-2 max-w-4xl ${discoveryText.body}`}>
+                                Focus on provider-shielded, residency-aware opportunities that are better suited to governed evaluation.
                             </p>
                             <div className="mt-4 flex flex-wrap gap-2.5">
                                 {regulatedDiscoveryFilters.map(filter => (
@@ -580,7 +595,7 @@ export default function DatasetsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+                        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                             <FilterSelect
                                 label="Data type"
                                 value={filters.dataType}
@@ -614,7 +629,7 @@ export default function DatasetsPage() {
                             />
                         </div>
 
-                        <div className="mt-8 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="mt-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div className="flex flex-wrap gap-2.5">
                                 {activeFilters.length > 0 ? (
                                     activeFilters.map(filter => (
@@ -641,15 +656,15 @@ export default function DatasetsPage() {
                 </section>
 
                 <section className={`${panelSurfaceClass} min-w-0`} aria-labelledby="matched-datasets">
-                        <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
+                        <div className="px-6 py-5 sm:px-7 xl:px-8 xl:py-6">
                             <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
                                 <div className="min-w-0">
                                     <div className={discoveryText.eyebrow}>Eligible opportunities</div>
                                     <h2 id="matched-datasets" className={`mt-3 ${discoveryText.panelTitle}`}>
                                         Decision-ready results
                                     </h2>
-                                    <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                                        Cards are organized for governed review: trust, access path, controlled-disclosure posture, coverage geography, geo policy, freshness, and reasons to prioritize come before deeper workflow actions.
+                                    <p className={`mt-2 max-w-4xl ${discoveryText.body}`}>
+                                        Front faces stay discovery-first, while Quick View flips each card into a richer trust and review snapshot.
                                     </p>
                                 </div>
 
@@ -660,12 +675,13 @@ export default function DatasetsPage() {
                             </div>
 
                             {filteredDatasets.length > 0 ? (
-                                <div className="mt-8 grid gap-8 xl:grid-cols-2">
+                                <div className="mt-6 grid gap-5 xl:grid-cols-2">
                                     {filteredDatasets.map(dataset => (
                                         <DatasetDecisionCard
                                             key={dataset.id}
                                             dataset={dataset}
                                             buyerOrgCountry={buyerOrgCountry}
+                                            prefersReducedMotion={prefersReducedMotion}
                                             shortlisted={shortlistIds.includes(dataset.id)}
                                             compared={compareIds.includes(dataset.id)}
                                             compareLimitReached={compareLimitReached}
@@ -961,6 +977,7 @@ function FilterSelect({
 function DatasetDecisionCard({
     dataset,
     buyerOrgCountry,
+    prefersReducedMotion,
     shortlisted,
     compared,
     compareLimitReached,
@@ -969,123 +986,226 @@ function DatasetDecisionCard({
 }: {
     dataset: Dataset
     buyerOrgCountry: string
+    prefersReducedMotion: boolean
     shortlisted: boolean
     compared: boolean
     compareLimitReached: boolean
     onToggleShortlist: () => void
     onToggleCompare: () => void
 }) {
+    const [isFlipped, setIsFlipped] = useState(false)
     const compareDisabled = compareLimitReached && !compared
     const confidenceTone = dataset.confidenceScore >= 95 ? 'healthy' : dataset.confidenceScore >= 90 ? 'scheduled' : 'monitoring'
     const providerTone = dataset.providerTrustScore >= 95 ? 'healthy' : dataset.providerTrustScore >= 90 ? 'scheduled' : 'monitoring'
-    const completenessTone = dataset.completeness >= 95 ? 'healthy' : dataset.completeness >= 90 ? 'scheduled' : 'monitoring'
-    const freshnessTone = dataset.freshness >= 93 ? 'healthy' : dataset.freshness >= 88 ? 'scheduled' : 'monitoring'
-    const consistencyTone = dataset.consistency >= 95 ? 'healthy' : dataset.consistency >= 90 ? 'scheduled' : 'monitoring'
     const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
-    const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
     const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
+    const frontBadges = getDiscoveryFrontBadges(dataset, geoAccessSignal, regulatedProfile)
+    const backBadges = getDiscoveryBackBadges(dataset, geoAccessSignal, regulatedProfile)
+    const trustRiskLabels = getPriorityTrustRiskLabels(dataset.trustProfile)
+    const frontTabIndex = isFlipped ? -1 : 0
+    const backTabIndex = isFlipped ? 0 : -1
+    const cardStageStyle = prefersReducedMotion
+        ? undefined
+        : {
+            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            transformStyle: 'preserve-3d',
+            transition: 'transform 560ms cubic-bezier(0.22, 1, 0.36, 1)'
+        } satisfies CSSProperties
+    const frontFaceStyle = prefersReducedMotion
+        ? ({
+            opacity: isFlipped ? 0 : 1,
+            transition: 'opacity 180ms ease-out'
+        } satisfies CSSProperties)
+        : ({
+            backfaceVisibility: 'hidden'
+        } satisfies CSSProperties)
+    const backFaceStyle = prefersReducedMotion
+        ? ({
+            opacity: isFlipped ? 1 : 0,
+            transition: 'opacity 180ms ease-out'
+        } satisfies CSSProperties)
+        : ({
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)'
+        } satisfies CSSProperties)
 
     return (
-        <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px] min-w-0`}>
-            <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Best for</div>
-                    <h3 className={`mt-4 ${discoveryText.itemTitle}`}>{dataset.title}</h3>
-                    <p className={`mt-4 ${discoveryText.bodyStrong}`}>{dataset.bestFor}</p>
-                </div>
+        <article
+            aria-label={`Dataset card for ${dataset.title}`}
+            data-card-flipped={isFlipped ? 'true' : 'false'}
+            className="relative min-w-0 h-[508px] sm:h-[492px] xl:h-[470px]"
+            style={prefersReducedMotion ? undefined : { perspective: '1600px' }}
+        >
+            <div className="relative h-full w-full" style={cardStageStyle}>
+                <div
+                    data-card-face="front"
+                    data-face-active={!isFlipped ? 'true' : 'false'}
+                    aria-hidden={isFlipped}
+                    className={`${cardSurfaceClass} ${isFlipped ? 'pointer-events-none select-none' : ''}`}
+                    style={frontFaceStyle}
+                >
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                {dataset.domain} · {dataset.dataType}
+                            </div>
+                            <h3 className="mt-3 text-[1.28rem] font-semibold leading-tight tracking-[-0.04em] text-slate-50" style={getLineClampStyle(2)}>
+                                {dataset.title}
+                            </h3>
+                        </div>
 
-                <div className="flex shrink-0 flex-col items-end gap-2.5">
-                    <StatusBadge label={dataset.verificationStatus} kind="verification" />
-                    <StatusBadge label={dataset.accessType} kind="access" />
-                </div>
-            </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <ActionIconButton
+                                label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
+                                active={shortlisted}
+                                onClick={onToggleShortlist}
+                                tabIndex={frontTabIndex}
+                            >
+                                <BookmarkIcon className="h-4 w-4" />
+                            </ActionIconButton>
+                            <ActionIconButton
+                                label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
+                                active={compared}
+                                disabled={compareDisabled}
+                                onClick={onToggleCompare}
+                                tabIndex={frontTabIndex}
+                            >
+                                <CompareIcon className="h-4 w-4" />
+                            </ActionIconButton>
+                        </div>
+                    </div>
 
-            <p className={`mt-5 ${discoveryText.body}`}>{dataset.description}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {frontBadges.map(badge => (
+                            <DiscoveryBadge key={badge.key} badge={badge} />
+                        ))}
+                    </div>
 
-            <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                <SignalCard label="Confidence score" value={`${dataset.confidenceScore}%`} detail={dataset.coverage} tone={confidenceTone} />
-                <SignalCard label="Provider review signal" value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} tone={providerTone} />
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2.5">
-                <InlineNeutralChip label={dataset.domain} />
-                <InlineNeutralChip label={dataset.dataType} />
-                <InlineNeutralChip label={`Coverage: ${dataset.geography}`} />
-                <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
-                <StatusChip label={geoAccessSignal.label} tone={geoAccessSignal.tone} />
-                {regulatedProfile.cardBadges.map(badge => (
-                    <StatusChip key={badge.label} label={badge.label} tone={badge.tone} />
-                ))}
-            </div>
-
-            <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
-
-            <div className="mt-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Minimum trust layer</div>
-                <RiskLabelStrip items={trustRiskLabels} compact className="mt-3" />
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone={completenessTone} />
-                <MetricPill label="Freshness" value={`${dataset.freshness}%`} tone={freshnessTone} />
-                <MetricPill label="Consistency" value={`${dataset.consistency}%`} tone={consistencyTone} />
-            </div>
-
-            <div className={`${subCardSurfaceClass} mt-6 px-5 py-5`}>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Why consider it</div>
-                <div className={`mt-4 ${discoveryText.bodyStrong}`}>{dataset.confidenceSummary}</div>
-                <div className={`mt-4 ${discoveryText.meta}`}>
-                    Updated {formatDatasetDate(dataset.lastUpdated)} · Range {dataset.timeRange} · {dataset.size}
-                </div>
-            </div>
-
-            <div className="mt-auto pt-7">
-                <div className="flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        onClick={onToggleShortlist}
-                        aria-label={shortlisted ? `Remove ${dataset.title} from shortlist` : `Add ${dataset.title} to shortlist`}
-                        className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
-                            shortlisted
-                                ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-100 hover:border-emerald-400'
-                                : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100'
-                        }`}
-                    >
-                        {shortlisted ? 'In priority set' : 'Add to priority set'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onToggleCompare}
-                        aria-label={compared ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
-                        disabled={compareDisabled}
-                        className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
-                            compared
-                                ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
-                                : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
-                        }`}
-                    >
-                        {compared ? 'In review' : 'Queue for review'}
-                    </button>
-                    <Link
-                        to={`/datasets/${dataset.id}`}
-                        className={primaryButtonClass}
-                        aria-label={`View details for ${dataset.title}`}
-                    >
-                        View details
-                    </Link>
-                </div>
-
-                {compareDisabled ? (
-                    <p className={`mt-4 ${discoveryText.meta}`}>
-                        Review queue is full. Remove one candidate from side-by-side review to add another.
+                    <p className="mt-4 text-sm leading-6 text-slate-200" style={getLineClampStyle(2)}>
+                        {dataset.bestFor}
                     </p>
-                ) : null}
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <CompactSignalCard
+                            label="Confidence"
+                            value={`${dataset.confidenceScore}%`}
+                            detail={dataset.verificationStatus}
+                            tone={confidenceTone}
+                        />
+                        <CompactSignalCard
+                            label="Coverage"
+                            value={dataset.coverage}
+                            detail={dataset.geography}
+                            tone={geoAccessSignal.tone === 'monitoring' ? 'monitoring' : 'scheduled'}
+                        />
+                    </div>
+
+                    <div className={`${subCardSurfaceClass} mt-4 px-4 py-3.5`}>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                            <span>Updated {formatDatasetDate(dataset.lastUpdated)}</span>
+                            <span className="h-1 w-1 rounded-full bg-slate-600" aria-hidden="true" />
+                            <span>{dataset.timeRange}</span>
+                            <span className="h-1 w-1 rounded-full bg-slate-600" aria-hidden="true" />
+                            <span>{dataset.size}</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-auto pt-4">
+                        <div className="flex flex-wrap gap-3">
+                            <Link
+                                to={`/datasets/${dataset.id}`}
+                                className={`${primaryButtonClass} min-w-[132px]`}
+                                aria-label={`View details for ${dataset.title}`}
+                                tabIndex={frontTabIndex}
+                            >
+                                View details
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => setIsFlipped(true)}
+                                aria-label={`Quick View for ${dataset.title}`}
+                                className={`${secondaryButtonClass} min-w-[122px]`}
+                                tabIndex={frontTabIndex}
+                            >
+                                Quick View
+                            </button>
+                        </div>
+
+                        {compareDisabled ? (
+                            <p className="mt-3 text-xs leading-5 text-slate-500">
+                                Review queue is full. Remove one candidate from side-by-side review to add another.
+                            </p>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div
+                    data-card-face="back"
+                    data-face-active={isFlipped ? 'true' : 'false'}
+                    aria-hidden={!isFlipped}
+                    className={`${cardSurfaceClass} ${!isFlipped ? 'pointer-events-none select-none' : ''}`}
+                    style={backFaceStyle}
+                >
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Quick view</div>
+                            <h3 className="mt-2 text-[1.15rem] font-semibold leading-tight tracking-[-0.04em] text-slate-50" style={getLineClampStyle(2)}>
+                                {dataset.title}
+                            </h3>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsFlipped(false)}
+                            aria-label={`Back to summary for ${dataset.title}`}
+                            className={`inline-flex shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-[#161b22] px-3 py-2 text-xs font-semibold text-slate-200 transition-all duration-200 hover:border-cyan-400/30 hover:text-white ${focusRingClass}`}
+                            tabIndex={backTabIndex}
+                        >
+                            Back
+                        </button>
+                    </div>
+
+                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                        <BackfaceInfoCard
+                            label="Provider review"
+                            value={`${dataset.providerTrustScore}%`}
+                            detail={`${dataset.contributorTrust} · ${dataset.contributionHistory}`}
+                            tone={providerTone}
+                        />
+                        <BackfaceInfoCard
+                            label="Market coverage"
+                            value={dataset.geography}
+                            detail={`${dataset.timeRange} · ${dataset.size}`}
+                            tone="scheduled"
+                        />
+                    </div>
+
+                    <div className="mt-2.5">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Trust & compliance</div>
+                        <div className="mt-2.5 flex flex-wrap gap-2">
+                            {backBadges.map(badge => (
+                                <StatusChip key={badge.label} label={badge.label} tone={badge.tone} />
+                            ))}
+                        </div>
+                        <RiskLabelStrip items={trustRiskLabels} compact className="mt-2.5" />
+                    </div>
+
+                    <div className="mt-3.5 border-t border-white/8 pt-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Quality summary</div>
+                        <p className="mt-2 text-sm leading-6 text-slate-200" style={getLineClampStyle(1)}>
+                            {dataset.confidenceSummary}
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-slate-400" style={getLineClampStyle(1)}>
+                            {geoAccessSignal.detail}
+                        </p>
+                    </div>
+                </div>
             </div>
         </article>
     )
 }
 
-function SignalCard({
+function CompactSignalCard({
     label,
     value,
     detail,
@@ -1097,29 +1217,48 @@ function SignalCard({
     tone: SignalTone
 }) {
     return (
-        <div className={`rounded-[22px] border px-5 py-5 ${getSignalToneMeta(tone).surfaceClassName}`}>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</div>
-            <div className="mt-4 text-[1.75rem] font-semibold tracking-[-0.05em] text-slate-50">{value}</div>
-            <div className={`mt-3 ${discoveryText.meta}`}>{detail}</div>
+        <div className={`rounded-[20px] border px-4 py-4 ${getSignalToneMeta(tone).surfaceClassName}`}>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+            <div className="mt-3 text-[1.2rem] font-semibold tracking-[-0.04em] text-slate-50" style={getLineClampStyle(2)}>
+                {value}
+            </div>
+            <div className="mt-2 text-xs leading-5 text-slate-400" style={getLineClampStyle(2)}>
+                {detail}
+            </div>
         </div>
     )
 }
 
-function MetricPill({
+function BackfaceInfoCard({
     label,
     value,
+    detail,
     tone
 }: {
     label: string
     value: string
+    detail: string
     tone: SignalTone
 }) {
     return (
-        <div className={`rounded-[20px] border px-4 py-4 ${getSignalToneMeta(tone).surfaceClassName}`}>
+        <div className={`rounded-[20px] border px-4 py-3.5 ${getSignalToneMeta(tone).surfaceClassName}`}>
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
-            <div className="mt-3 text-[1.1rem] font-semibold text-slate-50">{value}</div>
+            <div className="mt-2.5 text-[1.08rem] font-semibold tracking-[-0.03em] text-slate-50" style={getLineClampStyle(2)}>
+                {value}
+            </div>
+            <div className="mt-1.5 text-xs leading-5 text-slate-400" style={getLineClampStyle(1)}>
+                {detail}
+            </div>
         </div>
     )
+}
+
+function DiscoveryBadge({ badge }: { badge: DiscoveryCardBadge }) {
+    if (badge.kind === 'status') {
+        return <StatusBadge label={badge.label} kind={badge.statusKind} />
+    }
+
+    return <StatusChip label={badge.label} tone={badge.tone} />
 }
 
 function StatusChip({
@@ -1132,14 +1271,6 @@ function StatusChip({
     return (
         <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold ${getSignalToneMeta(tone).badgeClassName}`}>
             <span className={`h-2 w-2 rounded-full ${getSignalToneMeta(tone).dotClassName}`} aria-hidden="true" />
-            {label}
-        </span>
-    )
-}
-
-function InlineNeutralChip({ label }: { label: string }) {
-    return (
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-slate-300">
             {label}
         </span>
     )
@@ -1440,6 +1571,7 @@ function ActionIconButton({
     to,
     active = false,
     disabled = false,
+    tabIndex,
     onClick,
     children
 }: {
@@ -1447,6 +1579,7 @@ function ActionIconButton({
     to?: string
     active?: boolean
     disabled?: boolean
+    tabIndex?: number
     onClick?: () => void
     children: ReactNode
 }) {
@@ -1463,7 +1596,7 @@ function ActionIconButton({
 
     if (to) {
         return (
-            <Link to={to} aria-label={label} className={className}>
+            <Link to={to} aria-label={label} className={className} tabIndex={tabIndex}>
                 {tooltip}
                 {children}
             </Link>
@@ -1471,7 +1604,7 @@ function ActionIconButton({
     }
 
     return (
-        <button type="button" aria-label={label} disabled={disabled} onClick={onClick} className={className}>
+        <button type="button" aria-label={label} disabled={disabled} onClick={onClick} className={className} tabIndex={tabIndex}>
             {tooltip}
             {children}
         </button>
@@ -1682,6 +1815,130 @@ function buildActiveFilters(filters: FilterState): ActiveFilterChip[] {
     return chips
 }
 
+function getDiscoveryFrontBadges(
+    dataset: Dataset,
+    geoAccessSignal: ReturnType<typeof getDatasetGeoAccessSignal>,
+    regulatedProfile: RegulatedDiscoveryProfile
+): DiscoveryCardBadge[] {
+    const prioritizedRegulatedBadge = regulatedProfile.cardBadges.find(
+        badge =>
+            badge.label === 'UAE local-only' ||
+            badge.label === 'Cross-border review' ||
+            badge.label === 'Provider-shielded' ||
+            badge.label === 'Regulated-use ready'
+    )
+    const prioritizedPostureBadge =
+        dataset.accessType === 'Restricted'
+            ? {
+                key: `access-${dataset.accessType}`,
+                label: dataset.accessType,
+                kind: 'status',
+                statusKind: 'access'
+            } satisfies DiscoveryCardBadge
+            : prioritizedRegulatedBadge
+                ? {
+                    key: `regulated-${prioritizedRegulatedBadge.label}`,
+                    label: prioritizedRegulatedBadge.label,
+                    kind: 'signal',
+                    tone: prioritizedRegulatedBadge.tone
+                } satisfies DiscoveryCardBadge
+                : {
+                    key: `access-${dataset.accessType}`,
+                    label: dataset.accessType,
+                    kind: 'status',
+                    statusKind: 'access'
+                } satisfies DiscoveryCardBadge
+
+    return [
+        {
+            key: `verification-${dataset.verificationStatus}`,
+            label: dataset.verificationStatus,
+            kind: 'status',
+            statusKind: 'verification'
+        },
+        {
+            key: `geo-${geoAccessSignal.label}`,
+            label: geoAccessSignal.label,
+            kind: 'signal',
+            tone: geoAccessSignal.tone
+        },
+        prioritizedPostureBadge
+    ]
+}
+
+function getDiscoveryBackBadges(
+    dataset: Dataset,
+    geoAccessSignal: ReturnType<typeof getDatasetGeoAccessSignal>,
+    regulatedProfile: RegulatedDiscoveryProfile
+) {
+    const prioritizedRegulatedBadge =
+        regulatedProfile.cardBadges.find(badge => badge.label === 'UAE local-only') ??
+        regulatedProfile.cardBadges.find(badge => badge.label === 'Cross-border review') ??
+        regulatedProfile.cardBadges.find(badge => badge.label === 'Provider-shielded') ??
+        regulatedProfile.cardBadges.find(badge => badge.label === 'Regulated-use ready') ??
+        null
+
+    return [
+        { label: getBackfaceAccessLabel(dataset.accessType), tone: getAccessTypeTone(dataset.accessType) },
+        { label: getBackfaceGeoLabel(geoAccessSignal.label), tone: geoAccessSignal.tone },
+        ...(prioritizedRegulatedBadge ? [{ label: getBackfaceRegulatedLabel(prioritizedRegulatedBadge.label), tone: prioritizedRegulatedBadge.tone }] : [])
+    ]
+}
+
+function getPriorityTrustRiskLabels(profile: Dataset['trustProfile']) {
+    const labels = getDatasetTrustRiskLabels(profile)
+    const priorityKeys: Array<(typeof labels)[number]['key']> = ['sensitivity', 'legal_basis', 'rights', 'audit']
+
+    return priorityKeys
+        .map(key => labels.find(label => label.key === key))
+        .filter((label): label is (typeof labels)[number] => Boolean(label))
+}
+
+function getAccessTypeTone(accessType: AccessType): SignalTone {
+    return accessType === 'Restricted' ? 'monitoring' : 'healthy'
+}
+
+function getBackfaceAccessLabel(accessType: AccessType) {
+    return accessType === 'Restricted' ? 'Restricted' : 'Approved'
+}
+
+function getBackfaceGeoLabel(label: ReturnType<typeof getDatasetGeoAccessSignal>['label']) {
+    switch (label) {
+        case 'Geo check requires org profile':
+            return 'Geo profile'
+        case 'Eligible from your org location':
+            return 'Geo eligible'
+        case 'Region-restricted':
+            return 'Region review'
+        case 'Residency constrained':
+            return 'Residency'
+        default:
+            return label
+    }
+}
+
+function getBackfaceRegulatedLabel(label: string) {
+    switch (label) {
+        case 'Cross-border review':
+            return 'Cross-border'
+        case 'Regulated-use ready':
+            return 'Ready'
+        case 'Provider-shielded':
+            return 'Shielded'
+        default:
+            return label
+    }
+}
+
+function getLineClampStyle(lines: number): CSSProperties {
+    return {
+        display: '-webkit-box',
+        WebkitLineClamp: lines,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
+    }
+}
+
 function getRegulatedDiscoveryProfile(dataset: Dataset): RegulatedDiscoveryProfile {
     return (
         REGULATED_DISCOVERY_PROFILES[dataset.id] ?? {
@@ -1844,6 +2101,29 @@ function getSignalToneMeta(tone: SignalTone) {
                 surfaceClassName: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-50'
             }
     }
+}
+
+function usePrefersReducedMotion() {
+    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+
+        const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const handleChange = () => setPrefersReducedMotion(mediaQuery.matches)
+
+        handleChange()
+
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', handleChange)
+            return () => mediaQuery.removeEventListener('change', handleChange)
+        }
+
+        mediaQuery.addListener(handleChange)
+        return () => mediaQuery.removeListener(handleChange)
+    }, [])
+
+    return prefersReducedMotion
 }
 
 function SearchIcon(props: SVGProps<SVGSVGElement>) {

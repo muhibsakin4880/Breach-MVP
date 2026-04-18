@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 const authStorageKeys = {
     accessStatus: 'Redoubt:accessStatus',
@@ -58,10 +58,33 @@ async function expectDatasetDiscoveryShell(page: Page, viewportWidth: number) {
 
     if (viewportWidth >= 1280) {
         expect(Math.abs(firstCardBox.y - secondCardBox.y)).toBeLessThanOrEqual(8)
+        expect(firstCardBox.height).toBeLessThanOrEqual(470)
+
+        await resultsRegion.evaluate((node: HTMLElement) => {
+            node.scrollIntoView({ block: 'start' })
+        })
+
+        const mostlyVisibleCards = await countMostlyVisibleDatasetCards(
+            resultsRegion,
+            page.viewportSize()?.height ?? 0
+        )
+
+        expect(mostlyVisibleCards).toBeGreaterThanOrEqual(4)
         return
     }
 
     expect(secondCardBox.y).toBeGreaterThan(firstCardBox.y + firstCardBox.height)
+}
+
+async function countMostlyVisibleDatasetCards(resultsRegion: Locator, viewportHeight: number) {
+    return await resultsRegion.getByRole('article').evaluateAll((nodes, vh) => {
+        return nodes.filter(node => {
+            const rect = node.getBoundingClientRect()
+            const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0)
+
+            return rect.height > 0 && visibleHeight >= rect.height * 0.75
+        }).length
+    }, viewportHeight)
 }
 
 test.describe('participant dataset discovery', () => {
@@ -132,6 +155,60 @@ test.describe('participant dataset discovery', () => {
         await expect(shortlistRegion.getByText('Global Climate Observations 2020-2024')).toBeVisible()
         await expect(compareRegion.getByText('Financial Market Tick Data').first()).toBeVisible()
         await expect(compareRegion.getByText('Genomics Research Dataset v2').first()).toBeVisible()
+    })
+
+    test('flips a single dataset card into quick view without shifting neighboring cards', async ({ page }) => {
+        await page.setViewportSize({ width: 1536, height: 1200 })
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets')
+
+        const resultsRegion = page.getByRole('region', { name: 'Decision-ready results' })
+        const firstDatasetCard = resultsRegion.getByRole('article').first()
+        const secondDatasetCard = resultsRegion.getByRole('article').nth(1)
+
+        await resultsRegion.evaluate((node: HTMLElement) => {
+            node.scrollIntoView({ block: 'start' })
+        })
+
+        await expect(firstDatasetCard).toBeVisible()
+        await expect(secondDatasetCard).toBeVisible()
+
+        const firstCardBoxBefore = await firstDatasetCard.boundingBox()
+        const secondCardBoxBefore = await secondDatasetCard.boundingBox()
+
+        expect(firstCardBoxBefore).not.toBeNull()
+        expect(secondCardBoxBefore).not.toBeNull()
+
+        if (!firstCardBoxBefore || !secondCardBoxBefore) {
+            throw new Error('Expected dataset cards to expose bounding boxes before flipping.')
+        }
+
+        await firstDatasetCard.getByRole('button', { name: /Quick View for / }).click()
+
+        await expect(firstDatasetCard).toHaveAttribute('data-card-flipped', 'true')
+        await expect(firstDatasetCard.locator('[data-card-face="back"][data-face-active="true"]')).toContainText('Provider review')
+
+        const firstCardBoxAfterFlip = await firstDatasetCard.boundingBox()
+        const secondCardBoxAfterFlip = await secondDatasetCard.boundingBox()
+
+        expect(firstCardBoxAfterFlip).not.toBeNull()
+        expect(secondCardBoxAfterFlip).not.toBeNull()
+
+        if (!firstCardBoxAfterFlip || !secondCardBoxAfterFlip) {
+            throw new Error('Expected dataset cards to expose bounding boxes after flipping.')
+        }
+
+        expect(Math.abs(firstCardBoxAfterFlip.height - firstCardBoxBefore.height)).toBeLessThanOrEqual(2)
+        expect(Math.abs(firstCardBoxAfterFlip.y - firstCardBoxBefore.y)).toBeLessThanOrEqual(2)
+        expect(Math.abs(secondCardBoxAfterFlip.x - secondCardBoxBefore.x)).toBeLessThanOrEqual(2)
+        expect(Math.abs(secondCardBoxAfterFlip.y - secondCardBoxBefore.y)).toBeLessThanOrEqual(2)
+        expect(Math.abs(secondCardBoxAfterFlip.height - secondCardBoxBefore.height)).toBeLessThanOrEqual(2)
+
+        await firstDatasetCard.getByRole('button', { name: /Back to summary for / }).click()
+
+        await expect(firstDatasetCard).toHaveAttribute('data-card-flipped', 'false')
+        await expect(firstDatasetCard.locator('[data-card-face="front"][data-face-active="true"]')).toContainText('Quick View')
     })
 
     test('keeps the guidance workspace below results at 1280px without crushing dataset cards', async ({ page }) => {
