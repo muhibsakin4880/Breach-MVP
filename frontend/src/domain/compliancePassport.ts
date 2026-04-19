@@ -57,12 +57,15 @@ export type CompliancePassportRequestPrefill = {
 
 const defaultStep1: Step1FormState = {
     participantType: 'organization',
+    fullName: '',
+    primaryContactName: 'Avery Underwood',
     organizationName: 'Northbridge Research Labs',
     organizationWebsite: 'https://northbridge.ai',
     officialWorkEmail: 'avery.underwood@northbridge.ai',
     inviteCode: 'REDO-2026',
     roleInOrganization: 'Senior Data Scientist',
     industryDomain: 'Healthcare & AI',
+    primaryOperatingRegion: '',
     country: 'United States'
 }
 

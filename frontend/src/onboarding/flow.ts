@@ -45,18 +45,24 @@ export const isIndividualParticipant = (step1: Pick<Step1FormState, 'participant
 export const isStep1Complete = (step1: Step1FormState) => {
     if (!step1.participantType) return false
 
-    const hasCoreIdentityRecord =
+    const hasSharedIdentityRecord =
         step1.organizationName.trim().length > 0 &&
         isInviteCodeValid(step1.inviteCode) &&
         step1.roleInOrganization.trim().length > 0 &&
         step1.industryDomain.trim().length > 0 &&
         step1.country.trim().length > 0
 
-    if (!hasCoreIdentityRecord) return false
+    if (!hasSharedIdentityRecord) return false
 
-    return isOrganizationParticipant(step1)
-        ? isCorporateEmail(step1.officialWorkEmail.trim())
-        : isWorkEmail(step1.officialWorkEmail.trim())
+    if (isOrganizationParticipant(step1)) {
+        return step1.primaryContactName.trim().length > 0 && isCorporateEmail(step1.officialWorkEmail.trim())
+    }
+
+    return (
+        step1.fullName.trim().length > 0 &&
+        step1.primaryOperatingRegion.trim().length > 0 &&
+        isWorkEmail(step1.officialWorkEmail.trim())
+    )
 }
 
 export const isStep2Complete = (intendedUsage: string[], useCaseSummary: string) =>

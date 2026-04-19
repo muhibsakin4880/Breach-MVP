@@ -19,12 +19,15 @@ export const onboardingStorageKeys = {
 
 export const emptyStep1FormState: Step1FormState = {
     participantType: null,
+    fullName: '',
+    primaryContactName: '',
     organizationName: '',
     organizationWebsite: '',
     officialWorkEmail: '',
     inviteCode: '',
     roleInOrganization: '',
     industryDomain: '',
+    primaryOperatingRegion: '',
     country: ''
 }
 

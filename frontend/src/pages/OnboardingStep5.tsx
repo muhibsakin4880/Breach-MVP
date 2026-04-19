@@ -577,8 +577,12 @@ export default function OnboardingStep5() {
                                         value={step1Data.industryDomain || 'Not provided'}
                                     />
                                     <ReviewDetail
-                                        label="Primary operating region"
-                                        value={step1Data.country || 'Not provided'}
+                                        label={isIndividualPath ? 'Primary operating region' : 'Country'}
+                                        value={
+                                            isIndividualPath
+                                                ? step1Data.primaryOperatingRegion || 'Not provided'
+                                                : step1Data.country || 'Not provided'
+                                        }
                                     />
                                 </div>
 

@@ -2,12 +2,15 @@ export type ParticipantType = 'individual' | 'organization'
 
 export type Step1FormState = {
     participantType: ParticipantType | null
+    fullName: string
+    primaryContactName: string
     organizationName: string
     organizationWebsite: string
     officialWorkEmail: string
     inviteCode: string
     roleInOrganization: string
     industryDomain: string
+    primaryOperatingRegion: string
     country: string
 }
 

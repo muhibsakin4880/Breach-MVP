@@ -31,9 +31,29 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
     'live.com'
 ])
 
+const COUNTRY_OPTIONS = [
+    'United Arab Emirates',
+    'Saudi Arabia',
+    'Qatar',
+    'Kuwait',
+    'Bahrain',
+    'Oman',
+    'United Kingdom',
+    'Germany',
+    'France',
+    'Netherlands',
+    'United States',
+    'Canada',
+    'Singapore',
+    'India',
+    'Other'
+] as const
+
 const fieldLabelClassName = 'mb-2 block text-sm font-medium text-slate-200'
 const fieldInputClassName =
     'w-full rounded-[16px] border border-slate-700 bg-slate-950/85 px-4 py-3.5 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] focus:border-blue-500 focus:outline-none'
+const fieldSelectClassName =
+    'w-full rounded-[16px] border border-slate-700 bg-slate-950/85 px-4 py-3.5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] focus:border-blue-500 focus:outline-none'
 
 function isPersonalEmail(email: string): boolean {
     const domain = email.toLowerCase().split('@')[1]
@@ -51,6 +71,8 @@ export default function OnboardingStep1() {
     const [emailWarning, setEmailWarning] = useState<string | null>(null)
     const isOrganizationPath = state.participantType === 'organization'
     const isIndividualPath = state.participantType === 'individual'
+    const hasCustomCountryOption =
+        state.country.trim().length > 0 && !COUNTRY_OPTIONS.some((option) => option === state.country)
 
     const reviewChecks = isIndividualPath
         ? [
@@ -98,6 +120,8 @@ export default function OnboardingStep1() {
             identitySectionTitle: 'Participant identity',
             identitySectionBody:
                 'Use the email and role details Redoubt should associate with this individual account and any later mock review follow-up.',
+            nameLabel: 'Full name',
+            namePlaceholder: 'Your legal full name',
             organizationNameLabel: 'Primary affiliation or public identity',
             organizationNamePlaceholder: 'Independent researcher, studio, lab, or public professional identity',
             organizationWebsiteLabel: 'Professional website or public profile',
@@ -107,6 +131,8 @@ export default function OnboardingStep1() {
             industryPlaceholder: 'Security research, healthcare AI, policy analysis...',
             regionLabel: 'Primary operating region',
             regionPlaceholder: 'Country or region',
+            countryLabel: 'Country',
+            countryPlaceholder: 'Select your country',
             emailLabel: 'Preferred login email',
             emailPlaceholder: 'name@example.com',
             emailHelp: 'Use the email Redoubt should use for sign-in lookup and mock review communication.',
@@ -130,6 +156,8 @@ export default function OnboardingStep1() {
             identitySectionTitle: 'Participant identity',
             identitySectionBody:
                 'Use the business contact information reviewers should associate with this application package.',
+            nameLabel: 'Primary contact name',
+            namePlaceholder: 'Full name of person submitting this request',
             organizationNameLabel: 'Organization name',
             organizationNamePlaceholder: 'Your legal or operating organization name',
             organizationWebsiteLabel: 'Organization website',
@@ -138,8 +166,10 @@ export default function OnboardingStep1() {
                 'Optional, but useful when reviewers need to confirm the public corporate footprint tied to this request.',
             industryLabel: 'Industry / domain',
             industryPlaceholder: 'Healthcare, public sector, mobility...',
-            regionLabel: 'Primary operating region',
-            regionPlaceholder: 'Country or region',
+            regionLabel: 'Country',
+            regionPlaceholder: 'Select your country',
+            countryLabel: 'Country',
+            countryPlaceholder: 'Select your country',
             emailLabel: 'Official work email',
             emailPlaceholder: 'name@organization.com',
             emailHelp: 'Use the same corporate email that later verification and reviewer contact should reference.',
@@ -190,22 +220,28 @@ export default function OnboardingStep1() {
         const mockState: Step1FormState = state.participantType === 'individual'
             ? {
                 participantType: 'individual',
+                fullName: 'Ava Rahman',
+                primaryContactName: '',
                 organizationName: 'Independent Researcher',
                 organizationWebsite: 'https://portfolio.redoubt.local',
                 officialWorkEmail: 'ava.researcher@gmail.com',
                 inviteCode: 'RDT-IND-2026',
                 roleInOrganization: 'Independent Researcher',
                 industryDomain: 'Security Research & AI Evaluation',
+                primaryOperatingRegion: 'North America',
                 country: 'United States'
             }
             : {
                 participantType: 'organization',
+                fullName: '',
+                primaryContactName: 'Avery Underwood',
                 organizationName: 'Demo Corporation',
                 organizationWebsite: 'https://www.redoubt.local',
                 officialWorkEmail: 'demo@redoubt.local',
                 inviteCode: 'REDO-2026',
                 roleInOrganization: 'Senior Data Engineer',
                 industryDomain: 'Technology & AI',
+                primaryOperatingRegion: '',
                 country: 'United States'
             }
 
@@ -419,6 +455,18 @@ export default function OnboardingStep1() {
                                 </div>
 
                                 <div className="grid gap-5 md:grid-cols-2">
+                                    {isIndividualPath && (
+                                        <div className="md:col-span-2">
+                                            <label className={fieldLabelClassName}>{copy.nameLabel}</label>
+                                            <input
+                                                className={fieldInputClassName}
+                                                value={state.fullName}
+                                                onChange={(event) => handleChange('fullName', event.target.value)}
+                                                placeholder={copy.namePlaceholder}
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className="md:col-span-2">
                                         <label className={fieldLabelClassName}>{copy.organizationNameLabel}</label>
                                         <input
@@ -452,15 +500,63 @@ export default function OnboardingStep1() {
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className={fieldLabelClassName}>{copy.regionLabel}</label>
-                                        <input
-                                            className={fieldInputClassName}
-                                            value={state.country}
-                                            onChange={(event) => handleChange('country', event.target.value)}
-                                            placeholder={copy.regionPlaceholder}
-                                        />
-                                    </div>
+                                    {isIndividualPath ? (
+                                        <div className="grid gap-5">
+                                            <div>
+                                                <label className={fieldLabelClassName}>{copy.regionLabel}</label>
+                                                <input
+                                                    className={fieldInputClassName}
+                                                    value={state.primaryOperatingRegion}
+                                                    onChange={(event) =>
+                                                        handleChange('primaryOperatingRegion', event.target.value)
+                                                    }
+                                                    placeholder={copy.regionPlaceholder}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className={fieldLabelClassName}>{copy.countryLabel}</label>
+                                                <select
+                                                    className={fieldSelectClassName}
+                                                    value={state.country}
+                                                    onChange={(event) => handleChange('country', event.target.value)}
+                                                >
+                                                    <option value="" disabled>
+                                                        {copy.countryPlaceholder}
+                                                    </option>
+                                                    {hasCustomCountryOption && (
+                                                        <option value={state.country}>{state.country}</option>
+                                                    )}
+                                                    {COUNTRY_OPTIONS.map((option) => (
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className={fieldLabelClassName}>{copy.countryLabel}</label>
+                                            <select
+                                                className={fieldSelectClassName}
+                                                value={state.country}
+                                                onChange={(event) => handleChange('country', event.target.value)}
+                                            >
+                                                <option value="" disabled>
+                                                    {copy.countryPlaceholder}
+                                                </option>
+                                                {hasCustomCountryOption && (
+                                                    <option value={state.country}>{state.country}</option>
+                                                )}
+                                                {COUNTRY_OPTIONS.map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
                             </article>
 
@@ -476,6 +572,20 @@ export default function OnboardingStep1() {
                                 </div>
 
                                 <div className="grid gap-5 md:grid-cols-2">
+                                    {isOrganizationPath && (
+                                        <div className="md:col-span-2">
+                                            <label className={fieldLabelClassName}>{copy.nameLabel}</label>
+                                            <input
+                                                className={fieldInputClassName}
+                                                value={state.primaryContactName}
+                                                onChange={(event) =>
+                                                    handleChange('primaryContactName', event.target.value)
+                                                }
+                                                placeholder={copy.namePlaceholder}
+                                            />
+                                        </div>
+                                    )}
+
                                     <div className="md:col-span-2">
                                         <label className={fieldLabelClassName}>{copy.emailLabel}</label>
                                         <input
