@@ -56,6 +56,7 @@ import ResearcherAccessPage from './pages/ResearcherAccessPage'
 import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
+import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
@@ -262,7 +263,7 @@ function App() {
                     <Route path="demo/deals" element={<Navigate to={`/demo/deals/${DEFAULT_DEAL_ID}`} replace />} />
                     <Route path="demo/deals/:dealId" element={<DealDossierPage demo />} />
                     <Route path="demo/deals/:dealId/provider-packet" element={<ProviderRightsPacketPage demo />} />
-                    <Route path="demo/deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" demo />} />
+                    <Route path="demo/deals/:dealId/output-review" element={<CleanRoomOutputReviewPage demo />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={getDashboardPath()} replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path={participantOnboardingPaths.entry.slice(1)} element={RequireOnboardingAccess(<OnboardingEntryPage />)} />
@@ -304,7 +305,7 @@ function App() {
                     <Route path="deals" element={<Navigate to={`/deals/${DEFAULT_DEAL_ID}`} replace />} />
                     <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
-                    <Route path="deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" />} />
+                    <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />
                     <Route path="deals/:dealId/approval" element={<DealRoutePlaceholderPage surface="approval" />} />
                     <Route path="deals/:dealId/negotiation" element={<DealRoutePlaceholderPage surface="negotiation" />} />
                     <Route path="deals/:dealId/residency-memo" element={<DealRoutePlaceholderPage surface="residency-memo" />} />

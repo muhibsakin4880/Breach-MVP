@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
+import { getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import DealProgressTracker from '../components/DealProgressTracker'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
@@ -445,8 +446,15 @@ const getTransactionTimelineStateLabel = (state: TransactionTimelineStepState) =
 export default function EscrowCheckoutPage() {
     const { id } = useParams()
     const location = useLocation()
+    const isDemo = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
+    const seededDeal = getSeededDealRouteRecordByDatasetId(dataset.id)
+    const outputReviewPath = seededDeal
+        ? isDemo
+            ? `/demo/deals/${seededDeal.dealId}/output-review`
+            : `/deals/${seededDeal.dealId}/output-review`
+        : null
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
     const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id])
@@ -1413,8 +1421,16 @@ export default function EscrowCheckoutPage() {
                                         >
                                             Launch Governed Workspace
                                         </Link>
+                                        {outputReviewPath ? (
+                                            <Link
+                                                to={outputReviewPath}
+                                                className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
+                                            >
+                                                Open Output Review
+                                            </Link>
+                                        ) : null}
                                         <Link
-                                            to="/escrow-center"
+                                            to={isDemo ? '/demo/escrow-center' : '/escrow-center'}
                                             className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white hover:border-emerald-400/40 hover:bg-white/5"
                                         >
                                             Open Escrow Center

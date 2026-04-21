@@ -31,9 +31,9 @@ export default function DealRelationshipRail({
     ] as const
 
     const reservedSurfaces = [
-        { label: 'Provider packet', to: context.routeTargets['provider-packet'] },
-        { label: 'Output review', to: context.routeTargets['output-review'] },
-        { label: 'Approval', to: context.routeTargets.approval }
+        { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const },
+        { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const },
+        { label: 'Approval', to: context.routeTargets.approval, status: 'Upcoming', tone: 'amber' as const }
     ]
 
     return (
@@ -81,7 +81,7 @@ export default function DealRelationshipRail({
             </section>
 
             <section className={panelClass}>
-                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Reserved next surfaces</div>
+                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Deal-specific surfaces</div>
                 <h2 className="mt-2 text-lg font-semibold text-white">Deal-specific routes</h2>
                 <p className="mt-2 text-sm text-slate-400">
                     The deal id now resolves the dedicated proof and operating surfaces that follow this shell.
@@ -100,8 +100,8 @@ export default function DealRelationshipRail({
                                     {demo ? item.to.replace('/deals/', '/demo/deals/') : item.to}
                                 </div>
                             </div>
-                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100">
-                                Upcoming
+                            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${getSurfaceStatusClasses(item.tone)}`}>
+                                {item.status}
                             </span>
                         </Link>
                     ))}
@@ -125,4 +125,10 @@ function resolveDemoRoute(to: string, demo: boolean) {
     if (to.startsWith('/access-requests/')) return `/demo${to}`
     if (to === '/compliance-passport') return '/demo/compliance-passport'
     return to
+}
+
+function getSurfaceStatusClasses(tone: 'cyan' | 'emerald' | 'amber') {
+    if (tone === 'emerald') return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-100'
 }
