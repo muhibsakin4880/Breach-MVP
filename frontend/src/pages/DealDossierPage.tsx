@@ -1,9 +1,20 @@
 import { Link, useParams } from 'react-router-dom'
 import DealProgressTracker from '../components/DealProgressTracker'
+import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
 import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
-import { buildRequestBasisFields, getProviderReviewStatus, providerReviewStatusStyles, requestStatusLabel, statusStyles } from '../data/workspaceData'
+import {
+    buildRequestBasisFields,
+    getProviderReviewStatus,
+    providerReviewStatusStyles,
+    requestStatusLabel,
+    statusStyles
+} from '../data/workspaceData'
 import { describeAccessMode, passportStatusMeta } from '../domain/compliancePassport'
+import {
+    buildDealDossierProofBundle,
+    type DealArtifactPreviewTone
+} from '../domain/dealArtifactPreview'
 import { getDealRouteContextById } from '../domain/dealDossier'
 
 type DealDossierPageProps = {
@@ -12,6 +23,19 @@ type DealDossierPageProps = {
 
 const panelClass =
     'rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl'
+
+const severityClasses = {
+    Low: 'border-white/12 bg-white/5 text-slate-200',
+    Medium: 'border-amber-400/30 bg-amber-500/10 text-amber-100',
+    High: 'border-rose-400/30 bg-rose-500/10 text-rose-100'
+} as const
+
+const auditToneClasses = {
+    info: 'border-cyan-400/22 bg-cyan-500/10 text-cyan-100',
+    success: 'border-emerald-400/22 bg-emerald-500/10 text-emerald-100',
+    warning: 'border-amber-400/22 bg-amber-500/10 text-amber-100',
+    critical: 'border-rose-400/22 bg-rose-500/10 text-rose-100'
+} as const
 
 export default function DealDossierPage({
     demo = false
@@ -59,6 +83,9 @@ export default function DealDossierPage({
         : 'Create a rights package to price the deal and move into escrow-native checkout.'
     const blockers = context.lifecycleRecord?.blockers ?? []
     const signals = context.lifecycleRecord?.signals ?? []
+    const proofBundle = buildDealDossierProofBundle(context)
+    const auditEvents = [...proofBundle.auditTimeline].reverse().slice(0, 7)
+    const releaseChecklist = context.lifecycleRecord?.releaseReadiness.checklist ?? []
     const datasetLinks = [
         context.dataset ? { label: 'Open dataset detail', to: buildBuyerAwareRoute(`/datasets/${context.dataset.id}`, demo) } : null,
         context.request ? { label: 'Open request detail', to: buildBuyerAwareRoute(`/access-requests/${context.request.id}`, demo) } : null,
@@ -71,7 +98,7 @@ export default function DealDossierPage({
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(16,185,129,0.14),transparent_30%),radial-gradient(circle_at_84%_0%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_48%_85%,rgba(59,130,246,0.10),transparent_34%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Link to={demo ? '/demo/deals' : '/deals'} className="hover:text-white transition-colors">
+                    <Link to={demo ? '/demo/deals' : '/deals'} className="transition-colors hover:text-white">
                         Deals
                     </Link>
                     <span>/</span>
@@ -87,7 +114,7 @@ export default function DealDossierPage({
                             Evaluation Dossier
                         </h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            The canonical deal object that binds the dataset, request basis, reusable compliance context, rights package, and current governed evaluation stage into one shared view.
+                            The canonical deal object that binds the dataset, request basis, reusable compliance context, rights package, approval blockers, governed evaluation state, and settlement posture into one shared view.
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
@@ -290,6 +317,250 @@ export default function DealDossierPage({
                                 </div>
                             </article>
                         </section>
+
+                        <section className="grid gap-6 lg:grid-cols-2">
+                            <article className={panelClass}>
+                                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Approval blockers</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">Evidence pack and review gates</h2>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {proofBundle.reviewId ? (
+                                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                                {proofBundle.reviewId}
+                                            </span>
+                                        ) : null}
+                                        {proofBundle.evidencePack ? (
+                                            <StatusPill tone={toneFromPackStatus(proofBundle.evidencePack.status)} label={proofBundle.evidencePack.status} />
+                                        ) : null}
+                                    </div>
+                                </div>
+
+                                <p className="mt-4 text-sm leading-6 text-slate-300">
+                                    {proofBundle.evidencePack?.scope ?? 'This deal already resolves the lifecycle shell, but the attached approval packet is still thin until a seeded review pack is linked.'}
+                                </p>
+
+                                <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                    <MetricTile label="Review id" value={proofBundle.reviewId ?? 'Pending'} />
+                                    <MetricTile label="Evidence pack" value={proofBundle.evidencePack?.id ?? 'Not attached'} />
+                                    <MetricTile label="Owner" value={proofBundle.evidencePack?.owner ?? 'Awaiting owner'} />
+                                    <MetricTile label="Updated" value={proofBundle.evidencePack?.updatedAt ?? 'Pending'} />
+                                </div>
+
+                                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                                    <ShellList
+                                        title="Evidence pack contents"
+                                        items={
+                                            proofBundle.evidencePack?.contents.length
+                                                ? proofBundle.evidencePack.contents
+                                                : ['Rights packet summaries, deployment notes, and approval rationale will render here once the pack is linked.']
+                                        }
+                                    />
+                                    <ShellList
+                                        title="Deployment posture"
+                                        items={
+                                            proofBundle.deploymentSurface
+                                                ? [
+                                                    proofBundle.deploymentSurface.deploymentMode,
+                                                    proofBundle.deploymentSurface.residencyPosture,
+                                                    proofBundle.deploymentSurface.evaluationStatus
+                                                ]
+                                                : ['Deployment and residency posture will be attached to the review packet in a later step.']
+                                        }
+                                    />
+                                </div>
+
+                                <div className="mt-5 space-y-3">
+                                    {proofBundle.approvalBlockers.length > 0 ? (
+                                        proofBundle.approvalBlockers.map(blocker => (
+                                            <div
+                                                key={blocker.id}
+                                                className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-4"
+                                            >
+                                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="max-w-2xl">
+                                                        <div className="text-sm font-semibold text-white">{blocker.blocker}</div>
+                                                        <div className="mt-2 text-xs leading-5 text-slate-400">
+                                                            Owner {blocker.owner} · deadline {blocker.deadline}
+                                                        </div>
+                                                    </div>
+                                                    <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${severityClasses[blocker.severity]}`}>
+                                                        {blocker.severity}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <EmptyStateCopy text="No seeded approval blocker is attached yet. The dossier is ready for deeper signoff and policy exception artifacts in the next phase." />
+                                    )}
+                                </div>
+                            </article>
+
+                            <article className={panelClass}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{proofBundle.evaluationState.label}</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">{proofBundle.evaluationState.title}</h2>
+                                    </div>
+                                    <StatusPill tone={proofBundle.evaluationState.tone} label={proofBundle.evaluationState.status} />
+                                </div>
+
+                                <p className="mt-4 text-sm leading-6 text-slate-300">{proofBundle.evaluationState.summary}</p>
+
+                                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                                    <MetricTile
+                                        label="Escrow hold"
+                                        value={context.checkoutRecord ? formatUsd(context.checkoutRecord.funding.escrowHoldUsd) : quote ? formatUsd(quote.escrowHoldUsd) : 'Pending'}
+                                    />
+                                    <MetricTile
+                                        label="Evaluation fee"
+                                        value={context.checkoutRecord ? formatUsd(context.checkoutRecord.outcomeProtection.evaluationFeeUsd) : 'Pending'}
+                                    />
+                                    <MetricTile
+                                        label="Review window"
+                                        value={context.checkoutRecord ? `${context.checkoutRecord.configuration.reviewWindowHours} hrs` : quote ? `${quote.input.validationWindowHours} hrs` : 'Pending'}
+                                    />
+                                </div>
+
+                                <div className="mt-5">
+                                    <ShellList title="Operational checkpoints" items={proofBundle.evaluationState.highlights} />
+                                </div>
+
+                                {proofBundle.evaluationState.note ? (
+                                    <div className={`mt-5 rounded-2xl border px-4 py-3 text-xs leading-5 ${getToneNoteClasses(proofBundle.evaluationState.tone)}`}>
+                                        {proofBundle.evaluationState.note}
+                                    </div>
+                                ) : null}
+                            </article>
+                        </section>
+
+                        <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+                            <article className={panelClass}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{proofBundle.settlementState.label}</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">{proofBundle.settlementState.title}</h2>
+                                    </div>
+                                    <StatusPill tone={proofBundle.settlementState.tone} label={proofBundle.settlementState.status} />
+                                </div>
+
+                                <p className="mt-4 text-sm leading-6 text-slate-300">{proofBundle.settlementState.summary}</p>
+
+                                <div className="mt-5">
+                                    <ShellList
+                                        title="Settlement detail"
+                                        items={proofBundle.settlementState.highlights}
+                                        danger={proofBundle.settlementState.tone === 'rose'}
+                                    />
+                                </div>
+
+                                {releaseChecklist.length > 0 ? (
+                                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                                        {releaseChecklist.map(item => (
+                                            <div
+                                                key={item.key}
+                                                className={`rounded-2xl border px-4 py-3 ${
+                                                    item.passed
+                                                        ? 'border-emerald-400/18 bg-emerald-500/8'
+                                                        : 'border-amber-400/18 bg-amber-500/8'
+                                                }`}
+                                            >
+                                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                                                    Release gate
+                                                </div>
+                                                <div className="mt-2 text-sm font-semibold text-white">{item.label}</div>
+                                                <div className="mt-2 text-xs text-slate-300">
+                                                    {item.passed ? 'Passed' : 'Still requires follow-up'}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : null}
+
+                                {proofBundle.settlementState.note ? (
+                                    <div className={`mt-5 rounded-2xl border px-4 py-3 text-xs leading-5 ${getToneNoteClasses(proofBundle.settlementState.tone)}`}>
+                                        {proofBundle.settlementState.note}
+                                    </div>
+                                ) : null}
+                            </article>
+
+                            <article className={panelClass}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Artifact previews</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">Deal proof artifacts</h2>
+                                    </div>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                        {proofBundle.artifactPreviews.length} previews
+                                    </span>
+                                </div>
+
+                                <p className="mt-4 text-sm leading-6 text-slate-300">
+                                    These previews make the deal feel like a governed object instead of a loose collection of pages by showing the contract, evidence, approval, and dispute surfaces side by side.
+                                </p>
+
+                                <div className="mt-5">
+                                    <DealArtifactPreviewGrid artifacts={proofBundle.artifactPreviews} />
+                                </div>
+                            </article>
+                        </section>
+
+                        <section className={panelClass}>
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Audit timeline</div>
+                                    <h2 className="mt-2 text-xl font-semibold text-white">What the platform has recorded so far</h2>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                        {auditEvents.length} visible event{auditEvents.length === 1 ? '' : 's'}
+                                    </span>
+                                    {proofBundle.incidentRecord ? (
+                                        <StatusPill tone="amber" label="Incident-linked evidence" />
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            <div className="mt-5 space-y-3">
+                                {auditEvents.map(event => (
+                                    <div
+                                        key={event.id}
+                                        className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-4"
+                                    >
+                                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                            <div className="max-w-3xl">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${auditToneClasses[event.tone]}`}>
+                                                        {event.lifecycleLabel}
+                                                    </span>
+                                                    <span className="text-xs text-slate-500">{event.at}</span>
+                                                </div>
+                                                <div className="mt-3 text-sm font-semibold text-white">{event.action}</div>
+                                                {event.reason ? (
+                                                    <p className="mt-2 text-sm leading-6 text-slate-300">{event.reason}</p>
+                                                ) : null}
+                                            </div>
+                                            <div className="rounded-2xl border border-white/8 bg-slate-900/55 px-4 py-3 text-xs leading-5 text-slate-300">
+                                                <div className="font-semibold text-slate-100">Hash pointer</div>
+                                                <div className="mt-1 break-all">{event.hashPointer}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid gap-2 md:grid-cols-3">
+                                            {event.controls.map(control => (
+                                                <div
+                                                    key={`${event.id}-${control}`}
+                                                    className="rounded-2xl border border-white/8 bg-slate-900/50 px-3 py-3 text-xs leading-5 text-slate-300"
+                                                >
+                                                    {control}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
                     </div>
 
                     <aside>
@@ -387,6 +658,20 @@ function EmptyStateCopy({
     )
 }
 
+function StatusPill({
+    tone,
+    label
+}: {
+    tone: DealArtifactPreviewTone
+    label: string
+}) {
+    return (
+        <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getToneBadgeClasses(tone)}`}>
+            {label}
+        </span>
+    )
+}
+
 function formatUsd(value: number) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -399,6 +684,28 @@ function getToneClass(tone: 'cyan' | 'amber' | 'emerald') {
     if (tone === 'cyan') return 'text-cyan-200'
     if (tone === 'amber') return 'text-amber-200'
     return 'text-emerald-200'
+}
+
+function getToneBadgeClasses(tone: DealArtifactPreviewTone) {
+    if (tone === 'rose') return 'border-rose-400/30 bg-rose-500/10 text-rose-100'
+    if (tone === 'amber') return 'border-amber-400/30 bg-amber-500/10 text-amber-100'
+    if (tone === 'emerald') return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
+    return 'border-white/12 bg-white/5 text-slate-200'
+}
+
+function getToneNoteClasses(tone: DealArtifactPreviewTone) {
+    if (tone === 'rose') return 'border-rose-400/22 bg-rose-500/10 text-rose-100'
+    if (tone === 'amber') return 'border-amber-400/22 bg-amber-500/10 text-amber-100'
+    if (tone === 'emerald') return 'border-emerald-400/22 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-400/22 bg-cyan-500/10 text-cyan-100'
+    return 'border-white/10 bg-white/5 text-slate-300'
+}
+
+function toneFromPackStatus(status: 'Ready' | 'In Review' | 'Blocked'): DealArtifactPreviewTone {
+    if (status === 'Ready') return 'emerald'
+    if (status === 'Blocked') return 'rose'
+    return 'amber'
 }
 
 function buildBuyerAwareRoute(to: string, demo: boolean) {
