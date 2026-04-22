@@ -276,6 +276,12 @@ export default function ProviderDashboardPage() {
                                     >
                                         Upload New Dataset
                                     </Link>
+                                    <Link
+                                        to="/provider/institution-review"
+                                        className="rounded-lg border border-blue-500/35 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-100 transition-colors hover:bg-blue-500/20"
+                                    >
+                                        Institution review
+                                    </Link>
                                     {providerPacketQuickLink ? (
                                         <Link
                                             to={providerPacketQuickLink}

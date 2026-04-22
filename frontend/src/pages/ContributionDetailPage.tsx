@@ -79,12 +79,20 @@ export default function ContributionDetailPage() {
                     </svg>
                     Back to Provider Dashboard
                 </Link>
-                <Link
-                    to={`/provider/datasets/${dataset.id}/status`}
-                    className="inline-flex items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition-colors hover:border-cyan-400 hover:bg-cyan-500/15"
-                >
-                    Open Dataset Status
-                </Link>
+                <div className="flex flex-wrap gap-3">
+                    <Link
+                        to="/provider/institution-review"
+                        className="inline-flex items-center justify-center rounded-lg border border-blue-500/35 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-100 transition-colors hover:bg-blue-500/20"
+                    >
+                        Open Institution Review
+                    </Link>
+                    <Link
+                        to={`/provider/datasets/${dataset.id}/status`}
+                        className="inline-flex items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition-colors hover:border-cyan-400 hover:bg-cyan-500/15"
+                    >
+                        Open Dataset Status
+                    </Link>
+                </div>
             </div>
 
             <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 shadow-xl">

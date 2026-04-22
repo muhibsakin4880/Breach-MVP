@@ -57,6 +57,7 @@ import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
+import ProviderInstitutionReviewPage from './pages/ProviderInstitutionReviewPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
@@ -298,6 +299,7 @@ function App() {
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="participant-console" element={<ParticipantConsolePage />} />
                     <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
+                    <Route path="provider/institution-review" element={<ProviderInstitutionReviewPage />} />
                     <Route path="provider/datasets/new" element={<ContributionsPage />} />
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />

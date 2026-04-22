@@ -129,6 +129,9 @@ export default function ContributionStatusDetailsPage() {
                                     <Link to="/provider/dashboard" className={primaryActionButtonClass}>
                                         Back to Provider Dashboard
                                     </Link>
+                                    <Link to="/provider/institution-review" className={secondaryActionButtonClass}>
+                                        Institution review
+                                    </Link>
                                     {contribution.statusPage.secondaryAction ? (
                                         <Link to={contribution.statusPage.secondaryAction.to} className={secondaryActionButtonClass}>
                                             {contribution.statusPage.secondaryAction.label}
