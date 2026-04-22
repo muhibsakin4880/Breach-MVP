@@ -91,6 +91,7 @@ export default function DealDossierPage({
         context.request ? { label: 'Open request detail', to: buildBuyerAwareRoute(`/access-requests/${context.request.id}`, demo) } : null,
         { label: quote ? 'Refine rights package' : 'Build rights package', to: buildBuyerAwareRoute(`/datasets/${context.seed.datasetId}/rights-quote`, demo) },
         { label: 'Open governed checkout', to: buildBuyerAwareRoute(`/datasets/${context.seed.datasetId}/escrow-checkout`, demo) },
+        !demo ? { label: 'Open approval artifact', to: context.routeTargets.approval } : null,
         { label: 'Open output review', to: demo ? context.demoTargets['output-review'] : context.routeTargets['output-review'] }
     ].filter((item): item is { label: string; to: string } => Boolean(item))
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
 import OutputReviewEventFeed from '../components/deals/OutputReviewEventFeed'
 import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
@@ -95,7 +96,7 @@ export default function CleanRoomOutputReviewPage({
                             Clean Room Output Review
                         </h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            This is the operational surface between protected evaluation and any output movement: active sessions, blocked export, reviewer queue, and approved aggregate release all become visible against the same deal object.
+                            This is the operational surface between protected evaluation and any output movement: active sessions, blocked export, reviewer queue, extension requests, revocation, dispute freeze, and approved aggregate release all become visible against the same deal object.
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
@@ -122,7 +123,7 @@ export default function CleanRoomOutputReviewPage({
                         label="Raw export"
                         value={model.events.find(event => event.state === 'blocked_export')?.status ?? 'Blocked'}
                         detail={model.request.releaseBoundary}
-                        tone="rose"
+                        tone={model.currentState === 'blocked_export' ? 'cyan' : 'rose'}
                     />
                     <SummaryCard
                         label="Reviewer queue"
@@ -146,7 +147,7 @@ export default function CleanRoomOutputReviewPage({
                                     <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Core state feed</div>
                                     <h2 className="mt-2 text-2xl font-semibold text-white">Operational review sequence</h2>
                                     <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                                        The feed below makes the hard part legible: the session can be active while raw export stays blocked, the reviewer queue can open for aggregate output, and only then can a bounded result move out.
+                                        The feed below makes the hard part legible: the session can be active while raw export stays blocked, the reviewer queue can open for aggregate output, and the same lane can also capture extension requests, revocation, or a dispute-triggered freeze.
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap gap-3">
@@ -244,6 +245,84 @@ export default function CleanRoomOutputReviewPage({
                                 </div>
                             </article>
                         </section>
+
+                        <section className="grid gap-6 lg:grid-cols-2">
+                            <article className={panelClass}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Latest reviewer decision</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">Reviewer action summary</h2>
+                                    </div>
+                                    <TonePill tone={model.reviewerActionSummary.tone} label={model.reviewerActionSummary.decisionLabel} />
+                                </div>
+
+                                <div className="mt-5 grid gap-3">
+                                    <FieldRow label="Reviewer owner" value={model.reviewerActionSummary.reviewerOwner} />
+                                    <FieldRow label="Recorded at" value={model.reviewerActionSummary.recordedAt} />
+                                    <FieldRow label="Next action" value={model.reviewerActionSummary.nextAction} />
+                                </div>
+
+                                <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${getToneNoteClasses(model.reviewerActionSummary.tone)}`}>
+                                    {model.reviewerActionSummary.rationale}
+                                </div>
+                            </article>
+
+                            <article className={panelClass}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Intervention lane</div>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">Session intervention</h2>
+                                    </div>
+                                    <TonePill tone={model.sessionControl.tone} label={model.sessionControl.posture} />
+                                </div>
+
+                                <div className="mt-5 grid gap-3">
+                                    <FieldRow label="Control owner" value={model.sessionControl.owner} />
+                                    {model.extensionRequest ? (
+                                        <>
+                                            <FieldRow label="Requester" value={model.extensionRequest.requester} />
+                                            <FieldRow label="Requested window" value={model.extensionRequest.requestedWindow} />
+                                            <FieldRow label="Extension status" value={model.extensionRequest.status} />
+                                        </>
+                                    ) : null}
+                                    {model.sessionControl.revocationReason ? (
+                                        <FieldRow label="Revocation reason" value={model.sessionControl.revocationReason} />
+                                    ) : null}
+                                    {model.sessionControl.freezeReason ? (
+                                        <FieldRow label="Freeze reason" value={model.sessionControl.freezeReason} />
+                                    ) : null}
+                                </div>
+
+                                {model.extensionRequest ? (
+                                    <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${getToneNoteClasses(model.extensionRequest.tone)}`}>
+                                        {model.extensionRequest.reason} {model.extensionRequest.reviewerDisposition}
+                                    </div>
+                                ) : (
+                                    <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${getToneNoteClasses(model.sessionControl.tone)}`}>
+                                        {model.sessionControl.note}
+                                    </div>
+                                )}
+                            </article>
+                        </section>
+
+                        <section className={panelClass}>
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Output artifacts</div>
+                                    <h2 className="mt-2 text-xl font-semibold text-white">Reviewer-linked note previews</h2>
+                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                                        These previews make the operational documents visible without pretending to be full document viewers: export review note, extension handling, and freeze or revocation summaries.
+                                    </p>
+                                </div>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                    {model.artifactPreviews.length} artifact{model.artifactPreviews.length === 1 ? '' : 's'}
+                                </span>
+                            </div>
+
+                            <div className="mt-5">
+                                <DealArtifactPreviewGrid artifacts={model.artifactPreviews} />
+                            </div>
+                        </section>
                     </div>
 
                     <aside className="space-y-6">
@@ -259,13 +338,14 @@ export default function CleanRoomOutputReviewPage({
                                 <FieldRow label="Session id" value={model.session.sessionId} />
                                 <FieldRow label="Named analyst" value={model.session.analyst} />
                                 <FieldRow label="Participant" value={model.session.participant} />
+                                <FieldRow label="Session posture" value={model.sessionControl.posture} />
                                 <FieldRow label="Credential" value={model.session.credentialLabel} />
                                 <FieldRow label="Issued" value={model.session.issuedAt} />
                                 <FieldRow label="Expires" value={model.session.expiresAt} />
                             </div>
 
-                            <div className="mt-5 rounded-2xl border border-cyan-500/20 bg-cyan-500/8 px-4 py-3 text-sm leading-6 text-cyan-100/90">
-                                Review window {model.session.reviewWindowLabel} · the output lane stays tied to the same named-analyst session instead of becoming a separate uncontrolled path.
+                            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${getToneNoteClasses(model.sessionControl.tone)}`}>
+                                Review window {model.session.reviewWindowLabel} · the output lane stays tied to the same named-analyst session instead of becoming a separate uncontrolled path. {model.sessionControl.note}
                             </div>
                         </section>
 
@@ -277,10 +357,12 @@ export default function CleanRoomOutputReviewPage({
 
                             <div className="mt-5 grid gap-3">
                                 <FieldRow label="Watermark id" value={model.watermark.watermarkId} />
+                                <FieldRow label="Trace status" value={model.watermark.traceStatus} />
+                                <FieldRow label="Reviewer linkage" value={model.watermark.reviewLinkage} />
                                 <FieldRow label="Audit pointer" value={model.watermark.auditPointer} />
                             </div>
 
-                            <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm leading-6 text-emerald-100/90">
+                            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${getToneNoteClasses(model.currentStateTone)}`}>
                                 {model.watermark.traceSummary}
                             </div>
                         </section>

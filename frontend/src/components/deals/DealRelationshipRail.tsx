@@ -31,9 +31,9 @@ export default function DealRelationshipRail({
     ] as const
 
     const reservedSurfaces = [
-        { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const },
-        { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const },
-        { label: 'Approval', to: context.routeTargets.approval, status: 'Upcoming', tone: 'amber' as const }
+        { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const, demoReady: true },
+        { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const, demoReady: true },
+        { label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false }
     ]
 
     return (
@@ -89,21 +89,36 @@ export default function DealRelationshipRail({
 
                 <div className="mt-5 space-y-3">
                     {reservedSurfaces.map(item => (
-                        <Link
-                            key={`${context.seed.dealId}-${item.to}`}
-                            to={demo ? item.to.replace('/deals/', '/demo/deals/') : item.to}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 transition-colors hover:border-slate-500/50"
-                        >
-                            <div>
-                                <div className="text-sm font-semibold text-white">{item.label}</div>
-                                <div className="mt-1 text-xs text-slate-400">
-                                    {demo ? item.to.replace('/deals/', '/demo/deals/') : item.to}
+                        demo && !item.demoReady ? (
+                            <div
+                                key={`${context.seed.dealId}-${item.to}`}
+                                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3"
+                            >
+                                <div>
+                                    <div className="text-sm font-semibold text-white">{item.label}</div>
+                                    <div className="mt-1 text-xs text-slate-400">Workspace-only approval route</div>
                                 </div>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300">
+                                    Workspace only
+                                </span>
                             </div>
-                            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${getSurfaceStatusClasses(item.tone)}`}>
-                                {item.status}
-                            </span>
-                        </Link>
+                        ) : (
+                            <Link
+                                key={`${context.seed.dealId}-${item.to}`}
+                                to={demo ? item.to.replace('/deals/', '/demo/deals/') : item.to}
+                                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 transition-colors hover:border-slate-500/50"
+                            >
+                                <div>
+                                    <div className="text-sm font-semibold text-white">{item.label}</div>
+                                    <div className="mt-1 text-xs text-slate-400">
+                                        {demo ? item.to.replace('/deals/', '/demo/deals/') : item.to}
+                                    </div>
+                                </div>
+                                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${getSurfaceStatusClasses(item.tone)}`}>
+                                    {item.status}
+                                </span>
+                            </Link>
+                        )
                     ))}
                 </div>
             </section>

@@ -57,6 +57,7 @@ import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
+import DealApprovalPage from './pages/DealApprovalPage'
 import ProviderInstitutionReviewPage from './pages/ProviderInstitutionReviewPage'
 
 import { useAuth } from './contexts/AuthContext'
@@ -292,6 +293,7 @@ function App() {
                 <Route path="admin/notifications" element={RequireAdminAccess(withLazyRoute(<NotificationsPage />))} />
                 <Route path="admin/onboarding-queue" element={RequireAdminAccess(withLazyRoute(<OnboardingQueuePage />))} />
                 <Route path="admin/application-review/:appId" element={RequireAdminAccess(withLazyRoute(<ApplicationReviewPage />))} />
+                <Route path="admin/application-review/:appId/approval" element={RequireAdminAccess(<DealApprovalPage adminView />)} />
                 <Route path="admin/incident-response" element={RequireAdminAccess(withLazyRoute(<IncidentResponsePage />))} />
                 <Route path="admin/audit-trail" element={RequireAdminAccess(withLazyRoute(<AdminAuditTrailPage />))} />
 
@@ -308,7 +310,7 @@ function App() {
                     <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
                     <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />
-                    <Route path="deals/:dealId/approval" element={<DealRoutePlaceholderPage surface="approval" />} />
+                    <Route path="deals/:dealId/approval" element={<DealApprovalPage />} />
                     <Route path="deals/:dealId/negotiation" element={<DealRoutePlaceholderPage surface="negotiation" />} />
                     <Route path="deals/:dealId/residency-memo" element={<DealRoutePlaceholderPage surface="residency-memo" />} />
                     <Route path="deals/:dealId/go-live" element={<DealRoutePlaceholderPage surface="go-live" />} />

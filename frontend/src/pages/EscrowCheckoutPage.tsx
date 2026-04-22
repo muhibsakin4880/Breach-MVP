@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
+import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import { getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import DealProgressTracker from '../components/DealProgressTracker'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
+import { getDealRouteContextById } from '../domain/dealDossier'
 import {
     buildEscrowCheckoutRecord,
     buildEscrowDueUseAgreement,
@@ -32,6 +34,7 @@ import {
     type EscrowPaymentMethod,
     type EscrowReviewWindowHours
 } from '../domain/escrowCheckout'
+import { buildOutputReviewModel } from '../domain/outputReview'
 import {
     buildRightsQuote,
     formatUsd,
@@ -608,6 +611,39 @@ export default function EscrowCheckoutPage() {
         ],
         [config.accessMode, outcomeCredits.status]
     )
+    const outputReviewContext = useMemo(
+        () => (seededDeal ? getDealRouteContextById(seededDeal.dealId) : null),
+        [recordVersion, seededDeal?.dealId, selectedQuote.id]
+    )
+    const outputReviewModel = useMemo(
+        () => (outputReviewContext ? buildOutputReviewModel(outputReviewContext) : null),
+        [outputReviewContext]
+    )
+    const checkoutOutputArtifacts = useMemo(() => {
+        if (!outputReviewModel) return []
+
+        const exportReviewNote = outputReviewModel.artifactPreviews.find(
+            artifact => artifact.artifactLabel === 'Export review note'
+        )
+        const disputePreview = outputReviewModel.artifactPreviews.find(
+            artifact => artifact.artifactLabel === 'Freeze summary'
+        )
+        const extensionPreview = outputReviewModel.artifactPreviews.find(
+            artifact => artifact.artifactLabel === 'Extension request note'
+        )
+        const revocationPreview = outputReviewModel.artifactPreviews.find(
+            artifact => artifact.artifactLabel === 'Revocation summary'
+        )
+
+        return [
+            exportReviewNote,
+            outputReviewModel.currentState === 'dispute_frozen'
+                ? disputePreview
+                : outputReviewModel.currentState === 'revoked_session'
+                    ? revocationPreview
+                    : extensionPreview
+        ].filter((artifact): artifact is NonNullable<typeof artifact> => Boolean(artifact))
+    }, [outputReviewModel])
 
     useEffect(() => {
         if (!checkoutRecord || checkoutRecord.credentials.status !== 'issued') return
@@ -1414,6 +1450,18 @@ export default function EscrowCheckoutPage() {
                                             minute: '2-digit'
                                         })}
                                     </div>
+                                    {outputReviewModel ? (
+                                        <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                                Output review status
+                                            </div>
+                                            <div className="mt-3 grid gap-3 md:grid-cols-3">
+                                                <SummaryStat label="Current output-review state" value={outputReviewModel.currentStateLabel} />
+                                                <SummaryStat label="Reviewer queue" value={outputReviewModel.request.queueStatus} />
+                                                <SummaryStat label="Watermark trace" value={outputReviewModel.watermark.traceStatus} />
+                                            </div>
+                                        </div>
+                                    ) : null}
                                     <div className="mt-4 grid gap-3">
                                         <Link
                                             to={checkoutRecord.workspace.launchPath}
@@ -1436,6 +1484,16 @@ export default function EscrowCheckoutPage() {
                                             Open Escrow Center
                                         </Link>
                                     </div>
+                                    {checkoutOutputArtifacts.length > 0 ? (
+                                        <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                                Output-review artifacts
+                                            </div>
+                                            <div className="mt-4">
+                                                <DealArtifactPreviewGrid artifacts={checkoutOutputArtifacts} />
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                             )}
                         </section>

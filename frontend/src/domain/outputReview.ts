@@ -1,4 +1,4 @@
-import type { DealArtifactPreviewTone } from './dealArtifactPreview'
+import type { DealArtifactPreview, DealArtifactPreviewTone } from './dealArtifactPreview'
 import { buildDealDossierProofBundle } from './dealArtifactPreview'
 import type { DealRouteContext } from './dealDossier'
 import { checkoutAccessModeMeta } from './escrowCheckout'
@@ -8,6 +8,9 @@ export type OutputReviewCoreState =
     | 'blocked_export'
     | 'review_pending'
     | 'aggregate_approved'
+    | 'extension_request'
+    | 'revoked_session'
+    | 'dispute_frozen'
 
 export type OutputReviewEvent = {
     id: string
@@ -53,13 +56,65 @@ export type OutputReviewModel = {
         watermarkId: string
         traceSummary: string
         auditPointer: string
+        reviewLinkage: string
+        traceStatus: string
     }
     controlRows: Array<{
         label: string
         value: string
     }>
     approvedHighlights: string[]
+    reviewerActionSummary: {
+        decisionLabel: string
+        reviewerOwner: string
+        recordedAt: string
+        rationale: string
+        nextAction: string
+        tone: DealArtifactPreviewTone
+    }
+    extensionRequest: {
+        requester: string
+        requestedWindow: string
+        reason: string
+        status: string
+        reviewerDisposition: string
+        recordedAt: string
+        tone: DealArtifactPreviewTone
+    } | null
+    sessionControl: {
+        posture: string
+        owner: string
+        revocationReason: string | null
+        freezeReason: string | null
+        note: string
+        tone: DealArtifactPreviewTone
+    }
+    artifactPreviews: DealArtifactPreview[]
     events: OutputReviewEvent[]
+}
+
+type OutputReviewAdvancedSeed = {
+    defaultState: Extract<OutputReviewCoreState, 'extension_request' | 'revoked_session' | 'dispute_frozen'>
+    simulateActiveSession: boolean
+    reviewerDecisionLabel: string
+    recordedAt: string
+    rationale: string
+    nextAction: string
+    controlOwner: string
+    traceStatus: string
+    reviewLinkage: string
+    exportNoteSummary: string
+    extensionRequest?: {
+        requester: string
+        requestedWindow: string
+        reason: string
+        status: string
+        reviewerDisposition: string
+        recordedAt: string
+        tone: DealArtifactPreviewTone
+    }
+    revocationReason?: string
+    freezeReason?: string
 }
 
 type OutputReviewSeed = {
@@ -72,6 +127,7 @@ type OutputReviewSeed = {
     watermarkId: string
     traceSummary: string
     fallbackTimestamps: Record<OutputReviewCoreState, string>
+    advanced: OutputReviewAdvancedSeed
 }
 
 const OUTPUT_REVIEW_SEEDS: Record<string, OutputReviewSeed> = {
@@ -88,7 +144,31 @@ const OUTPUT_REVIEW_SEEDS: Record<string, OutputReviewSeed> = {
             active_session: '2026-03-31 08:55 UTC',
             blocked_export: '2026-03-31 09:02 UTC',
             review_pending: '2026-03-31 09:08 UTC',
-            aggregate_approved: '2026-03-31 09:21 UTC'
+            extension_request: '2026-03-31 09:18 UTC',
+            aggregate_approved: '2026-03-31 09:21 UTC',
+            revoked_session: '2026-03-31 09:29 UTC',
+            dispute_frozen: '2026-03-31 09:41 UTC'
+        },
+        advanced: {
+            defaultState: 'extension_request',
+            simulateActiveSession: true,
+            reviewerDecisionLabel: 'Extension request open',
+            recordedAt: '2026-03-31 09:18 UTC',
+            rationale: 'The analyst requested additional governed time to complete the aggregate export packet without opening a broader export path.',
+            nextAction: 'Output reviewer confirms whether the session may extend by four hours under the same policy envelope.',
+            controlOwner: 'Governed output desk',
+            traceStatus: 'Trace open while extension review is pending',
+            reviewLinkage: 'Watermark and reviewer queue remain attached while the extension request is reviewed.',
+            exportNoteSummary: 'The current output packet is still reviewer-bound and no raw export path has been broadened.',
+            extensionRequest: {
+                requester: 'A. Underwood',
+                requestedWindow: 'Add 4 hours to the governed session',
+                reason: 'Need more time to validate climate aggregation thresholds before submitting the final export note.',
+                status: 'Pending extension decision',
+                reviewerDisposition: 'Reviewer will either extend the current token window or require a fresh JIT session.',
+                recordedAt: '2026-03-31 09:18 UTC',
+                tone: 'amber'
+            }
         }
     },
     'DL-1002': {
@@ -104,7 +184,23 @@ const OUTPUT_REVIEW_SEEDS: Record<string, OutputReviewSeed> = {
             active_session: '2026-03-30 13:14 UTC',
             blocked_export: '2026-03-30 13:29 UTC',
             review_pending: '2026-03-30 13:36 UTC',
-            aggregate_approved: '2026-03-30 13:48 UTC'
+            extension_request: '2026-03-30 13:41 UTC',
+            aggregate_approved: '2026-03-30 13:48 UTC',
+            revoked_session: '2026-03-30 13:55 UTC',
+            dispute_frozen: '2026-03-30 14:02 UTC'
+        },
+        advanced: {
+            defaultState: 'revoked_session',
+            simulateActiveSession: true,
+            reviewerDecisionLabel: 'Session revoked after reviewer action',
+            recordedAt: '2026-03-30 13:55 UTC',
+            rationale: 'The analyst attempted to move replay diagnostics outside the approved destination lane, so the reviewer revoked the active session before approving any further output.',
+            nextAction: 'A fresh JIT session can be requested only after the reviewer closes the revocation note.',
+            controlOwner: 'Market data reviewer',
+            traceStatus: 'Trace held after revocation',
+            reviewLinkage: 'Watermark trace now points to the revocation decision rather than an approved release record.',
+            exportNoteSummary: 'The export packet was intercepted before release and remains sealed behind the revocation note.',
+            revocationReason: 'Replay diagnostics exceeded the approved destination posture and triggered reviewer revocation.'
         }
     },
     'DL-1003': {
@@ -120,7 +216,23 @@ const OUTPUT_REVIEW_SEEDS: Record<string, OutputReviewSeed> = {
             active_session: '2026-03-31 10:12 UTC',
             blocked_export: '2026-03-31 10:22 UTC',
             review_pending: '2026-03-31 10:28 UTC',
-            aggregate_approved: '2026-03-31 10:41 UTC'
+            extension_request: '2026-03-31 10:34 UTC',
+            aggregate_approved: '2026-03-31 10:41 UTC',
+            revoked_session: '2026-03-31 10:45 UTC',
+            dispute_frozen: '2026-03-31 10:52 UTC'
+        },
+        advanced: {
+            defaultState: 'dispute_frozen',
+            simulateActiveSession: true,
+            reviewerDecisionLabel: 'Dispute-triggered freeze activated',
+            recordedAt: '2026-03-31 10:52 UTC',
+            rationale: 'Provider governance opened a dispute after a location-join concern surfaced, so the output lane froze before any reviewed delivery could proceed.',
+            nextAction: 'Keep the session frozen until dispute review closes and the mobility restriction memo is refreshed.',
+            controlOwner: 'Mobility governance reviewer',
+            traceStatus: 'Trace frozen with dispute record',
+            reviewLinkage: 'Watermark trace is now attached to the dispute packet and cannot advance into release.',
+            exportNoteSummary: 'The export packet is preserved for dispute review, but it cannot move while the freeze stays active.',
+            freezeReason: 'Dispute review is open because location-join safeguards need renewed governance confirmation.'
         }
     }
 }
@@ -129,7 +241,10 @@ const stageLabels: Record<OutputReviewCoreState, string> = {
     active_session: 'Active session',
     blocked_export: 'Blocked export',
     review_pending: 'Output review pending',
-    aggregate_approved: 'Aggregate export approved'
+    extension_request: 'Extension request',
+    aggregate_approved: 'Aggregate export approved',
+    revoked_session: 'Revoked session',
+    dispute_frozen: 'Dispute-triggered freeze'
 }
 
 const formatUtcTimestamp = (value?: string) => {
@@ -163,80 +278,247 @@ const getSeed = (dealId: string): OutputReviewSeed =>
             active_session: '2026-03-31 09:00 UTC',
             blocked_export: '2026-03-31 09:07 UTC',
             review_pending: '2026-03-31 09:13 UTC',
-            aggregate_approved: '2026-03-31 09:28 UTC'
+            extension_request: '2026-03-31 09:16 UTC',
+            aggregate_approved: '2026-03-31 09:28 UTC',
+            revoked_session: '2026-03-31 09:36 UTC',
+            dispute_frozen: '2026-03-31 09:44 UTC'
+        },
+        advanced: {
+            defaultState: 'extension_request',
+            simulateActiveSession: true,
+            reviewerDecisionLabel: 'Extension request open',
+            recordedAt: '2026-03-31 09:16 UTC',
+            rationale: 'Reviewer is still assessing whether the named analyst can keep the same governed session open.',
+            nextAction: 'Output review desk decides whether the extension remains inside policy.',
+            controlOwner: 'Output review desk',
+            traceStatus: 'Trace open',
+            reviewLinkage: 'Trace remains linked to the reviewer queue.',
+            exportNoteSummary: 'The output packet remains bounded to the reviewer lane.',
+            extensionRequest: {
+                requester: 'Named analyst',
+                requestedWindow: 'Add 2 hours',
+                reason: 'Need more governed time to complete the export packet.',
+                status: 'Pending extension decision',
+                reviewerDisposition: 'Reviewer decides whether the current session may stay active.',
+                recordedAt: '2026-03-31 09:16 UTC',
+                tone: 'amber'
+            }
         }
     }
+
+const buildOutputArtifacts = ({
+    dealId,
+    seed,
+    currentState,
+    releaseBoundary,
+    watermarkId,
+    reviewId,
+    reviewerActionSummary,
+    extensionRequest,
+    sessionControl
+}: {
+    dealId: string
+    seed: OutputReviewSeed
+    currentState: OutputReviewCoreState
+    releaseBoundary: string
+    watermarkId: string
+    reviewId: string | null
+    reviewerActionSummary: OutputReviewModel['reviewerActionSummary']
+    extensionRequest: OutputReviewModel['extensionRequest']
+    sessionControl: OutputReviewModel['sessionControl']
+}): DealArtifactPreview[] => {
+    const exportReviewPreview: DealArtifactPreview = {
+        id: `${dealId}-output-export-note`,
+        artifactLabel: 'Export review note',
+        title: 'Reviewer export decision',
+        status:
+            currentState === 'aggregate_approved'
+                ? 'Approved aggregate release'
+                : currentState === 'dispute_frozen'
+                    ? 'Held in dispute freeze'
+                    : currentState === 'revoked_session'
+                        ? 'Held after revocation'
+                        : 'Reviewer-controlled output',
+        tone:
+            currentState === 'aggregate_approved'
+                ? 'emerald'
+                : currentState === 'dispute_frozen' || currentState === 'revoked_session'
+                    ? 'rose'
+                    : currentState === 'extension_request'
+                        ? 'amber'
+                        : 'cyan',
+        summary: seed.advanced.exportNoteSummary,
+        highlights: [
+            `Artifact ${seed.artifactName}`,
+            `Destination ${seed.destination}`,
+            `Boundary ${releaseBoundary}`,
+            `Watermark ${watermarkId}`
+        ],
+        note: `${reviewerActionSummary.reviewerOwner} · ${reviewerActionSummary.recordedAt}${reviewId ? ` · ${reviewId}` : ''}`
+    }
+
+    const previews: DealArtifactPreview[] = [exportReviewPreview]
+
+    if (extensionRequest) {
+        previews.push({
+            id: `${dealId}-output-extension-note`,
+            artifactLabel: 'Extension request note',
+            title: 'Session extension request',
+            status: extensionRequest.status,
+            tone: extensionRequest.tone,
+            summary: `${extensionRequest.requester} requested more governed time before the current export packet can be finalized.`,
+            highlights: [
+                extensionRequest.requestedWindow,
+                extensionRequest.reason,
+                extensionRequest.reviewerDisposition
+            ],
+            note: `Recorded ${extensionRequest.recordedAt}`
+        })
+    }
+
+    if (currentState === 'revoked_session') {
+        previews.push({
+            id: `${dealId}-output-revocation-summary`,
+            artifactLabel: 'Revocation summary',
+            title: 'Reviewer revocation note',
+            status: 'Session revoked',
+            tone: 'rose',
+            summary: sessionControl.revocationReason ?? 'The current governed session was revoked before release.',
+            highlights: [
+                `Owner ${sessionControl.owner}`,
+                reviewerActionSummary.nextAction,
+                `Trace status ${seed.advanced.traceStatus}`
+            ],
+            note: reviewerActionSummary.rationale
+        })
+    }
+
+    if (currentState === 'dispute_frozen') {
+        previews.push({
+            id: `${dealId}-output-freeze-summary`,
+            artifactLabel: 'Freeze summary',
+            title: 'Dispute freeze memo',
+            status: 'Frozen pending dispute',
+            tone: 'rose',
+            summary: sessionControl.freezeReason ?? 'The output lane is frozen while dispute review remains open.',
+            highlights: [
+                `Owner ${sessionControl.owner}`,
+                reviewerActionSummary.nextAction,
+                `Trace status ${seed.advanced.traceStatus}`
+            ],
+            note: reviewerActionSummary.rationale
+        })
+    }
+
+    return previews
+}
 
 export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewModel => {
     const seed = getSeed(context.seed.dealId)
     const proofBundle = buildDealDossierProofBundle(context)
     const checkout = context.checkoutRecord
     const accessMode = checkout?.configuration.accessMode ?? 'clean_room'
-    const sessionActive = checkout?.credentials.status === 'issued'
-    const workspaceReady = checkout?.workspace.status === 'ready'
+    const rawSessionIssued = checkout?.credentials.status === 'issued'
+    const simulatedSessionIssued = rawSessionIssued || seed.advanced.simulateActiveSession
+    const workspaceReady = checkout?.workspace.status === 'ready' || seed.advanced.simulateActiveSession
     const rawExportBlocked = accessMode !== 'encrypted_download'
-    const reviewPending =
-        accessMode === 'aggregated_export' &&
-        !(
-            checkout?.outcomeProtection.validation.status === 'confirmed' ||
-            checkout?.lifecycleState === 'RELEASED_TO_PROVIDER'
-        )
     const aggregateApproved =
         accessMode === 'aggregated_export' &&
         (
             checkout?.outcomeProtection.validation.status === 'confirmed' ||
             checkout?.lifecycleState === 'RELEASED_TO_PROVIDER'
         )
+    const reviewPending =
+        accessMode === 'aggregated_export' &&
+        !aggregateApproved &&
+        (
+            checkout?.credentials.status === 'issued' ||
+            seed.advanced.defaultState === 'extension_request'
+        )
+    const disputeFrozen =
+        checkout?.lifecycleState === 'DISPUTE_OPEN' ||
+        checkout?.outcomeProtection.credits.status === 'issued' ||
+        seed.advanced.defaultState === 'dispute_frozen'
+    const revokedSession = !disputeFrozen && seed.advanced.defaultState === 'revoked_session'
+    const extensionRequestOpen =
+        !disputeFrozen &&
+        !revokedSession &&
+        !aggregateApproved &&
+        !reviewPending &&
+        seed.advanced.defaultState === 'extension_request' &&
+        simulatedSessionIssued
 
     const currentState: OutputReviewCoreState =
-        aggregateApproved
-            ? 'aggregate_approved'
-            : reviewPending
-                ? 'review_pending'
-                : sessionActive && rawExportBlocked
-                    ? 'blocked_export'
-                    : 'active_session'
+        disputeFrozen
+            ? 'dispute_frozen'
+            : revokedSession
+                ? 'revoked_session'
+                : aggregateApproved
+                    ? 'aggregate_approved'
+                    : reviewPending
+                        ? 'review_pending'
+                        : extensionRequestOpen
+                            ? 'extension_request'
+                            : rawExportBlocked
+                                ? 'blocked_export'
+                                : 'active_session'
 
     const currentStateTone: DealArtifactPreviewTone =
         currentState === 'aggregate_approved'
             ? 'emerald'
-            : currentState === 'review_pending'
+            : currentState === 'review_pending' || currentState === 'extension_request'
                 ? 'amber'
                 : currentState === 'blocked_export'
-                    ? 'rose'
-                    : sessionActive
-                        ? 'cyan'
-                        : 'amber'
+                    ? 'cyan'
+                    : currentState === 'revoked_session' || currentState === 'dispute_frozen'
+                        ? 'rose'
+                        : simulatedSessionIssued
+                            ? 'cyan'
+                            : 'slate'
 
     const reviewWindowLabel = checkout
         ? `${checkout.configuration.reviewWindowHours} hours`
         : context.quote
             ? `${context.quote.input.validationWindowHours} hours`
-            : 'Pending checkout'
+            : seed.advanced.extensionRequest?.requestedWindow ?? 'Pending checkout'
 
     const sessionIssuedAt = checkout?.credentials.issuedAt
         ? formatUtcTimestamp(checkout.credentials.issuedAt)
-        : workspaceReady
-            ? formatUtcTimestamp(checkout?.workspace.provisionedAt)
-            : seed.fallbackTimestamps.active_session
+        : seed.fallbackTimestamps.active_session
 
     const sessionExpiresAt = checkout?.credentials.expiresAt
         ? formatUtcTimestamp(checkout.credentials.expiresAt)
-        : sessionActive
-            ? 'Time-boxed JIT session'
-            : 'Credentials not issued yet'
+        : currentState === 'revoked_session'
+            ? 'Revoked by reviewer action'
+            : currentState === 'dispute_frozen'
+                ? 'Frozen pending dispute review'
+                : simulatedSessionIssued
+                    ? 'Time-boxed JIT session'
+                    : 'Credentials not issued yet'
 
     const queueStatus =
-        aggregateApproved
-            ? 'Resolved after review'
-            : reviewPending
-                ? 'Pending reviewer action'
-                : rawExportBlocked
-                    ? 'Standby until aggregate request appears'
-                    : 'Encrypted release route only'
+        currentState === 'dispute_frozen'
+            ? 'Frozen after dispute'
+            : currentState === 'revoked_session'
+                ? 'Closed after revocation'
+                : currentState === 'aggregate_approved'
+                    ? 'Resolved after review'
+                    : currentState === 'review_pending'
+                        ? 'Pending reviewer action'
+                        : currentState === 'extension_request'
+                            ? 'Extension pending decision'
+                            : rawExportBlocked
+                                ? 'Standby until aggregate request appears'
+                                : 'Encrypted release route only'
 
     const queueTone: DealArtifactPreviewTone =
-        aggregateApproved ? 'emerald' : reviewPending ? 'amber' : rawExportBlocked ? 'cyan' : 'amber'
+        currentState === 'aggregate_approved'
+            ? 'emerald'
+            : currentState === 'dispute_frozen' || currentState === 'revoked_session'
+                ? 'rose'
+                : currentState === 'review_pending' || currentState === 'extension_request'
+                    ? 'amber'
+                    : 'cyan'
 
     const releaseBoundary = checkout
         ? checkoutAccessModeMeta[accessMode].detail
@@ -251,22 +533,82 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
         ? `audit://${proofBundle.reviewId.toLowerCase()}/output-review/${context.seed.dealId.toLowerCase()}`
         : `audit://output-review/${context.seed.dealId.toLowerCase()}`
 
+    const reviewerActionSummary: OutputReviewModel['reviewerActionSummary'] = {
+        decisionLabel: seed.advanced.reviewerDecisionLabel,
+        reviewerOwner: seed.reviewerOwner,
+        recordedAt: seed.advanced.recordedAt,
+        rationale:
+            checkout?.outcomeProtection.validation.note ??
+            context.request?.reviewerFeedback ??
+            seed.advanced.rationale,
+        nextAction: seed.advanced.nextAction,
+        tone:
+            currentState === 'aggregate_approved'
+                ? 'emerald'
+                : currentState === 'extension_request' || currentState === 'review_pending'
+                    ? 'amber'
+                    : currentState === 'active_session'
+                        ? 'cyan'
+                        : 'rose'
+    }
+
+    const extensionRequest = seed.advanced.extensionRequest ?? null
+
+    const sessionControl: OutputReviewModel['sessionControl'] = {
+        posture:
+            currentState === 'dispute_frozen'
+                ? 'Session frozen pending dispute'
+                : currentState === 'revoked_session'
+                    ? 'Session revoked'
+                    : currentState === 'extension_request'
+                        ? 'Extension pending reviewer decision'
+                        : currentState === 'aggregate_approved'
+                            ? 'Session completed after approved export'
+                            : simulatedSessionIssued
+                                ? 'Active governed session'
+                                : 'Session not yet issued',
+        owner: seed.advanced.controlOwner,
+        revocationReason:
+            currentState === 'revoked_session'
+                ? seed.advanced.revocationReason ?? 'Reviewer closed the governed session before release.'
+                : null,
+        freezeReason:
+            currentState === 'dispute_frozen'
+                ? checkout?.outcomeProtection.credits.reason ??
+                  checkout?.outcomeProtection.validation.note ??
+                  seed.advanced.freezeReason ??
+                  'Dispute review remains open.'
+                : null,
+        note:
+            currentState === 'extension_request'
+                ? 'The current token window remains governed while the extension request is reviewed.'
+                : currentState === 'revoked_session'
+                    ? 'Any new access now requires a fresh JIT issuance and reviewer approval.'
+                    : currentState === 'dispute_frozen'
+                        ? 'The session, queue, and watermark trail remain preserved but cannot advance into release.'
+                        : 'Session posture remains inside the standard output-review envelope.',
+        tone:
+            currentState === 'dispute_frozen' || currentState === 'revoked_session'
+                ? 'rose'
+                : currentState === 'extension_request'
+                    ? 'amber'
+                    : simulatedSessionIssued
+                        ? 'cyan'
+                        : 'slate'
+    }
+
     const events: OutputReviewEvent[] = [
         {
             id: `${context.seed.dealId}-active-session`,
             state: 'active_session',
             label: stageLabels.active_session,
-            status: sessionActive ? 'Active' : workspaceReady ? 'Ready to launch' : 'Planned',
-            tone: sessionActive ? 'cyan' : workspaceReady ? 'amber' : 'slate',
-            at: sessionActive
-                ? sessionIssuedAt
-                : workspaceReady
-                    ? formatUtcTimestamp(checkout?.workspace.provisionedAt)
-                    : seed.fallbackTimestamps.active_session,
+            status: simulatedSessionIssued ? 'Active' : workspaceReady ? 'Ready to launch' : 'Planned',
+            tone: simulatedSessionIssued ? 'cyan' : workspaceReady ? 'amber' : 'slate',
+            at: sessionIssuedAt,
             actor: seed.analyst,
             summary: `${checkout?.workspace.workspaceName ?? `${context.dataset?.category ?? 'Governed'} clean room`} is the current operating surface for this evaluation.`,
             detail:
-                sessionActive
+                simulatedSessionIssued
                     ? 'The named analyst is inside a time-boxed session with reviewer-governed egress and full audit capture.'
                     : 'The workspace is staged for named-analyst launch, but session issuance still depends on checkout state.',
             controls: [
@@ -280,7 +622,7 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
             state: 'blocked_export',
             label: stageLabels.blocked_export,
             status: rawExportBlocked ? 'Blocked by policy' : 'Encrypted package only',
-            tone: rawExportBlocked ? 'rose' : 'amber',
+            tone: rawExportBlocked ? 'cyan' : 'amber',
             at: seed.fallbackTimestamps.blocked_export,
             actor: 'Output policy engine',
             summary:
@@ -322,6 +664,30 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
             ]
         },
         {
+            id: `${context.seed.dealId}-extension-request`,
+            state: 'extension_request',
+            label: stageLabels.extension_request,
+            status: extensionRequest?.status ?? 'No extension requested',
+            tone: extensionRequest?.tone ?? 'slate',
+            at: extensionRequest?.recordedAt ?? seed.fallbackTimestamps.extension_request,
+            actor: extensionRequest?.requester ?? seed.analyst,
+            summary:
+                extensionRequest
+                    ? `${extensionRequest.requester} requested a governed session extension before the current export packet can be finalized.`
+                    : 'No governed extension request is currently open.',
+            detail:
+                extensionRequest
+                    ? `${extensionRequest.reason} ${extensionRequest.reviewerDisposition}`
+                    : 'Extension requests appear here when the active session needs more governed time without broadening export rights.',
+            controls: extensionRequest
+                ? [
+                    extensionRequest.requestedWindow,
+                    extensionRequest.status,
+                    extensionRequest.reviewerDisposition
+                ]
+                : ['No extension note recorded']
+        },
+        {
             id: `${context.seed.dealId}-aggregate-approved`,
             state: 'aggregate_approved',
             label: stageLabels.aggregate_approved,
@@ -344,8 +710,67 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
                 `Watermark ${watermarkId}`,
                 `Audit ${auditPointer}`
             ]
+        },
+        {
+            id: `${context.seed.dealId}-revoked-session`,
+            state: 'revoked_session',
+            label: stageLabels.revoked_session,
+            status: currentState === 'revoked_session' ? 'Session revoked' : 'No revocation',
+            tone: currentState === 'revoked_session' ? 'rose' : 'slate',
+            at: seed.fallbackTimestamps.revoked_session,
+            actor: seed.advanced.controlOwner,
+            summary:
+                currentState === 'revoked_session'
+                    ? 'Reviewer intervention revoked the current governed session before output release.'
+                    : 'Session revocation appears here only when reviewer intervention closes the lane.',
+            detail:
+                currentState === 'revoked_session'
+                    ? sessionControl.revocationReason ?? 'Reviewer revoked the session.'
+                    : 'The session remains revocable if reviewer intervention detects policy drift.',
+            controls: [
+                `Owner ${seed.advanced.controlOwner}`,
+                reviewerActionSummary.nextAction,
+                `Trace ${seed.advanced.traceStatus}`
+            ]
+        },
+        {
+            id: `${context.seed.dealId}-dispute-frozen`,
+            state: 'dispute_frozen',
+            label: stageLabels.dispute_frozen,
+            status: currentState === 'dispute_frozen' ? 'Frozen pending dispute' : 'No dispute freeze',
+            tone: currentState === 'dispute_frozen' ? 'rose' : 'slate',
+            at:
+                currentState === 'dispute_frozen'
+                    ? formatUtcTimestamp(checkout?.updatedAt) || seed.fallbackTimestamps.dispute_frozen
+                    : seed.fallbackTimestamps.dispute_frozen,
+            actor: seed.advanced.controlOwner,
+            summary:
+                currentState === 'dispute_frozen'
+                    ? 'Dispute review froze the output lane before any release could proceed.'
+                    : 'Dispute-triggered freeze appears only when payout or release is blocked by dispute handling.',
+            detail:
+                currentState === 'dispute_frozen'
+                    ? sessionControl.freezeReason ?? 'The output lane is frozen while dispute review remains open.'
+                    : 'No dispute freeze is active for the current review lane.',
+            controls: [
+                `Owner ${seed.advanced.controlOwner}`,
+                reviewerActionSummary.nextAction,
+                `Trace ${seed.advanced.traceStatus}`
+            ]
         }
     ]
+
+    const artifactPreviews = buildOutputArtifacts({
+        dealId: context.seed.dealId,
+        seed,
+        currentState,
+        releaseBoundary,
+        watermarkId,
+        reviewId: proofBundle.reviewId,
+        reviewerActionSummary,
+        extensionRequest,
+        sessionControl
+    })
 
     return {
         reviewId: proofBundle.reviewId,
@@ -358,9 +783,28 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
             participant: seed.participant,
             workspaceName: checkout?.workspace.workspaceName ?? `${context.dataset?.category ?? 'Governed'} clean room`,
             launchPath: checkout?.workspace.launchPath ?? '/secure-enclave',
-            status: sessionActive ? 'Issued' : workspaceReady ? 'Ready' : 'Planned',
-            tone: sessionActive ? 'cyan' : workspaceReady ? 'amber' : 'slate',
-            credentialLabel: checkout?.credentials.credentialId ?? 'Credential pending',
+            status:
+                currentState === 'dispute_frozen'
+                    ? 'Frozen'
+                    : currentState === 'revoked_session'
+                        ? 'Revoked'
+                        : simulatedSessionIssued
+                            ? 'Issued'
+                            : workspaceReady
+                                ? 'Ready'
+                                : 'Planned',
+            tone:
+                currentState === 'dispute_frozen' || currentState === 'revoked_session'
+                    ? 'rose'
+                    : simulatedSessionIssued
+                        ? 'cyan'
+                        : workspaceReady
+                            ? 'amber'
+                            : 'slate',
+            credentialLabel:
+                currentState === 'revoked_session'
+                    ? `${checkout?.credentials.credentialId ?? 'Credential'} revoked`
+                    : checkout?.credentials.credentialId ?? 'Credential pending',
             issuedAt: sessionIssuedAt,
             expiresAt: sessionExpiresAt,
             reviewWindowLabel
@@ -373,13 +817,15 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
             queueTone,
             rationale:
                 context.request?.reviewerRationale ??
-                'Only aggregate outputs that match the contracted evaluation purpose can move into reviewer inspection.',
+                seed.advanced.rationale,
             releaseBoundary
         },
         watermark: {
             watermarkId,
             traceSummary: seed.traceSummary,
-            auditPointer
+            auditPointer,
+            reviewLinkage: seed.advanced.reviewLinkage,
+            traceStatus: seed.advanced.traceStatus
         },
         controlRows: [
             { label: 'Access mode', value: checkoutAccessModeMeta[accessMode].label },
@@ -401,6 +847,10 @@ export const buildOutputReviewModel = (context: DealRouteContext): OutputReviewM
                     'No raw export path is unlocked by default.',
                     'Audit trace remains attached even when the queue is pending.'
                 ],
+        reviewerActionSummary,
+        extensionRequest,
+        sessionControl,
+        artifactPreviews,
         events
     }
 }

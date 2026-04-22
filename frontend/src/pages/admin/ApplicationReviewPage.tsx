@@ -1,4 +1,4 @@
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import {
     getDocumentChecklistCounts,
@@ -12,6 +12,7 @@ import {
     type ReviewDocumentStatus,
     type ReviewTone
 } from '../../data/adminPilotOpsData'
+import { getApprovalArtifactByReviewId } from '../../domain/approvalArtifact'
 import { useAuth } from '../../contexts/AuthContext'
 
 const toneBadgeClasses: Record<ReviewTone, string> = {
@@ -74,6 +75,7 @@ export default function ApplicationReviewPage() {
     const checklistCounts = getDocumentChecklistCounts(record)
     const decisionStatus = getDecisionStatusLabel(record.decisionStatus)
     const packetStatus = getPacketStatusLabel(record.loiStatus)
+    const sharedApprovalArtifact = getApprovalArtifactByReviewId(reviewId)
     const overviewItems = [
         { label: 'Organization', value: record.organizationName },
         { label: 'Review ID', value: record.id },
@@ -106,6 +108,15 @@ export default function ApplicationReviewPage() {
                             <p className="mt-1 text-sm text-slate-400">{record.id} · {record.reviewScope}</p>
                             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">{normalizeReviewCopy(record.overview)}</p>
                         </div>
+
+                        {sharedApprovalArtifact ? (
+                            <Link
+                                to={`/admin/application-review/${reviewId}/approval`}
+                                className="inline-flex items-center gap-2 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-2 text-[11px] font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/18"
+                            >
+                                Open shared approval artifact
+                            </Link>
+                        ) : null}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
