@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode, type 
 import { Link } from 'react-router-dom'
 import { RiskLabelStrip } from '../components/trust/TrustLayer'
 import {
+    DISCOVERY_REVIEW_STATE_META,
+    DISCOVERY_REVIEW_STATE_OPTIONS,
+    type DiscoveryReviewState,
+    type DiscoveryReviewStateMeta
+} from '../data/discoveryReviewData'
+import {
     DATASET_DISCOVERY_SUMMARIES,
     type AccessType,
     type DatasetDiscoverySummary,
@@ -11,6 +17,16 @@ import {
     dashboardColorTokens,
     dashboardComponentTokens
 } from '../dashboardTokens'
+import {
+    buildDiscoveryReviewAction,
+    buildDiscoveryReviewCounts,
+    getDiscoveryReviewState,
+    loadDiscoveryReviewStateMap,
+    saveDiscoveryReviewStateMap,
+    syncDiscoveryReviewStateMap,
+    type DiscoveryReviewAction,
+    type DiscoveryReviewStateMap
+} from '../domain/discoveryReviewState'
 import { getDatasetGeoAccessSignal } from '../domain/datasetGeoAccess'
 import { getDatasetTrustRiskLabels } from '../domain/datasetTrustProfile'
 import {
@@ -63,6 +79,13 @@ type RequestReadiness = {
     secondaryLabel: string
     secondaryTo?: string
     secondaryHref?: string
+}
+
+type TrackedReviewDataset = {
+    dataset: Dataset
+    reviewState: DiscoveryReviewState
+    reviewMeta: DiscoveryReviewStateMeta
+    reviewAction: DiscoveryReviewAction
 }
 
 type SidebarSectionKey =
@@ -298,6 +321,12 @@ export default function DatasetsPage() {
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
     const [compareIds, setCompareIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_COMPARE))
+    const [reviewStateMap, setReviewStateMap] = useState<DiscoveryReviewStateMap>(() =>
+        syncDiscoveryReviewStateMap(
+            parseStoredIdList(STORAGE_DATASET_SHORTLIST),
+            loadDiscoveryReviewStateMap()
+        )
+    )
     const prefersReducedMotion = usePrefersReducedMotion()
     const buyerOrgCountry = useMemo(
         () => readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState).country.trim(),
@@ -315,6 +344,14 @@ export default function DatasetsPage() {
         if (typeof window === 'undefined') return
         window.localStorage.setItem(STORAGE_DATASET_COMPARE, JSON.stringify(compareIds))
     }, [compareIds])
+
+    useEffect(() => {
+        setReviewStateMap(current => syncDiscoveryReviewStateMap(shortlistIds, current))
+    }, [shortlistIds])
+
+    useEffect(() => {
+        saveDiscoveryReviewStateMap(reviewStateMap)
+    }, [reviewStateMap])
 
     const filteredDatasets = useMemo(() => {
         const searchTerm = filters.searchTerm.trim().toLowerCase()
@@ -364,12 +401,24 @@ export default function DatasetsPage() {
         .map(id => DATASETS.find(dataset => dataset.id === id))
         .filter((dataset): dataset is Dataset => Boolean(dataset))
 
+    const trackedReviewDatasets: TrackedReviewDataset[] = shortlistDatasets.map(dataset => {
+        const reviewState = getDiscoveryReviewState(dataset.id, true, reviewStateMap) ?? 'shortlisted'
+
+        return {
+            dataset,
+            reviewState,
+            reviewMeta: DISCOVERY_REVIEW_STATE_META[reviewState],
+            reviewAction: buildDiscoveryReviewAction(dataset.id, reviewState)
+        }
+    })
+
     const compareDatasets = compareIds
         .map(id => DATASETS.find(dataset => dataset.id === id))
         .filter((dataset): dataset is Dataset => Boolean(dataset))
 
-    const decisionAction = getDecisionAction(shortlistDatasets, compareDatasets, filteredDatasets)
-    const requestReadiness = getRequestReadiness(shortlistDatasets, compareDatasets)
+    const reviewCounts = buildDiscoveryReviewCounts(shortlistIds, reviewStateMap)
+    const decisionAction = getDecisionAction(shortlistDatasets, compareDatasets, filteredDatasets, trackedReviewDatasets)
+    const requestReadiness = getRequestReadiness(shortlistDatasets, compareDatasets, trackedReviewDatasets)
     const firstShortlistedDataset = shortlistDatasets[0] ?? null
     const compareLimitReached = compareIds.length >= MAX_COMPARE_ITEMS
     const activeFilters = buildActiveFilters(filters)
@@ -416,11 +465,13 @@ export default function DatasetsPage() {
         })
     }
 
-    const attestedShortlistCount = shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Attested').length
-    const shortlistAverageConfidence =
-        shortlistDatasets.length > 0
-            ? `${Math.round(shortlistDatasets.reduce((sum, dataset) => sum + dataset.confidenceScore, 0) / shortlistDatasets.length)}%`
-            : '0%'
+    const setDatasetReviewState = (datasetId: number, reviewState: DiscoveryReviewState) => {
+        setShortlistIds(current => (current.includes(datasetId) ? current : [...current, datasetId]))
+        setReviewStateMap(current => ({
+            ...current,
+            [String(datasetId)]: reviewState
+        }))
+    }
 
     return (
         <div className={discoveryPageClass}>
@@ -484,13 +535,16 @@ export default function DatasetsPage() {
                                     Turn governed sourcing into the next action
                                 </h2>
                                 <p className={`mt-3 ${discoveryText.body}`}>
-                                    Track what sits in your priority set, what is queued for side-by-side review, and the clearest next move for this guided buyer workflow.
+                                    Track what sits in your priority set, which candidates are under committee review, and where governance or provider follow-up is blocking the next move.
                                 </p>
 
                                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                                     <DecisionStat label="Priority set" value={`${shortlistDatasets.length}`} />
-                                    <DecisionStat label="In review" value={`${compareDatasets.length}`} />
-                                    <DecisionStat label="Eligible results" value={`${filteredDatasets.length}`} />
+                                    <DecisionStat label="Committee review" value={`${reviewCounts.committeeReview}`} />
+                                    <DecisionStat
+                                        label="Needs follow-up"
+                                        value={`${reviewCounts.needsGovernanceInput + reviewCounts.awaitingProviderClarification}`}
+                                    />
                                 </div>
 
                                 <div className={`mt-5 rounded-[22px] border px-5 py-5 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
@@ -676,19 +730,28 @@ export default function DatasetsPage() {
 
                             {filteredDatasets.length > 0 ? (
                                 <div className="mt-6 grid gap-5 xl:grid-cols-2">
-                                    {filteredDatasets.map(dataset => (
+                                    {filteredDatasets.map(dataset => {
+                                        const reviewState = getDiscoveryReviewState(
+                                            dataset.id,
+                                            shortlistIds.includes(dataset.id),
+                                            reviewStateMap
+                                        )
+
+                                        return (
                                         <DatasetDecisionCard
                                             key={dataset.id}
                                             dataset={dataset}
                                             buyerOrgCountry={buyerOrgCountry}
                                             prefersReducedMotion={prefersReducedMotion}
                                             shortlisted={shortlistIds.includes(dataset.id)}
+                                            reviewState={reviewState}
                                             compared={compareIds.includes(dataset.id)}
                                             compareLimitReached={compareLimitReached}
                                             onToggleShortlist={() => toggleShortlist(dataset.id)}
                                             onToggleCompare={() => toggleCompare(dataset.id)}
                                         />
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <EmptyResultsState onReset={resetFilters} />
@@ -716,7 +779,8 @@ export default function DatasetsPage() {
                         >
                             {shortlistDatasets.length > 0 ? (
                                 <div className="space-y-4">
-                                    {shortlistDatasets.map(dataset => {
+                                    {trackedReviewDatasets.map(item => {
+                                        const { dataset, reviewState, reviewMeta, reviewAction } = item
                                         const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
                                         const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
 
@@ -738,12 +802,45 @@ export default function DatasetsPage() {
                                                 </div>
 
                                                 <div className="mt-4 flex flex-wrap gap-2.5">
+                                                    <StatusChip label={reviewMeta.shortLabel} tone={reviewMeta.tone} />
                                                     <StatusChip label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
                                                     <StatusChip label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
                                                     <StatusChip label={geoAccessSignal.label} tone={geoAccessSignal.tone} />
                                                 </div>
 
                                                 <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
+
+                                                <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+                                                    <div className={`${insetPanelClass} px-4 py-4`}>
+                                                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                            Internal review state
+                                                        </div>
+                                                        <div className="mt-3 flex flex-wrap gap-2">
+                                                            <StatusChip label={reviewMeta.label} tone={reviewMeta.tone} />
+                                                        </div>
+                                                        <p className="mt-3 text-sm leading-6 text-slate-300">{reviewMeta.summary}</p>
+                                                    </div>
+
+                                                    <label className={`${insetPanelClass} block px-4 py-4`}>
+                                                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                            Set internal review state
+                                                        </span>
+                                                        <select
+                                                            aria-label={`Set internal review state for ${dataset.title}`}
+                                                            value={reviewState}
+                                                            onChange={event =>
+                                                                setDatasetReviewState(dataset.id, event.target.value as DiscoveryReviewState)
+                                                            }
+                                                            className="mt-3 w-full rounded-[14px] border border-white/10 bg-[#0d162a]/95 px-4 py-3 text-sm text-slate-100 focus:border-cyan-400/40 focus:outline-none"
+                                                        >
+                                                            {DISCOVERY_REVIEW_STATE_OPTIONS.map(option => (
+                                                                <option key={option.value} value={option.value}>
+                                                                    {option.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </label>
+                                                </div>
 
                                                 <div className="mt-4">
                                                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Minimum trust layer</div>
@@ -758,6 +855,9 @@ export default function DatasetsPage() {
                                                 <div className="mt-5 flex flex-wrap gap-3">
                                                     <Link to={`/datasets/${dataset.id}`} className={primaryButtonClass}>
                                                         Open detail
+                                                    </Link>
+                                                    <Link to={reviewAction.to} className={secondaryButtonClass}>
+                                                        {reviewAction.label}
                                                     </Link>
                                                     <button
                                                         type="button"
@@ -804,8 +904,8 @@ export default function DatasetsPage() {
 
                             <div className="mt-5 grid gap-3 sm:grid-cols-3">
                                 <CompactDecisionStat label="Priority set" value={`${shortlistDatasets.length}`} />
-                                <CompactDecisionStat label="Attested" value={`${attestedShortlistCount}`} />
-                                <CompactDecisionStat label="Average confidence" value={shortlistAverageConfidence} />
+                                <CompactDecisionStat label="Needs governance" value={`${reviewCounts.needsGovernanceInput}`} />
+                                <CompactDecisionStat label="Awaiting clarification" value={`${reviewCounts.awaitingProviderClarification}`} />
                             </div>
 
                             <div className="mt-5 flex flex-col gap-3">
@@ -877,29 +977,54 @@ export default function DatasetsPage() {
                                     <span className={discoveryText.metaStrong}>{compareDatasets.length} of {MAX_COMPARE_ITEMS} selected</span>
                                 </div>
 
-                                {compareDatasets.map(dataset => (
-                                    <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="min-w-0">
-                                                <div className="text-base font-semibold text-slate-50">{dataset.title}</div>
-                                                <div className={`mt-2 ${discoveryText.meta}`}>
-                                                    {dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}
+                                {compareDatasets.map(dataset => {
+                                    const reviewState = getDiscoveryReviewState(
+                                        dataset.id,
+                                        shortlistIds.includes(dataset.id),
+                                        reviewStateMap
+                                    )
+                                    const reviewMeta = reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState] : null
+                                    const reviewAction = reviewState ? buildDiscoveryReviewAction(dataset.id, reviewState) : null
+
+                                    return (
+                                        <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="min-w-0">
+                                                    <div className="text-base font-semibold text-slate-50">{dataset.title}</div>
+                                                    <div className={`mt-2 ${discoveryText.meta}`}>
+                                                        {dataset.domain} · {bucketFreshness(dataset.freshness)} · {dataset.accessType}
+                                                    </div>
+                                                    <div className="mt-3 flex flex-wrap gap-2">
+                                                        {reviewMeta ? (
+                                                            <StatusChip label={reviewMeta.shortLabel} tone={reviewMeta.tone} />
+                                                        ) : (
+                                                            <StatusChip label="Not in priority set" tone="scheduled" />
+                                                        )}
+                                                    </div>
+                                                    {reviewAction ? (
+                                                        <Link
+                                                            to={reviewAction.to}
+                                                            className="mt-3 inline-flex text-sm font-semibold text-cyan-100 transition-colors hover:text-cyan-200"
+                                                        >
+                                                            {reviewAction.label}
+                                                        </Link>
+                                                    ) : null}
                                                 </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleCompare(dataset.id)}
+                                                    aria-label={`Remove ${dataset.title} from compare`}
+                                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                                >
+                                                    Remove
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleCompare(dataset.id)}
-                                                aria-label={`Remove ${dataset.title} from compare`}
-                                                className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
-                                            >
-                                                Remove
-                                            </button>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
 
                                 {compareDatasets.length >= 2 ? (
-                                    <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} />
+                                    <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} reviewStateMap={reviewStateMap} shortlistIds={shortlistIds} />
                                 ) : (
                                     <div className={`${subCardSurfaceClass} px-5 py-5`}>
                                         <div className="text-base font-semibold text-slate-50">Add one more opportunity to review</div>
@@ -979,6 +1104,7 @@ function DatasetDecisionCard({
     buyerOrgCountry,
     prefersReducedMotion,
     shortlisted,
+    reviewState,
     compared,
     compareLimitReached,
     onToggleShortlist,
@@ -988,6 +1114,7 @@ function DatasetDecisionCard({
     buyerOrgCountry: string
     prefersReducedMotion: boolean
     shortlisted: boolean
+    reviewState: DiscoveryReviewState | null
     compared: boolean
     compareLimitReached: boolean
     onToggleShortlist: () => void
@@ -999,7 +1126,18 @@ function DatasetDecisionCard({
     const providerTone = dataset.providerTrustScore >= 95 ? 'healthy' : dataset.providerTrustScore >= 90 ? 'scheduled' : 'monitoring'
     const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
     const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
-    const frontBadges = getDiscoveryFrontBadges(dataset, geoAccessSignal, regulatedProfile)
+    const reviewMeta = reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState] : null
+    const frontBadges = [
+        ...getDiscoveryFrontBadges(dataset, geoAccessSignal, regulatedProfile),
+        ...(reviewMeta
+            ? [{
+                key: `review-state-${dataset.id}`,
+                label: reviewMeta.shortLabel,
+                kind: 'signal' as const,
+                tone: reviewMeta.tone
+            }]
+            : [])
+    ]
     const backBadges = getDiscoveryBackBadges(dataset, geoAccessSignal, regulatedProfile)
     const trustRiskLabels = getPriorityTrustRiskLabels(dataset.trustProfile)
     const frontTabIndex = isFlipped ? -1 : 0
@@ -1084,6 +1222,12 @@ function DatasetDecisionCard({
                     <p className="mt-5 text-sm leading-6 text-slate-200" style={getLineClampStyle(2)}>
                         {dataset.bestFor}
                     </p>
+
+                    {reviewMeta ? (
+                        <p className="mt-3 text-xs leading-5 text-slate-400">
+                            Internal review state: <span className="font-semibold text-slate-200">{reviewMeta.label}</span>
+                        </p>
+                    ) : null}
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
                         <CompactSignalCard
@@ -1647,7 +1791,17 @@ function CompactDecisionStat({ label, value }: { label: string; value: string })
     )
 }
 
-function CompareTable({ datasets, buyerOrgCountry }: { datasets: Dataset[]; buyerOrgCountry: string }) {
+function CompareTable({
+    datasets,
+    buyerOrgCountry,
+    reviewStateMap,
+    shortlistIds
+}: {
+    datasets: Dataset[]
+    buyerOrgCountry: string
+    reviewStateMap: DiscoveryReviewStateMap
+    shortlistIds: number[]
+}) {
     const attributes = [
         { label: 'Confidence', getValue: (dataset: Dataset) => `${dataset.confidenceScore}%` },
         { label: 'Provider review signal', getValue: (dataset: Dataset) => `${dataset.providerTrustScore}%` },
@@ -1655,7 +1809,19 @@ function CompareTable({ datasets, buyerOrgCountry }: { datasets: Dataset[]; buye
         { label: 'Verification', getValue: (dataset: Dataset) => dataset.verificationStatus },
         { label: 'Access path', getValue: (dataset: Dataset) => dataset.accessType },
         { label: 'Coverage geography', getValue: (dataset: Dataset) => dataset.geography },
-        { label: 'Geo policy', getValue: (dataset: Dataset) => getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry).label }
+        { label: 'Geo policy', getValue: (dataset: Dataset) => getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry).label },
+        {
+            label: 'Internal review',
+            getValue: (dataset: Dataset) => {
+                const reviewState = getDiscoveryReviewState(
+                    dataset.id,
+                    shortlistIds.includes(dataset.id),
+                    reviewStateMap
+                )
+
+                return reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState].shortLabel : 'Not in priority set'
+            }
+        }
     ] as const
 
     return (
@@ -1951,13 +2117,59 @@ function getRegulatedDiscoveryProfile(dataset: Dataset): RegulatedDiscoveryProfi
     )
 }
 
-function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Dataset[], filteredDatasets: Dataset[]): DecisionAction {
+function getDecisionAction(
+    shortlistDatasets: Dataset[],
+    compareDatasets: Dataset[],
+    filteredDatasets: Dataset[],
+    trackedReviewDatasets: TrackedReviewDataset[]
+): DecisionAction {
+    const clarificationCandidate = trackedReviewDatasets.find(item => item.reviewState === 'awaiting_provider_clarification')
+    if (clarificationCandidate) {
+        return {
+            label: 'Open clarification history',
+            detail: `${clarificationCandidate.dataset.title} is waiting on a provider-side answer before buyer review can continue.`,
+            to: clarificationCandidate.reviewAction.to,
+            tone: 'monitoring'
+        }
+    }
+
+    const governanceCandidate = trackedReviewDatasets.find(item => item.reviewState === 'needs_governance_input')
+    if (governanceCandidate) {
+        return {
+            label: 'Open governance-ready dossier',
+            detail: `${governanceCandidate.dataset.title} needs privacy, legal, or governance review before it should move into a broader evaluation lane.`,
+            to: governanceCandidate.reviewAction.to,
+            tone: 'monitoring'
+        }
+    }
+
+    if (trackedReviewDatasets.some(item => item.reviewState === 'committee_review')) {
+        return {
+            label: 'Review committee slate',
+            detail: 'One or more tracked opportunities are under committee review. Use the priority set or side-by-side panel to keep internal ranking visible.',
+            href: compareDatasets.length >= 2 ? '#compare-panel' : '#shortlist-panel',
+            tone: 'scheduled'
+        }
+    }
+
     if (compareDatasets.length >= 2) {
         return {
             label: 'Review queued opportunities',
             detail: 'You have enough opportunities in side-by-side review to inspect trust, freshness, and access path together.',
             href: '#compare-panel',
             tone: 'healthy'
+        }
+    }
+
+    if (
+        trackedReviewDatasets.length > 0 &&
+        trackedReviewDatasets.every(item => item.reviewState === 'rejected_for_now')
+    ) {
+        return {
+            label: 'Reassess held opportunities',
+            detail: 'Every tracked opportunity is on hold for now. Reopen the shortlist if you want to revisit one or clear the held set.',
+            href: '#shortlist-panel',
+            tone: 'monitoring'
         }
     }
 
@@ -1987,7 +2199,11 @@ function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Datase
     }
 }
 
-function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Dataset[]): RequestReadiness {
+function getRequestReadiness(
+    shortlistDatasets: Dataset[],
+    compareDatasets: Dataset[],
+    trackedReviewDatasets: TrackedReviewDataset[]
+): RequestReadiness {
     if (shortlistDatasets.length === 0) {
         return {
             tone: 'scheduled',
@@ -1995,6 +2211,59 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
             detail: 'Add at least one viable opportunity to the priority set before moving into detail review or buyer workflow guidance.',
             primaryLabel: 'Open guided tour',
             primaryTo: '/guided-tour',
+            secondaryLabel: 'Review discovery results',
+            secondaryHref: '#matched-datasets'
+        }
+    }
+
+    const clarificationCandidate = trackedReviewDatasets.find(item => item.reviewState === 'awaiting_provider_clarification')
+    if (clarificationCandidate) {
+        return {
+            tone: 'monitoring',
+            title: 'Awaiting provider clarification',
+            detail: `${clarificationCandidate.dataset.title} is blocked on a provider answer or scope clarification. Keep the negotiation thread visible before progressing.`,
+            primaryLabel: clarificationCandidate.reviewAction.label,
+            primaryTo: clarificationCandidate.reviewAction.to,
+            secondaryLabel: 'Review priority set',
+            secondaryHref: '#shortlist-panel'
+        }
+    }
+
+    const governanceCandidate = trackedReviewDatasets.find(item => item.reviewState === 'needs_governance_input')
+    if (governanceCandidate) {
+        return {
+            tone: 'monitoring',
+            title: 'Governance review is the next gate',
+            detail: `${governanceCandidate.dataset.title} already looks promising, but it still needs governance input before the buyer should treat it as evaluation-ready.`,
+            primaryLabel: governanceCandidate.reviewAction.label,
+            primaryTo: governanceCandidate.reviewAction.to,
+            secondaryLabel: 'Review priority set',
+            secondaryHref: '#shortlist-panel'
+        }
+    }
+
+    if (trackedReviewDatasets.some(item => item.reviewState === 'committee_review')) {
+        return {
+            tone: 'scheduled',
+            title: 'Committee review in progress',
+            detail: 'Your tracked opportunities are being ranked internally. Keep the committee slate visible and route the strongest candidate into the deal flow when consensus forms.',
+            primaryLabel: compareDatasets.length >= 2 ? 'Review side-by-side panel' : 'Review priority set',
+            primaryHref: compareDatasets.length >= 2 ? '#compare-panel' : '#shortlist-panel',
+            secondaryLabel: `Open ${shortlistDatasets[0].title}`,
+            secondaryTo: `/datasets/${shortlistDatasets[0].id}`
+        }
+    }
+
+    if (
+        trackedReviewDatasets.length > 0 &&
+        trackedReviewDatasets.every(item => item.reviewState === 'rejected_for_now')
+    ) {
+        return {
+            tone: 'monitoring',
+            title: 'Tracked opportunities are on hold',
+            detail: 'Everything in the current priority set is rejected for now. Keep the hold state visible or reopen one candidate if the buyer team wants to revisit it.',
+            primaryLabel: 'Review priority set',
+            primaryHref: '#shortlist-panel',
             secondaryLabel: 'Review discovery results',
             secondaryHref: '#matched-datasets'
         }
