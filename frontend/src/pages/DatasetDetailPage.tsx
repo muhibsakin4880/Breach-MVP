@@ -4,6 +4,7 @@ import DealProgressTracker from '../components/DealProgressTracker'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DatasetAccessPackagePanel from '../components/dataset-detail/DatasetAccessPackagePanel'
 import DatasetActionCheckoutPanel from '../components/dataset-detail/DatasetActionCheckoutPanel'
+import DatasetAssistantPanel from '../components/dataset-detail/DatasetAssistantPanel'
 import DatasetDealProgressSummaryPanel from '../components/dataset-detail/DatasetDealProgressSummaryPanel'
 import DatasetHeroPanel from '../components/dataset-detail/DatasetHeroPanel'
 import DatasetNotesGuidancePanel from '../components/dataset-detail/DatasetNotesGuidancePanel'
@@ -689,6 +690,9 @@ export default function DatasetDetailPage() {
                                         qualityPreview={datasetQualityPreview}
                                         showSchemaPreview={false}
                                         overviewMode
+                                        interstitialContent={
+                                            <DatasetAssistantPanel dataset={dataset} />
+                                        }
                                     />
                                 </div>
                             ) : null}

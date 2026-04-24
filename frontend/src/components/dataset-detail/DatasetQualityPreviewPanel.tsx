@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { DatasetQualityPreview } from '../../data/datasetCatalogData'
 import { confidenceLevel, decisionLabel, type DatasetDetail } from '../../data/datasetDetailData'
 import DatasetDetailPanel, { DatasetDetailMetric } from './DatasetDetailPanel'
@@ -7,13 +8,15 @@ type DatasetQualityPreviewPanelProps = {
     qualityPreview?: DatasetQualityPreview | null
     showSchemaPreview?: boolean
     overviewMode?: boolean
+    interstitialContent?: ReactNode
 }
 
 export default function DatasetQualityPreviewPanel({
     dataset,
     qualityPreview,
     showSchemaPreview = true,
-    overviewMode = false
+    overviewMode = false,
+    interstitialContent
 }: DatasetQualityPreviewPanelProps) {
     const confidenceTone = confidenceLevel(dataset.confidenceScore)
     const decisionTone = decisionLabel(dataset.preview.decision)
@@ -129,6 +132,8 @@ export default function DatasetQualityPreviewPanel({
                         </div>
                     </div>
                 </div>
+
+                {interstitialContent ? interstitialContent : null}
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                     <div className="rounded-md border border-slate-800 bg-slate-950/55 p-4">
