@@ -29,6 +29,7 @@ const navGroups: NavGroup[] = [
             { label: 'Escrow Center', to: '/escrow-center' },
             { label: 'Compliance Passport', to: '/compliance-passport' },
             { label: 'Researcher Access', to: '/researcher-access' },
+            { label: 'Ephemeral Token', to: '/ephemeral-token' },
             { label: 'Rights Quote Builder', to: '/datasets/1/rights-quote' }
         ]
     },

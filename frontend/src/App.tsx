@@ -53,6 +53,7 @@ import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
+import EphemeralTokenPage from './pages/EphemeralTokenPage'
 import DealIndexPage from './pages/DealIndexPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
@@ -308,6 +309,7 @@ function App() {
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
+                    <Route path="ephemeral-token" element={<EphemeralTokenPage />} />
                     <Route path="deals" element={<DealIndexPage />} />
                     <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
