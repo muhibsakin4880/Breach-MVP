@@ -15,6 +15,12 @@ export type ProviderDatasetSchemaFieldSnapshot = {
     residency: 'global' | 'local'
     nullRate: number
     aiDescription: string
+    sample?: string
+    cryptoState?: string
+    cardinality?: string
+    provenance?: string
+    anomalyFlags?: string
+    updateVelocity?: string
 }
 
 export type ProviderDatasetSchemaReviewSnapshot = {

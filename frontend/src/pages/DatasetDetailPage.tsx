@@ -47,6 +47,7 @@ import {
 } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { getOutcomeEvaluationFee, loadEscrowCheckouts } from '../domain/escrowCheckout'
+import { getProviderDatasetSubmissionByDatasetId } from '../domain/providerDatasetSubmission'
 import {
     getDatasetTrustRiskLabels,
     getDatasetTrustSummaryRows,
@@ -208,6 +209,10 @@ export default function DatasetDetailPage() {
         () => getDatasetQualityPreviewById(dataset.id),
         [dataset.id]
     )
+    const providerSubmission = useMemo(
+        () => getProviderDatasetSubmissionByDatasetId(dataset.id),
+        [dataset.id]
+    )
 
     const dealRoute = useMemo(
         () => getDealRouteRecordByDatasetId(dataset.id),
@@ -225,6 +230,12 @@ export default function DatasetDetailPage() {
             ? buildDemoDealPath(dealRoute.dealId, 'provider-packet')
             : buildDealPath(dealRoute.dealId, 'provider-packet')
     }, [dealRoute, isDemoRoute])
+    const qualityBreakdownPath = useMemo(
+        () => isDemoRoute
+            ? `/demo/datasets/${dataset.id}/quality-breakdown`
+            : `/datasets/${dataset.id}/quality-breakdown`,
+        [dataset.id, isDemoRoute]
+    )
     const dealContext = useMemo(
         () => (dealRoute ? getDealRouteContextById(dealRoute.dealId) : null),
         [dealRoute]
@@ -702,7 +713,12 @@ export default function DatasetDetailPage() {
                             ) : null}
 
                             {activeTab === 'schema' ? (
-                                <DatasetSchemaPreviewPanel dataset={dataset} />
+                                <DatasetSchemaPreviewPanel
+                                    dataset={dataset}
+                                    qualityPreview={datasetQualityPreview}
+                                    providerSubmission={providerSubmission}
+                                    qualityBreakdownPath={qualityBreakdownPath}
+                                />
                             ) : null}
 
                             {activeTab === 'governance' ? (
