@@ -118,27 +118,80 @@ const emptyNextSteps = [
     'Token issued'
 ]
 
+const tokenFlowSteps = [
+    'Escrow is funded',
+    'Workspace is provisioned',
+    'Policy checks pass',
+    'Ephemeral Token is issued',
+    'Evaluation becomes active',
+    'Token expires, freezes, or revokes based on deal and policy state'
+]
+
+const securityControls = [
+    { title: 'Time-boxed access', detail: 'Credential windows are short-lived and close automatically at expiry.', tone: 'cyan' },
+    { title: 'Policy-bound scope', detail: 'Scopes follow the approved evaluation workflow, not broad account access.', tone: 'emerald' },
+    { title: 'Audit logging', detail: 'Workspace activity and control events remain tied to the deal audit trail.', tone: 'emerald' },
+    { title: 'Egress review', detail: 'Outputs are blocked or routed through review depending on the access mode.', tone: 'amber' },
+    { title: 'Raw export control', detail: 'Raw data export is blocked unless an explicitly approved encrypted download path applies.', tone: 'rose' },
+    { title: 'Auto-expiry', detail: 'Expired credentials cannot continue workspace access without renewed review.', tone: 'cyan' },
+    { title: 'Freeze / revoke controls', detail: 'Disputes, outcome failures, or policy events can freeze or revoke access.', tone: 'amber' },
+    { title: 'No raw secret exposed', detail: 'The UI shows only safe token references for audit and support.', tone: 'emerald' }
+] satisfies Array<{ title: string; detail: string; tone: Tone }>
+
+const accessModeCards = [
+    {
+        title: 'Secure clean room',
+        detail: 'Analysis happens inside an isolated workspace with no raw export path.'
+    },
+    {
+        title: 'Aggregated export',
+        detail: 'Governed analysis is allowed, but only reviewed aggregate outputs can leave.'
+    },
+    {
+        title: 'Encrypted download',
+        detail: 'Time-boxed, watermarked, encrypted package access is allowed when explicitly approved.'
+    }
+]
+
 export default function EphemeralTokenPage() {
     const nowMs = useMemo(() => Date.now(), [])
+    const dealContexts = useMemo(() => loadDealRouteContexts(), [])
     const checkoutRecords = useMemo(() => loadEscrowCheckouts(), [])
+    // loadEscrowCheckouts returns records sorted newest first, so index 0 is the current token context.
     const currentToken = checkoutRecords[0] ?? null
     const dealContext = useMemo(
-        () => (currentToken ? findDealContextForCheckout(currentToken) : null),
-        [currentToken]
+        () => (currentToken ? findDealContextForCheckout(currentToken, dealContexts) : null),
+        [currentToken, dealContexts]
     )
+    const tokenStatus = currentToken ? deriveTokenStatus(currentToken, nowMs) : undefined
+    const statusTone = tokenStatus ? getStatusTone(tokenStatus) : 'cyan'
 
-    if (!currentToken) {
-        return (
-            <div className={pageClass}>
-                <div className={dashboardComponentTokens['page-background']} />
-                <main className={shellClass}>
-                    <PageHeader />
+    return (
+        <div className={pageClass}>
+            <div className={dashboardComponentTokens['page-background']} />
+            <main className={shellClass}>
+                <PageHeader status={tokenStatus} statusTone={statusTone} />
+                {currentToken ? (
+                    <TokenDashboard currentToken={currentToken} dealContext={dealContext} nowMs={nowMs} />
+                ) : (
                     <EmptyTokenState />
-                </main>
-            </div>
-        )
-    }
+                )}
+                <EducationSections />
+                <SecurityNotice />
+            </main>
+        </div>
+    )
+}
 
+function TokenDashboard({
+    currentToken,
+    dealContext,
+    nowMs
+}: {
+    currentToken: EscrowCheckoutRecord
+    dealContext: DealRouteContext | null
+    nowMs: number
+}) {
     const tokenStatus = deriveTokenStatus(currentToken, nowMs)
     const statusTone = getStatusTone(tokenStatus)
     const lifecycleLabel = CONTRACT_STATE_LABELS[currentToken.lifecycleState]
@@ -146,7 +199,7 @@ export default function EphemeralTokenPage() {
     const outcomeMeta = outcomeStageMeta[currentToken.outcomeProtection.stage]
     const timeRemaining = formatTimeRemaining(currentToken.credentials.expiresAt, nowMs)
     const policyState = getPolicyState(currentToken, tokenStatus)
-    const safeTokenReference = currentToken.credentials.credentialId ?? `PLANNED-${currentToken.escrowId}`
+    const safeTokenReference = getSafeTokenReference(currentToken)
     const dossierRoute = dealContext?.routeTargets.dossier ?? '/deals'
     const terminalState = getTerminalState(currentToken, tokenStatus)
     const timelineEvents = buildTimelineEvents(currentToken, tokenStatus, nowMs)
@@ -155,19 +208,13 @@ export default function EphemeralTokenPage() {
     const renewalEligible = tokenStatus === 'Expired'
 
     return (
-        <div className={pageClass}>
-            <div className={dashboardComponentTokens['page-background']} />
-            <main className={shellClass}>
-                <PageHeader status={tokenStatus} statusTone={statusTone} />
-
+        <>
                 <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Ephemeral Token summary">
                     <SummaryCard label="Token status" value={tokenStatus} detail={getStatusDetail(tokenStatus)} tone={statusTone} />
                     <SummaryCard label="Time remaining" value={timeRemaining} detail={formatIsoTimestamp(currentToken.credentials.expiresAt, 'Expiry pending')} tone={tokenStatus === 'Expired' ? 'slate' : statusTone} />
                     <SummaryCard label="Access mode" value={accessModeMeta.label} detail={accessModeMeta.detail} tone="cyan" />
                     <SummaryCard label="Policy state" value={policyState} detail="Deal, DUA, workspace, and egress controls remain linked." tone={policyState === 'Restricted' ? 'amber' : 'emerald'} />
                 </section>
-
-                <SecurityNotice />
 
                 {terminalState ? (
                     <TerminalStatePanel
@@ -310,8 +357,7 @@ export default function EphemeralTokenPage() {
                         </Panel>
                     </aside>
                 </section>
-            </main>
-        </div>
+        </>
     )
 }
 
@@ -320,10 +366,13 @@ function PageHeader({ status, statusTone = 'cyan' }: { status?: TokenStatus; sta
         <header className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
             <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
-                    <div className={text.heroEyebrow}>Buyer workflow · temporary access</div>
+                    <div className={text.heroEyebrow}>BUYER WORKFLOW · TEMPORARY ACCESS</div>
                     <h1 className={`mt-3 ${text.heroTitle}`}>Ephemeral Token</h1>
                     <p className={`mt-3 max-w-3xl ${text.bodyStrong}`}>
                         Temporary, policy-bound access for secure dataset evaluation.
+                    </p>
+                    <p className={`mt-3 max-w-4xl ${text.body}`}>
+                        Redoubt issues short-lived Ephemeral Tokens after escrow, workspace provisioning, and policy checks clear. Access is scoped to the approved evaluation workflow and can expire, freeze, or revoke automatically.
                     </p>
                 </div>
                 {status ? (
@@ -371,6 +420,66 @@ function EmptyTokenState() {
                 </div>
             </div>
         </section>
+    )
+}
+
+function EducationSections() {
+    return (
+        <div className="mt-6 space-y-6" aria-label="Ephemeral Token education">
+            <Panel
+                eyebrow="Buyer access model"
+                title="How Ephemeral Tokens Work"
+                description="An Ephemeral Token is a short-lived access credential that allows a buyer or evaluator to work with a protected dataset inside a governed workspace. It does not provide permanent access, uncontrolled raw data access, or reusable secrets."
+            >
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {tokenFlowSteps.map((step, index) => (
+                        <div key={step} className={cardClass}>
+                            <div className="flex items-start gap-3">
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-cyan-400/25 bg-cyan-400/[0.08] text-xs font-semibold text-cyan-100">
+                                    {index + 1}
+                                </span>
+                                <div>
+                                    <div className="text-sm font-semibold text-slate-100">{step}</div>
+                                    <p className={`mt-2 ${text.meta}`}>
+                                        {getFlowStepDetail(index)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </Panel>
+
+            <Panel
+                eyebrow="Control posture"
+                title="Security Controls"
+                description="Every token is constrained by time, policy, audit, egress, and deal-state controls before protected data evaluation can proceed."
+            >
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {securityControls.map(control => (
+                        <div key={control.title} className={`rounded-2xl border px-4 py-4 ${toneClasses[control.tone].panel}`}>
+                            <StatusBadge label={control.title} tone={control.tone} />
+                            <p className={`mt-3 ${text.bodyStrong}`}>{control.detail}</p>
+                        </div>
+                    ))}
+                </div>
+            </Panel>
+
+            <Panel
+                eyebrow="Access mode reference"
+                title="Access Modes"
+                description="The token’s scope follows the selected access mode, so buyers can evaluate without receiving permanent or uncontrolled data access."
+            >
+                <div className="grid gap-3 lg:grid-cols-3">
+                    {accessModeCards.map(mode => (
+                        <article key={mode.title} className={cardClass}>
+                            <h3 className={text.itemTitle}>{mode.title}</h3>
+                            <p className={`mt-3 ${text.body}`}>{mode.detail}</p>
+                        </article>
+                    ))}
+                </div>
+            </Panel>
+        </div>
     )
 }
 
@@ -549,8 +658,19 @@ function deriveTokenStatus(record: EscrowCheckoutRecord, nowMs: number): TokenSt
     if (record.lifecycleState === 'RELEASED_TO_PROVIDER') return 'Revoked'
     if (record.lifecycleState === 'DISPUTE_OPEN' || record.outcomeProtection.credits.status === 'issued') return 'Frozen'
     if (record.credentials.status === 'issued' && record.credentials.expiresAt && Date.parse(record.credentials.expiresAt) <= nowMs) return 'Expired'
+    if (record.credentials.status === 'issued' && !hasFutureExpiry(record.credentials.expiresAt, nowMs)) return 'Provisioning'
     if (record.credentials.status !== 'issued' || record.workspace.status !== 'ready') return 'Provisioning'
     return 'Active'
+}
+
+function hasFutureExpiry(expiresAt: string | undefined, nowMs: number) {
+    if (!expiresAt) return false
+    const expiresMs = Date.parse(expiresAt)
+    return !Number.isNaN(expiresMs) && expiresMs > nowMs
+}
+
+function getSafeTokenReference(record: EscrowCheckoutRecord) {
+    return record.credentials.credentialId ?? `PLANNED-${record.escrowId}`
 }
 
 function getStatusTone(status: TokenStatus): Tone {
@@ -567,6 +687,15 @@ function getStatusDetail(status: TokenStatus) {
     if (status === 'Frozen') return 'Access is paused while policy, outcome, or dispute controls review the deal.'
     if (status === 'Revoked') return 'The credential has been archived after release or control action.'
     return 'The credential window has closed.'
+}
+
+function getFlowStepDetail(index: number) {
+    if (index === 0) return 'The governed transaction starts only after escrow funding is captured.'
+    if (index === 1) return 'Redoubt prepares the secure workspace that will contain evaluation activity.'
+    if (index === 2) return 'Policy, DUA, and deal-state checks gate credential issue.'
+    if (index === 3) return 'A safe reference ID and scoped permissions attach to the workspace.'
+    if (index === 4) return 'The buyer evaluates protected data within the approved access boundary.'
+    return 'Access ends automatically or is restricted when policy or deal state requires it.'
 }
 
 function getPolicyState(record: EscrowCheckoutRecord, status: TokenStatus) {
@@ -711,16 +840,19 @@ function sanitizeScopes(scopes: string[]) {
         if (scope === 'egress:reviewed') return 'egress reviewed'
         if (scope === 'download:encrypted') return 'encrypted download approved'
         if (scope === 'watermark:required') return 'watermark required'
-        if (scope === 'keys:ephemeral') return 'ephemeral access'
-        return scope.replace(/[:_-]+/g, ' ')
+        if (scope === 'keys:ephemeral') return 'keys ephemeral'
+        return 'additional scoped permission'
     })
 
     return Array.from(new Set(labels))
 }
 
-function findDealContextForCheckout(record: EscrowCheckoutRecord): DealRouteContext | null {
+function findDealContextForCheckout(
+    record: EscrowCheckoutRecord,
+    contexts: DealRouteContext[]
+): DealRouteContext | null {
     return (
-        loadDealRouteContexts().find(context =>
+        contexts.find(context =>
             context.checkoutId === record.id ||
             context.checkoutRecord?.id === record.id ||
             context.dataset?.id === record.datasetId ||
