@@ -103,19 +103,39 @@ export default function DatasetAssistantPanel({
     const chatContainerRef = useRef<HTMLDivElement | null>(null)
 
     const suggestedPrompts = useMemo(
-        () => [
-            {
-                section: 'Confidence',
-                prompt: `Why is the confidence score ${dataset.confidenceScore}%?`
-            },
-            {
-                section: 'Schema',
-                prompt: 'Which fields are restricted in this preview?'
-            },
-            { section: 'Risk', prompt: 'What does Gray Zone mean for this dataset?' },
-            { section: 'Freshness', prompt: 'How fresh is this dataset right now?' }
-        ],
-        [dataset.confidenceScore]
+        () =>
+            variant === 'breakdown'
+                ? [
+                    {
+                        section: 'Schema',
+                        prompt: 'Which fields are highest risk in this preview?'
+                    },
+                    {
+                        section: 'Residency',
+                        prompt: 'What does local hosting required imply for this dataset?'
+                    },
+                    {
+                        section: 'Labels',
+                        prompt: 'Explain Gray Zone versus Restricted for this schema.'
+                    },
+                    {
+                        section: 'Governance',
+                        prompt: 'What should I inspect here before starting clean-room evaluation?'
+                    }
+                ]
+                : [
+                    {
+                        section: 'Confidence',
+                        prompt: `Why is the confidence score ${dataset.confidenceScore}%?`
+                    },
+                    {
+                        section: 'Schema',
+                        prompt: 'Which fields are restricted in this preview?'
+                    },
+                    { section: 'Risk', prompt: 'What does Gray Zone mean for this dataset?' },
+                    { section: 'Freshness', prompt: 'How fresh is this dataset right now?' }
+                ],
+        [dataset.confidenceScore, variant]
     )
 
     useEffect(() => {
@@ -204,16 +224,33 @@ export default function DatasetAssistantPanel({
     const sendButtonClass = variant === 'breakdown'
         ? 'rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60'
         : 'rounded-sm bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60'
+    const eyebrowLabel = variant === 'breakdown' ? 'Advanced AI Analysis' : 'AI Review'
+    const titleLabel = variant === 'breakdown' ? 'Schema & Governance Copilot' : 'AI Insight'
+    const insightSummary = variant === 'breakdown'
+        ? 'Use this copilot to interpret schema risk, residency boundaries, access tiers, and masked-preview constraints before you move into governed evaluation.'
+        : dataset.preview.aiSummary
+    const insightFootnote = variant === 'breakdown'
+        ? 'Grounded only in preview-safe schema labels, residency rules, access tiers, and confidence signals.'
+        : 'Grounded only in preview-safe metadata: confidence, freshness, schema risk labels, and access policy signals.'
+    const transcriptTitle = variant === 'breakdown'
+        ? 'Ask AI about schema and governance'
+        : 'Ask AI about this dataset'
+    const transcriptDescription = variant === 'breakdown'
+        ? 'Best for questions about field risk, residency, label meanings, and preview-safe inspection limits.'
+        : 'Best for quick questions about confidence, hidden fields, and access controls.'
+    const inputPlaceholder = variant === 'breakdown'
+        ? 'Ask about field risk, residency, or governance labels...'
+        : 'Ask about confidence, hidden fields, or access policy...'
 
     return (
         <section className={shellClass}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        AI Review
+                        {eyebrowLabel}
                     </div>
                     <h3 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                        AI Insight
+                        {titleLabel}
                     </h3>
                 </div>
                 <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-200">
@@ -223,11 +260,10 @@ export default function DatasetAssistantPanel({
 
             <div className={insightCardClass}>
                 <p className="text-sm leading-7 text-slate-200">
-                    {dataset.preview.aiSummary}
+                    {insightSummary}
                 </p>
                 <p className="mt-3 text-xs leading-6 text-slate-400">
-                    Grounded only in preview-safe metadata: confidence,
-                    freshness, schema risk labels, and access policy signals.
+                    {insightFootnote}
                 </p>
             </div>
 
@@ -256,11 +292,10 @@ export default function DatasetAssistantPanel({
                 <div className="flex items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
                     <div>
                         <h4 className="text-sm font-semibold text-white">
-                            Ask AI about this dataset
+                            {transcriptTitle}
                         </h4>
                         <p className="mt-1 text-[11px] text-slate-400">
-                            Best for quick questions about confidence, hidden
-                            fields, and access controls.
+                            {transcriptDescription}
                         </p>
                     </div>
                     <span className="text-[11px] text-slate-400">
@@ -317,7 +352,7 @@ export default function DatasetAssistantPanel({
                                     handleSendChatMessage()
                                 }
                             }}
-                            placeholder="Ask about confidence, hidden fields, or access policy..."
+                            placeholder={inputPlaceholder}
                             className={inputClass}
                         />
                         <button

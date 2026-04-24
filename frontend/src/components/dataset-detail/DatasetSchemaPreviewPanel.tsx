@@ -304,17 +304,17 @@ export default function DatasetSchemaPreviewPanel({
                     <div className="flex flex-col gap-3 rounded-md border border-cyan-500/18 bg-cyan-500/6 px-4 py-3 md:flex-row md:items-center md:justify-between">
                         <div className="min-w-0">
                             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-200/85">
-                                Deeper schema workspace
+                                Advanced schema workspace
                             </div>
                             <p className="mt-1 text-sm leading-6 text-slate-300">
-                                This seeded dataset uses the catalog preview model here. Open the deeper quality breakdown for fuller schema and validation signals.
+                                This seeded dataset uses the catalog preview model here. Open the advanced quality workspace for fuller schema filtering, label guidance, and validation signals.
                             </p>
                         </div>
                         <Link
                             to={qualityBreakdownPath}
                             className="inline-flex shrink-0 items-center justify-center rounded-sm border border-cyan-400/35 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/18 hover:text-white"
                         >
-                            Open quality breakdown
+                            Open advanced quality workspace
                         </Link>
                     </div>
                 ) : null}

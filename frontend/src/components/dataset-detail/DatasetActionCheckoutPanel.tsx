@@ -181,7 +181,7 @@ export default function DatasetActionCheckoutPanel({
                                 to={`/datasets/${dataset.id}/quality-breakdown`}
                                 className="mt-3 inline-flex items-center rounded-sm bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
                             >
-                                Open Free Metadata Preview
+                                Open Advanced Quality Workspace
                             </Link>
                         )}
 
@@ -216,7 +216,7 @@ export default function DatasetActionCheckoutPanel({
                             ) : (
                                 <div className="mt-3 space-y-3">
                                     <p className="text-sm text-slate-200/85">
-                                        Inspect quality, schema shape, and AI summaries before touching paid workflows.
+                                        Inspect schema controls, quality signals, and governance labels before touching paid workflows.
                                     </p>
                                     <div className="grid gap-2 sm:grid-cols-2">
                                         {freeMetricDetails.map(metric => (
