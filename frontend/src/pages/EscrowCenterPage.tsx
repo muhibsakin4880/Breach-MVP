@@ -4,6 +4,8 @@ import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
 import {
+    DEMO_ESCROW_CANONICAL_IDS,
+    filterOutCanonicalDemoEscrowRecords,
     getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
     getDemoEscrowNextAction,
@@ -95,14 +97,24 @@ export default function EscrowCenterPage() {
     const usesCanonicalBuyerDemo = isDemo || buyerDemoActive
     const buyerRouteTargets = getBuyerRouteTargets(isDemo)
     const [recordsVersion, setRecordsVersion] = useState(0)
-    const escrowCheckoutRecords = useMemo(() => loadEscrowCheckouts(), [recordsVersion])
+    const escrowCheckoutRecords = useMemo(
+        () =>
+            usesCanonicalBuyerDemo
+                ? loadEscrowCheckouts()
+                : filterOutCanonicalDemoEscrowRecords(loadEscrowCheckouts()),
+        [recordsVersion, usesCanonicalBuyerDemo]
+    )
     const demoScenario = useMemo(
         () => (usesCanonicalBuyerDemo ? getCanonicalDemoEscrowScenario() : null),
         [recordsVersion, usesCanonicalBuyerDemo]
     )
     const canonicalDemoEscrowId = demoScenario?.checkoutRecord?.escrowId ?? null
     const escrowTransactions = useMemo(() => {
-        const liveTransactions = loadEscrowCheckoutTransactions()
+        const liveTransactions = usesCanonicalBuyerDemo
+            ? loadEscrowCheckoutTransactions()
+            : loadEscrowCheckoutTransactions().filter(
+                transaction => transaction.id !== DEMO_ESCROW_CANONICAL_IDS.escrowId
+            )
 
         if (!usesCanonicalBuyerDemo || !canonicalDemoEscrowId) {
             return [...liveTransactions, ...seedEscrowTransactions]
@@ -115,7 +127,7 @@ export default function EscrowCenterPage() {
 
         return [...pinnedLiveTransactions, ...seedEscrowTransactions]
     }, [canonicalDemoEscrowId, recordsVersion, usesCanonicalBuyerDemo])
-    const [selectedId, setSelectedId] = useState(() => loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
+    const [selectedId, setSelectedId] = useState('ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(8)
     const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
@@ -143,7 +155,7 @@ export default function EscrowCenterPage() {
         setActiveFilter('All')
         setSearchQuery('')
         setCurrentPage(1)
-        setSelectedId(loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
+        setSelectedId('ESC-2026-003')
         setRecordsVersion(current => current + 1)
     }
 

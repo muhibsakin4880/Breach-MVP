@@ -1,9 +1,11 @@
+import { Link } from 'react-router-dom'
 import {
     activateBuyerDemo,
     deactivateBuyerDemo,
     DEMO_ESCROW_STAGE_EXPLANATIONS,
     DEMO_ESCROW_STAGE_LABELS,
     DEMO_ESCROW_STAGE_ORDER,
+    getBuyerRouteTargets,
     getCurrentDemoStage,
     isBuyerDemoActive,
     loadBuyerDemoHappyPath,
@@ -24,6 +26,26 @@ const surfaceClass =
 const quietButtonClass =
     'rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400/35 hover:bg-cyan-500/10 hover:text-cyan-100'
 
+const presenterNarrative = [
+    'We start with a dataset and rights quote.',
+    'Buyer funds escrow.',
+    'Redoubt provisions a governed workspace.',
+    'A short-lived Ephemeral Token is issued.',
+    'Evaluation happens inside the secure enclave.',
+    'Outputs are reviewed before release.',
+    'Escrow is released only after validation.',
+    'Access closes automatically when the transaction is complete.'
+] as const
+
+const narrativeStageIndexMap: Record<DemoEscrowStage, number> = {
+    quote_ready: 0,
+    escrow_funded: 1,
+    workspace_ready: 2,
+    token_issued: 4,
+    release_pending: 5,
+    released: 7
+}
+
 export default function DemoEscrowControls({
     mode = 'demo-route',
     onScenarioChange
@@ -31,6 +53,8 @@ export default function DemoEscrowControls({
     const currentStage = getCurrentDemoStage()
     const demoIsActive = mode === 'demo-route' ? true : isBuyerDemoActive()
     const currentExplanation = DEMO_ESCROW_STAGE_EXPLANATIONS[currentStage]
+    const demoRouteTargets = getBuyerRouteTargets(true)
+    const narrativeIndex = narrativeStageIndexMap[currentStage]
 
     const applyScenario = (scenario: DemoEscrowScenario | null) => {
         onScenarioChange?.(scenario)
@@ -169,6 +193,74 @@ export default function DemoEscrowControls({
                     </button>
                 ))}
             </div>
+
+            {mode === 'demo-route' ? (
+                <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
+                    <section className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+                            Presenter narrative
+                        </div>
+                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                            {presenterNarrative.map((step, index) => {
+                                const state =
+                                    index < narrativeIndex
+                                        ? 'complete'
+                                        : index === narrativeIndex
+                                            ? 'current'
+                                            : 'upcoming'
+
+                                const stateClass =
+                                    state === 'complete'
+                                        ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'
+                                        : state === 'current'
+                                            ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100'
+                                            : 'border-white/10 bg-white/[0.03] text-slate-300'
+
+                                const markerClass =
+                                    state === 'complete'
+                                        ? 'border-emerald-400/35 bg-emerald-500/15 text-emerald-100'
+                                        : state === 'current'
+                                            ? 'border-cyan-400/35 bg-cyan-500/15 text-cyan-100'
+                                            : 'border-white/10 bg-white/[0.04] text-slate-400'
+
+                                return (
+                                    <div key={step} className={`rounded-2xl border px-4 py-3 ${stateClass}`}>
+                                        <div className="flex items-start gap-3">
+                                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${markerClass}`}>
+                                                {index + 1}
+                                            </span>
+                                            <div className="text-sm leading-6">{step}</div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+                            Demo route map
+                        </div>
+                        <div className="mt-4 grid gap-3">
+                            <Link to={demoRouteTargets.checkout} className={quietButtonClass}>
+                                Checkout
+                            </Link>
+                            <Link to={demoRouteTargets.escrowCenter} className={quietButtonClass}>
+                                Escrow Center
+                            </Link>
+                            <Link to={demoRouteTargets.ephemeralToken} className={quietButtonClass}>
+                                Ephemeral Token
+                            </Link>
+                            <Link to={demoRouteTargets.secureWorkspace} className={quietButtonClass}>
+                                Secure Workspace
+                            </Link>
+                            <Link to={demoRouteTargets.outputReview} className={quietButtonClass}>
+                                Output Review
+                            </Link>
+                        </div>
+                    </section>
+                </div>
+            ) : null}
         </section>
     )
 }

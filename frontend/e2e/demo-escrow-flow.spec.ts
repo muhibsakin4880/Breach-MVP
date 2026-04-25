@@ -98,7 +98,7 @@ test.describe('demo escrow buyer flow', () => {
         ).toBeVisible()
         await expect(page.getByText('Active demo case')).toBeVisible()
 
-        await page.getByRole('link', { name: 'Ephemeral Token' }).click()
+        await page.getByLabel('Selected case').getByRole('link', { name: 'Ephemeral Token' }).click()
         await expect(page).toHaveURL(/\/demo\/ephemeral-token$/)
         await expect(page.getByText('TOK-DEMO-1001')).toBeVisible()
         await expect(

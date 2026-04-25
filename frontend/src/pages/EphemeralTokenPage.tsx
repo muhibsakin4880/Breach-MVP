@@ -31,6 +31,7 @@ import {
 import { getDealRouteContextById, loadDealRouteContexts } from '../domain/dealDossier'
 import {
     DEMO_ESCROW_CANONICAL_IDS,
+    filterOutCanonicalDemoEscrowRecords,
     getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
     isBuyerDemoActive,
@@ -220,7 +221,13 @@ export default function EphemeralTokenPage({ demo = false }: { demo?: boolean })
     const useBuyerDemoScenario = demo || buyerDemoActive
     const buyerRouteTargets = getBuyerRouteTargets(demo)
     const dealContexts = useMemo(() => (useBuyerDemoScenario ? [] : loadDealRouteContexts()), [demoControlsVersion, useBuyerDemoScenario])
-    const checkoutRecords = useMemo(() => (useBuyerDemoScenario ? [] : loadEscrowCheckouts()), [demoControlsVersion, useBuyerDemoScenario])
+    const checkoutRecords = useMemo(
+        () =>
+            useBuyerDemoScenario
+                ? []
+                : filterOutCanonicalDemoEscrowRecords(loadEscrowCheckouts()),
+        [demoControlsVersion, useBuyerDemoScenario]
+    )
     const demoScenario = useMemo(
         () => (useBuyerDemoScenario ? getCanonicalDemoEscrowScenario() : null),
         [demoControlsVersion, useBuyerDemoScenario]

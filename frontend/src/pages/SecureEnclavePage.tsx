@@ -4,6 +4,7 @@ import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import {
+    filterOutCanonicalDemoEscrowRecords,
     getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
     getDemoEscrowNextAction,
@@ -61,7 +62,7 @@ export default function SecureEnclavePage() {
         )
     }
 
-    const latestCheckout = useMemo(() => loadEscrowCheckouts()[0] ?? null, [])
+    const latestCheckout = useMemo(() => filterOutCanonicalDemoEscrowRecords(loadEscrowCheckouts())[0] ?? null, [])
     const dealRoute = useMemo(
         () => (latestCheckout ? getDealRouteRecordByDatasetId(latestCheckout.datasetId) : null),
         [latestCheckout]

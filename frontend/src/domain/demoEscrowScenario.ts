@@ -346,7 +346,7 @@ function buildStageTimestamps(stage: DemoEscrowStage, now = new Date()): DemoEsc
     }
 }
 
-function isCanonicalDemoQuote(quote: RightsQuote) {
+export function isCanonicalDemoQuote(quote: RightsQuote) {
     return quote.id === DEMO_ESCROW_CANONICAL_IDS.quoteId
 }
 
@@ -356,6 +356,14 @@ export function isCanonicalDemoEscrowRecord(record: EscrowCheckoutRecord) {
         record.escrowId === DEMO_ESCROW_CANONICAL_IDS.escrowId ||
         record.quoteId === DEMO_ESCROW_CANONICAL_IDS.quoteId
     )
+}
+
+export function filterOutCanonicalDemoQuotes<T extends RightsQuote>(quotes: T[]) {
+    return quotes.filter(quote => !isCanonicalDemoQuote(quote))
+}
+
+export function filterOutCanonicalDemoEscrowRecords<T extends EscrowCheckoutRecord>(records: T[]) {
+    return records.filter(record => !isCanonicalDemoEscrowRecord(record))
 }
 
 function persistCanonicalDemoQuote(quote: RightsQuote | null) {

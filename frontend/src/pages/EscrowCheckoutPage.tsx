@@ -38,8 +38,10 @@ import {
 import { buildOutputReviewModel } from '../domain/outputReview'
 import {
     DEMO_ESCROW_CANONICAL_IDS,
+    filterOutCanonicalDemoQuotes,
     getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
+    isCanonicalDemoEscrowRecord,
     isBuyerDemoActive,
     saveCanonicalDemoEscrowState,
     setDemoStage,
@@ -478,7 +480,10 @@ export default function EscrowCheckoutPage() {
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
     const [recordVersion, setRecordVersion] = useState(0)
-    const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, recordVersion])
+    const savedQuotes = useMemo(() => {
+        const quotes = loadRightsQuotes(dataset.id)
+        return usesCanonicalBuyerDemo ? quotes : filterOutCanonicalDemoQuotes(quotes)
+    }, [dataset.id, recordVersion, usesCanonicalBuyerDemo])
     const fallbackQuote = useMemo(
         () => buildRightsQuote(dataset, getDefaultRightsQuoteForm(passport), passport),
         [dataset, passport]
@@ -496,8 +501,15 @@ export default function EscrowCheckoutPage() {
         availableQuotes[0] ??
         fallbackQuote
     const persistedCheckout = useMemo(
-        () => loadEscrowCheckoutByQuoteId(selectedQuote.id),
-        [selectedQuote.id, recordVersion]
+        () => {
+            const record = loadEscrowCheckoutByQuoteId(selectedQuote.id)
+            if (!usesCanonicalBuyerDemo && record && isCanonicalDemoEscrowRecord(record)) {
+                return null
+            }
+
+            return record
+        },
+        [selectedQuote.id, recordVersion, usesCanonicalBuyerDemo]
     )
     const [checkoutRecord, setCheckoutRecord] = useState<EscrowCheckoutRecord | null>(persistedCheckout)
     const [config, setConfig] = useState<EscrowCheckoutConfig>(() =>
