@@ -1,4 +1,10 @@
-import { useMemo, type ReactNode } from 'react'
+import {
+    startTransition,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode
+} from 'react'
 import { Link } from 'react-router-dom'
 import {
     dashboardColorTokens,
@@ -8,31 +14,21 @@ import {
     dashboardSpacingTokens,
     dashboardTypographyTokens
 } from '../dashboardTokens'
-import { CONTRACT_STATE_LABELS } from '../domain/accessContract'
 import {
-    checkoutAccessModeMeta,
-    loadEscrowCheckouts,
-    outcomeStageMeta,
-    type EscrowCheckoutRecord
-} from '../domain/escrowCheckout'
-import { loadDealRouteContexts, type DealRouteContext } from '../domain/dealDossier'
-
-type TokenStatus = 'Active' | 'Provisioning' | 'Frozen' | 'Expired' | 'Revoked'
-type Tone = 'cyan' | 'emerald' | 'amber' | 'rose' | 'slate'
-type TimelineState = 'complete' | 'current' | 'upcoming' | 'blocked'
-
-type TokenLifecycleEvent = {
-    title: string
-    detail: string
-    timestamp: string
-    state: TimelineState
-}
-
-type TerminalState = {
-    reason: string
-    timestamp: string
-    triggerSource: 'System' | 'Admin' | 'Outcome engine' | 'Policy control'
-}
+    buildBuyerTokenViewModel,
+    findDealContextForCheckout,
+    formatTimestamp,
+    getBuyerTokenTone,
+    selectPrimaryBuyerToken,
+    type BuyerTokenPolicyControl,
+    type BuyerTokenStatus,
+    type BuyerTokenTerminalState,
+    type BuyerTokenTimelineEvent,
+    type BuyerTokenTone,
+    type PolicyControlStatus
+} from '../domain/ephemeralToken'
+import { loadDealRouteContexts } from '../domain/dealDossier'
+import { loadEscrowCheckouts } from '../domain/escrowCheckout'
 
 const pageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
 const shellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
@@ -54,7 +50,7 @@ const text = {
     metaStrong: dashboardTypographyTokens['text-muted-strong']
 }
 
-const statusToneClasses: Record<TokenStatus, string> = {
+const statusToneClasses: Record<BuyerTokenStatus, string> = {
     Active: 'border-emerald-400/35 bg-emerald-500/10 text-emerald-100',
     Provisioning: 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100',
     Frozen: 'border-amber-400/40 bg-amber-500/10 text-amber-100',
@@ -62,7 +58,7 @@ const statusToneClasses: Record<TokenStatus, string> = {
     Revoked: 'border-rose-400/40 bg-rose-500/10 text-rose-100'
 }
 
-const toneClasses: Record<Tone, { badge: string; marker: string; text: string; panel: string }> = {
+const toneClasses: Record<BuyerTokenTone, { badge: string; marker: string; text: string; panel: string }> = {
     cyan: {
         badge: 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100',
         marker: 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100',
@@ -95,28 +91,48 @@ const toneClasses: Record<Tone, { badge: string; marker: string; text: string; p
     }
 }
 
-const allowedAccess = [
-    'Dataset read inside governed workspace',
-    'Clean-room query',
-    'Audit write',
-    'Policy-enforced evaluation'
-]
-
-const blockedAccess = [
-    'Raw export',
-    'Re-identification',
-    'Redistribution',
-    'Unreviewed egress',
-    'Download unless encrypted download mode is approved'
-]
-
-const emptyNextSteps = [
-    'Browse datasets',
-    'Build rights quote',
-    'Complete escrow checkout',
-    'Wait for workspace provisioning',
-    'Token issued'
-]
+const securityControls = [
+    {
+        title: 'Time-boxed access',
+        detail: 'Credential windows are short-lived and close automatically at expiry.',
+        tone: 'cyan'
+    },
+    {
+        title: 'Policy-bound scope',
+        detail: 'Scopes follow the approved evaluation workflow, not broad account access.',
+        tone: 'emerald'
+    },
+    {
+        title: 'Audit logging',
+        detail: 'Workspace activity and control events remain tied to the deal audit trail.',
+        tone: 'emerald'
+    },
+    {
+        title: 'Egress review',
+        detail: 'Outputs are blocked or routed through review depending on the access mode.',
+        tone: 'amber'
+    },
+    {
+        title: 'Raw export control',
+        detail: 'Raw data export is blocked unless an explicitly approved encrypted path applies.',
+        tone: 'rose'
+    },
+    {
+        title: 'Auto-expiry',
+        detail: 'Expired credentials cannot continue workspace access without renewed review.',
+        tone: 'cyan'
+    },
+    {
+        title: 'Freeze / revoke controls',
+        detail: 'Disputes, outcome failures, or policy events can freeze or revoke access.',
+        tone: 'amber'
+    },
+    {
+        title: 'No raw secret exposed',
+        detail: 'The UI shows only safe token references for audit and support.',
+        tone: 'emerald'
+    }
+] satisfies Array<{ title: string; detail: string; tone: BuyerTokenTone }>
 
 const tokenFlowSteps = [
     'Escrow is funded',
@@ -126,17 +142,6 @@ const tokenFlowSteps = [
     'Evaluation becomes active',
     'Token expires, freezes, or revokes based on deal and policy state'
 ]
-
-const securityControls = [
-    { title: 'Time-boxed access', detail: 'Credential windows are short-lived and close automatically at expiry.', tone: 'cyan' },
-    { title: 'Policy-bound scope', detail: 'Scopes follow the approved evaluation workflow, not broad account access.', tone: 'emerald' },
-    { title: 'Audit logging', detail: 'Workspace activity and control events remain tied to the deal audit trail.', tone: 'emerald' },
-    { title: 'Egress review', detail: 'Outputs are blocked or routed through review depending on the access mode.', tone: 'amber' },
-    { title: 'Raw export control', detail: 'Raw data export is blocked unless an explicitly approved encrypted download path applies.', tone: 'rose' },
-    { title: 'Auto-expiry', detail: 'Expired credentials cannot continue workspace access without renewed review.', tone: 'cyan' },
-    { title: 'Freeze / revoke controls', detail: 'Disputes, outcome failures, or policy events can freeze or revoke access.', tone: 'amber' },
-    { title: 'No raw secret exposed', detail: 'The UI shows only safe token references for audit and support.', tone: 'emerald' }
-] satisfies Array<{ title: string; detail: string; tone: Tone }>
 
 const accessModeCards = [
     {
@@ -153,29 +158,100 @@ const accessModeCards = [
     }
 ]
 
+const emptyNextSteps = [
+    'Browse datasets',
+    'Build rights quote',
+    'Complete escrow checkout',
+    'Wait for workspace provisioning',
+    'Token issued'
+]
+
+const lifecyclePreviewEvents: BuyerTokenTimelineEvent[] = [
+    {
+        title: 'Escrow funded',
+        detail: 'A governed transaction starts after the rights package, DUA, and funding checks complete.',
+        timestamp: 'Pending funded checkout',
+        state: 'current'
+    },
+    {
+        title: 'Workspace provisioned',
+        detail: 'Redoubt prepares the secure workspace for the approved evaluation flow.',
+        timestamp: 'After escrow clears',
+        state: 'upcoming'
+    },
+    {
+        title: 'Ephemeral Token issued',
+        detail: 'A short-lived token reference is attached to the workspace after policy checks pass.',
+        timestamp: 'After provisioning and policy checks',
+        state: 'upcoming'
+    },
+    {
+        title: 'Evaluation active',
+        detail: 'The buyer evaluates the protected dataset inside the governed workspace.',
+        timestamp: 'During the approved review window',
+        state: 'upcoming'
+    },
+    {
+        title: 'Outcome and validation controls',
+        detail: 'Outcome protection, egress review, and buyer validation remain tied to the deal state.',
+        timestamp: 'During live evaluation',
+        state: 'upcoming'
+    },
+    {
+        title: 'Token closes or renews',
+        detail: 'Access expires, freezes, revokes, or re-issues only after deal-state and policy review.',
+        timestamp: 'At expiry or control event',
+        state: 'upcoming'
+    }
+]
+
 export default function EphemeralTokenPage() {
-    const nowMs = useMemo(() => Date.now(), [])
+    const [nowMs, setNowMs] = useState(() => Date.now())
     const dealContexts = useMemo(() => loadDealRouteContexts(), [])
     const checkoutRecords = useMemo(() => loadEscrowCheckouts(), [])
-    // loadEscrowCheckouts returns records sorted newest first, so index 0 is the current token context.
-    const currentToken = checkoutRecords[0] ?? null
-    const dealContext = useMemo(
-        () => (currentToken ? findDealContextForCheckout(currentToken, dealContexts) : null),
-        [currentToken, dealContexts]
+
+    useEffect(() => {
+        let timeoutId = 0
+
+        const scheduleTick = () => {
+            const delay = Math.max(1000, 60000 - (Date.now() % 60000))
+            timeoutId = window.setTimeout(() => {
+                startTransition(() => {
+                    setNowMs(Date.now())
+                })
+                scheduleTick()
+            }, delay)
+        }
+
+        scheduleTick()
+
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [])
+
+    const primaryToken = useMemo(
+        () => selectPrimaryBuyerToken(checkoutRecords, nowMs),
+        [checkoutRecords, nowMs]
     )
-    const tokenStatus = currentToken ? deriveTokenStatus(currentToken, nowMs) : undefined
-    const statusTone = tokenStatus ? getStatusTone(tokenStatus) : 'cyan'
+    const dealContext = useMemo(
+        () => (primaryToken ? findDealContextForCheckout(primaryToken.record, dealContexts) : null),
+        [dealContexts, primaryToken]
+    )
+    const viewModel = useMemo(
+        () => (primaryToken ? buildBuyerTokenViewModel(primaryToken.record, dealContext, nowMs) : null),
+        [dealContext, nowMs, primaryToken]
+    )
 
     return (
         <div className={pageClass}>
             <div className={dashboardComponentTokens['page-background']} />
             <main className={shellClass}>
-                <PageHeader status={tokenStatus} statusTone={statusTone} />
-                {currentToken ? (
-                    <TokenDashboard currentToken={currentToken} dealContext={dealContext} nowMs={nowMs} />
-                ) : (
-                    <EmptyTokenState />
-                )}
+                <PageHeader
+                    status={viewModel?.status}
+                    statusTone={viewModel ? getBuyerTokenTone(viewModel.status) : 'cyan'}
+                />
+                {viewModel ? <TokenDashboard viewModel={viewModel} /> : <EmptyTokenState />}
                 <EducationSections />
                 <SecurityNotice />
             </main>
@@ -183,187 +259,266 @@ export default function EphemeralTokenPage() {
     )
 }
 
-function TokenDashboard({
-    currentToken,
-    dealContext,
-    nowMs
-}: {
-    currentToken: EscrowCheckoutRecord
-    dealContext: DealRouteContext | null
-    nowMs: number
-}) {
-    const tokenStatus = deriveTokenStatus(currentToken, nowMs)
-    const statusTone = getStatusTone(tokenStatus)
-    const lifecycleLabel = CONTRACT_STATE_LABELS[currentToken.lifecycleState]
-    const accessModeMeta = checkoutAccessModeMeta[currentToken.configuration.accessMode]
-    const outcomeMeta = outcomeStageMeta[currentToken.outcomeProtection.stage]
-    const timeRemaining = formatTimeRemaining(currentToken.credentials.expiresAt, nowMs)
-    const policyState = getPolicyState(currentToken, tokenStatus)
-    const safeTokenReference = getSafeTokenReference(currentToken)
-    const dossierRoute = dealContext?.routeTargets.dossier ?? '/deals'
-    const terminalState = getTerminalState(currentToken, tokenStatus)
-    const timelineEvents = buildTimelineEvents(currentToken, tokenStatus, nowMs)
-    const scopeChips = sanitizeScopes(currentToken.credentials.scopes)
-    const workspaceReady = currentToken.workspace.status === 'ready'
-    const renewalEligible = tokenStatus === 'Expired'
+function TokenDashboard({ viewModel }: { viewModel: ReturnType<typeof buildBuyerTokenViewModel> }) {
+    const policyTone =
+        viewModel.policyState === 'Policy enforced'
+            ? 'emerald'
+            : viewModel.policyState === 'Expired'
+                ? 'slate'
+                : 'amber'
+    const canOpenWorkspace = viewModel.workspaceReady && viewModel.status === 'Active'
 
     return (
         <>
-                <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Ephemeral Token summary">
-                    <SummaryCard label="Token status" value={tokenStatus} detail={getStatusDetail(tokenStatus)} tone={statusTone} />
-                    <SummaryCard label="Time remaining" value={timeRemaining} detail={formatIsoTimestamp(currentToken.credentials.expiresAt, 'Expiry pending')} tone={tokenStatus === 'Expired' ? 'slate' : statusTone} />
-                    <SummaryCard label="Access mode" value={accessModeMeta.label} detail={accessModeMeta.detail} tone="cyan" />
-                    <SummaryCard label="Policy state" value={policyState} detail="Deal, DUA, workspace, and egress controls remain linked." tone={policyState === 'Restricted' ? 'amber' : 'emerald'} />
-                </section>
+            <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Ephemeral Token summary">
+                <SummaryCard
+                    label="Token status"
+                    value={viewModel.status}
+                    detail={viewModel.statusDetail}
+                    tone={viewModel.tone}
+                />
+                <SummaryCard
+                    label="Time remaining"
+                    value={viewModel.timeRemaining}
+                    detail={formatTimestamp(viewModel.record.credentials.expiresAt, 'Expiry pending')}
+                    tone={viewModel.status === 'Expired' ? 'slate' : viewModel.tone}
+                />
+                <SummaryCard
+                    label="Access mode"
+                    value={viewModel.accessModeLabel}
+                    detail={viewModel.accessModeDetail}
+                    tone="cyan"
+                />
+                <SummaryCard
+                    label="Policy state"
+                    value={viewModel.policyState}
+                    detail="Deal, DUA, workspace, and egress controls remain linked."
+                    tone={policyTone}
+                />
+            </section>
 
-                {terminalState ? (
-                    <TerminalStatePanel
-                        status={tokenStatus}
-                        terminalState={terminalState}
-                        dossierRoute={dossierRoute}
-                    />
-                ) : null}
+            {viewModel.terminalState ? (
+                <TerminalStatePanel
+                    terminalState={viewModel.terminalState}
+                    dossierRoute={viewModel.dossierRoute}
+                />
+            ) : null}
 
-                <section className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1.42fr)_minmax(360px,0.8fr)]">
-                    <div className="space-y-6">
-                        <Panel
-                            eyebrow="Current credential context"
-                            title="Current Ephemeral Token"
-                            description="Buyer/evaluator access is represented by a safe reference ID and metadata only."
-                        >
-                            <div className="grid gap-3 md:grid-cols-2">
-                                <DetailRow label="Token reference ID" value={safeTokenReference} mono />
-                                <DetailRow label="Status" value={tokenStatus} badgeClassName={statusToneClasses[tokenStatus]} />
-                                <DetailRow label="Buyer / evaluator" value={currentToken.buyerLabel} mono />
-                                <DetailRow label="Dataset" value={currentToken.datasetTitle} />
-                                <DetailRow label="Workspace" value={currentToken.workspace.workspaceName} />
-                                <DetailRow label="Issued time" value={formatIsoTimestamp(currentToken.credentials.issuedAt, 'Not issued yet')} />
-                                <DetailRow label="Expiry time" value={formatIsoTimestamp(currentToken.credentials.expiresAt, 'Pending credential issue')} />
-                                <DetailRow label="TTL" value={`${currentToken.credentials.tokenTtlMinutes} minutes`} />
-                                <DetailRow label="Access mode" value={accessModeMeta.label} />
-                                <DetailRow label="Lifecycle state" value={lifecycleLabel} />
-                            </div>
-                        </Panel>
-
-                        <Panel
-                            eyebrow="Permissions and scopes"
-                            title="What this token allows and blocks"
-                            description="Scopes are displayed as plain-language permissions, not as usable access material."
-                        >
-                            <div className="grid gap-4 lg:grid-cols-2">
-                                <PermissionList title="Allowed" items={allowedAccess} tone="emerald" />
-                                <PermissionList title="Blocked" items={blockedAccess} tone="rose" />
-                            </div>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {scopeChips.map(scope => (
-                                    <span key={scope} className="rounded-full border border-cyan-400/20 bg-cyan-400/[0.08] px-3 py-1.5 text-xs font-semibold text-cyan-100">
-                                        {scope}
-                                    </span>
-                                ))}
-                            </div>
-                        </Panel>
-
-                        <Panel
-                            eyebrow="Linked transaction"
-                            title="Deal and escrow context"
-                            description="The token is tied to funded escrow, rights scope, workspace controls, and buyer validation."
-                        >
-                            <div className="grid gap-3 md:grid-cols-2">
-                                <DetailRow label="Deal / checkout reference" value={dealContext?.seed.dealId ?? currentToken.id} mono />
-                                <DetailRow label="Escrow reference" value={currentToken.escrowId} mono />
-                                <DetailRow label="Escrow state" value={lifecycleLabel} />
-                                <DetailRow label="Provider label" value={currentToken.providerLabel} mono />
-                                <DetailRow label="Buyer validation window" value={`${currentToken.configuration.reviewWindowHours} hours`} />
-                                <DetailRow label="Outcome protection state" value={outcomeMeta.label} />
-                                <DetailRow label="Evaluation fee" value={formatCurrency(currentToken.outcomeProtection.evaluationFeeUsd)} />
-                                <DetailRow label="DUA" value={currentToken.dua.accepted ? `Accepted · ${currentToken.dua.version}` : `Pending · ${currentToken.dua.version}`} />
-                            </div>
-                            <p className={`mt-4 ${text.body}`}>{outcomeMeta.detail}</p>
-                        </Panel>
-
-                        <Panel
-                            eyebrow="Activity timeline"
-                            title="Lifecycle timeline"
-                            description="A compact trace of escrow funding, workspace readiness, token issue, evaluation, and terminal state."
-                        >
-                            <div className="space-y-4">
-                                {timelineEvents.map((event, index) => (
-                                    <TimelineRow key={event.title} event={event} isLast={index === timelineEvents.length - 1} />
-                                ))}
-                            </div>
-                        </Panel>
-                    </div>
-
-                    <aside className="space-y-6 xl:sticky xl:top-24">
-                        <Panel
-                            eyebrow="Workspace access"
-                            title="Secure workspace"
-                            description={accessModeMeta.detail}
-                        >
-                            <div className={cardClass}>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div className={text.eyebrow}>Workspace status</div>
-                                        <div className="mt-2 text-lg font-semibold text-white">
-                                            {workspaceReady ? 'Ready' : 'Planned'}
-                                        </div>
-                                    </div>
-                                    <StatusBadge label={workspaceReady ? 'Ready' : 'Provisioning'} tone={workspaceReady ? 'emerald' : 'amber'} />
-                                </div>
-                                <div className="mt-4 text-sm font-semibold text-slate-100">{currentToken.workspace.workspaceName}</div>
-                                <p className={`mt-2 ${text.body}`}>
-                                    {workspaceReady
-                                        ? 'Workspace controls are ready. Launching keeps evaluation inside the governed access boundary.'
-                                        : 'Workspace provisioning is pending. Access opens after policy checks, escrow state review, and workspace readiness complete.'}
-                                </p>
-                                {workspaceReady ? (
-                                    <Link to={currentToken.workspace.launchPath} className={`mt-5 w-full ${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-2.5`}>
-                                        Open Secure Workspace
-                                    </Link>
-                                ) : (
-                                    <button type="button" disabled className={`mt-5 w-full ${disabledButtonClass}`}>
-                                        Workspace provisioning pending
-                                    </button>
+            <section className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1.42fr)_minmax(360px,0.8fr)]">
+                <div className="space-y-6">
+                    <Panel
+                        eyebrow="Current credential context"
+                        title="Current Ephemeral Token"
+                        description="Buyer/evaluator access is represented by a safe reference ID and metadata only."
+                    >
+                        <div className="grid gap-3 md:grid-cols-2">
+                            <DetailRow label="Token reference ID" value={viewModel.safeTokenReference} mono />
+                            <DetailRow
+                                label="Token status"
+                                value={viewModel.status}
+                                badgeClassName={statusToneClasses[viewModel.status]}
+                            />
+                            <DetailRow label="Credential status" value={viewModel.credentialStatusLabel} />
+                            <DetailRow label="Buyer / evaluator" value={viewModel.record.buyerLabel} mono />
+                            <DetailRow label="Dataset" value={viewModel.record.datasetTitle} />
+                            <DetailRow label="Workspace" value={viewModel.record.workspace.workspaceName} />
+                            <DetailRow label="Workspace status" value={viewModel.workspaceStatusLabel} />
+                            <DetailRow
+                                label="Issued time"
+                                value={formatTimestamp(viewModel.record.credentials.issuedAt, 'Not issued yet')}
+                            />
+                            <DetailRow
+                                label="Expiry time"
+                                value={formatTimestamp(
+                                    viewModel.record.credentials.expiresAt,
+                                    'Pending credential issue'
                                 )}
-                            </div>
-                        </Panel>
+                            />
+                            <DetailRow
+                                label="TTL"
+                                value={`${viewModel.record.credentials.tokenTtlMinutes} minutes`}
+                            />
+                            <DetailRow label="Access mode" value={viewModel.accessModeLabel} />
+                            <DetailRow label="Lifecycle state" value={viewModel.lifecycleLabel} />
+                        </div>
+                    </Panel>
 
-                        <Panel
-                            eyebrow="Expiry and renewal"
-                            title="Time-boxed access"
-                            description="After expiry, workspace access closes automatically. New access requires policy re-check, deal-state review, and a renewed Ephemeral Token."
-                        >
-                            <div className="space-y-3">
-                                <DetailRow label="Countdown" value={timeRemaining} />
-                                <DetailRow label="Expiry timestamp" value={formatIsoTimestamp(currentToken.credentials.expiresAt, 'Pending issue')} />
-                                <DetailRow label="After expiry" value="Workspace access closes automatically" />
-                                <DetailRow label="Renewal eligibility" value={renewalEligible ? 'Eligible after review' : 'Not currently available'} />
-                            </div>
-                            <button type="button" disabled className={`mt-5 w-full ${disabledButtonClass}`}>
-                                Request Renewal · Coming soon
-                            </button>
-                        </Panel>
+                    <Panel
+                        eyebrow="Permissions and scopes"
+                        title="What this token allows and blocks"
+                        description="Scopes are displayed as plain-language permissions, not as usable access material."
+                    >
+                        <div className="grid gap-4 lg:grid-cols-2">
+                            <PermissionList title="Allowed" items={viewModel.permissions.allowed} tone="emerald" />
+                            <PermissionList title="Blocked" items={viewModel.permissions.blocked} tone="rose" />
+                        </div>
+                        <div className="mt-5 flex flex-wrap gap-2">
+                            {viewModel.permissions.scopeChips.map(scope => (
+                                <span
+                                    key={scope}
+                                    className="rounded-full border border-cyan-400/20 bg-cyan-400/[0.08] px-3 py-1.5 text-xs font-semibold text-cyan-100"
+                                >
+                                    {scope}
+                                </span>
+                            ))}
+                        </div>
+                    </Panel>
 
-                        <Panel
-                            eyebrow="Policy controls"
-                            title="Active control checks"
-                            description="Control rows show the safe enforcement posture for this evaluation credential."
-                        >
-                            <div className="space-y-3">
-                                {buildPolicyControls(currentToken, tokenStatus).map(control => (
-                                    <ControlRow key={control.label} label={control.label} value={control.value} tone={control.tone} />
-                                ))}
+                    <Panel
+                        eyebrow="Linked transaction"
+                        title="Deal and escrow context"
+                        description="The token exists because a governed transaction, escrow flow, rights package, and evaluation workflow exist."
+                    >
+                        <div className="grid gap-3 md:grid-cols-2">
+                            <DetailRow label="Checkout / deal reference" value={viewModel.linkedDealReference} mono />
+                            <DetailRow label="Escrow reference" value={viewModel.record.escrowId} mono />
+                            <DetailRow label="Escrow state" value={viewModel.escrowStateLabel} />
+                            <DetailRow label="Provider label" value={viewModel.record.providerLabel} mono />
+                            <DetailRow label="Buyer validation window" value={viewModel.validationWindowLabel} />
+                            <DetailRow
+                                label="Outcome protection state"
+                                value={viewModel.outcomeProtectionLabel}
+                            />
+                            <DetailRow label="Evaluation fee" value={viewModel.evaluationFeeLabel} />
+                            <DetailRow label="DUA status" value={viewModel.duaLabel} />
+                            <DetailRow label="Release state" value={viewModel.releaseStateLabel} />
+                        </div>
+                        <p className={`mt-4 ${text.body}`}>{viewModel.outcomeProtectionDetail}</p>
+                    </Panel>
+
+                    <Panel
+                        eyebrow="Activity timeline"
+                        title="Lifecycle timeline"
+                        description="A compact trace of escrow funding, workspace readiness, token issue, evaluation, and terminal state."
+                    >
+                        <div className="space-y-4">
+                            {viewModel.timelineEvents.map((event, index) => (
+                                <TimelineRow
+                                    key={event.title}
+                                    event={event}
+                                    isLast={index === viewModel.timelineEvents.length - 1}
+                                />
+                            ))}
+                        </div>
+                    </Panel>
+                </div>
+
+                <aside className="space-y-6 xl:sticky xl:top-24">
+                    <Panel
+                        eyebrow="Workspace access"
+                        title="Secure workspace"
+                        description={viewModel.accessModeDetail}
+                    >
+                        <div className={cardClass}>
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className={text.eyebrow}>Workspace status</div>
+                                    <div className="mt-2 text-lg font-semibold text-white">
+                                        {viewModel.workspaceStatusLabel}
+                                    </div>
+                                </div>
+                                <StatusBadge
+                                    label={viewModel.workspaceStatusLabel}
+                                    tone={viewModel.workspaceReady ? 'emerald' : 'amber'}
+                                />
                             </div>
-                        </Panel>
-                    </aside>
-                </section>
+
+                            <div className="mt-4 grid gap-3">
+                                <CompactDetailRow
+                                    label="Workspace name"
+                                    value={viewModel.record.workspace.workspaceName}
+                                />
+                                <CompactDetailRow
+                                    label="Workspace access mode"
+                                    value={viewModel.accessModeLabel}
+                                />
+                                <CompactDetailRow
+                                    label="Workspace launch path"
+                                    value={viewModel.record.workspace.launchPath}
+                                    mono
+                                />
+                            </div>
+
+                            <p className={`mt-4 ${text.body}`}>
+                                {canOpenWorkspace
+                                    ? 'Workspace controls are ready. Launching keeps evaluation inside the governed access boundary.'
+                                    : viewModel.status === 'Frozen' || viewModel.status === 'Revoked'
+                                        ? 'Workspace access is unavailable because this token is no longer usable.'
+                                        : viewModel.status === 'Expired'
+                                            ? 'Workspace access is closed because the evaluation window has expired.'
+                                            : 'Workspace provisioning is pending. Your Ephemeral Token will activate when provisioning and policy checks complete.'}
+                            </p>
+
+                            {canOpenWorkspace ? (
+                                <Link
+                                    to={viewModel.record.workspace.launchPath}
+                                    className={`mt-5 w-full ${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-2.5`}
+                                >
+                                    Open Secure Workspace
+                                </Link>
+                            ) : (
+                                <button type="button" disabled className={`mt-5 w-full ${disabledButtonClass}`}>
+                                    {viewModel.workspaceReady
+                                        ? 'Workspace access unavailable'
+                                        : 'Workspace provisioning pending'}
+                                </button>
+                            )}
+                        </div>
+                    </Panel>
+
+                    <Panel
+                        eyebrow="Expiry and renewal"
+                        title="Time-boxed access"
+                        description="After expiry, workspace access closes automatically. New access requires policy re-check, deal-state review, and a renewed Ephemeral Token."
+                    >
+                        <div className="space-y-3">
+                            <DetailRow label="Countdown" value={viewModel.timeRemaining} />
+                            <DetailRow
+                                label="Expiry timestamp"
+                                value={formatTimestamp(viewModel.record.credentials.expiresAt, 'Pending issue')}
+                            />
+                            <DetailRow
+                                label="After expiry"
+                                value="Workspace access closes automatically"
+                            />
+                            <DetailRow
+                                label="Renewal eligibility"
+                                value={viewModel.renewalEligibilityLabel}
+                            />
+                        </div>
+                        <button type="button" disabled className={`mt-5 w-full ${disabledButtonClass}`}>
+                            Request Renewal · Coming soon
+                        </button>
+                    </Panel>
+
+                    <Panel
+                        eyebrow="Policy controls"
+                        title="Active control checks"
+                        description="Control rows show the safe enforcement posture for this evaluation credential."
+                    >
+                        <div className="space-y-3">
+                            {viewModel.policyControls.map(control => (
+                                <PolicyControlRow key={control.label} control={control} />
+                            ))}
+                        </div>
+                    </Panel>
+                </aside>
+            </section>
         </>
     )
 }
 
-function PageHeader({ status, statusTone = 'cyan' }: { status?: TokenStatus; statusTone?: Tone }) {
+function PageHeader({
+    status,
+    statusTone = 'cyan'
+}: {
+    status?: BuyerTokenStatus
+    statusTone?: BuyerTokenTone
+}) {
     return (
-        <header className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
+        <header
+            className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}
+        >
             <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
                     <div className={text.heroEyebrow}>BUYER WORKFLOW · TEMPORARY ACCESS</div>
@@ -372,13 +527,19 @@ function PageHeader({ status, statusTone = 'cyan' }: { status?: TokenStatus; sta
                         Temporary, policy-bound access for secure dataset evaluation.
                     </p>
                     <p className={`mt-3 max-w-4xl ${text.body}`}>
-                        Redoubt issues short-lived Ephemeral Tokens after escrow, workspace provisioning, and policy checks clear. Access is scoped to the approved evaluation workflow and can expire, freeze, or revoke automatically.
+                        Redoubt issues short-lived Ephemeral Tokens after escrow, workspace provisioning, and
+                        policy checks clear. Access is scoped to the approved evaluation workflow and can expire,
+                        freeze, or revoke automatically.
                     </p>
                 </div>
                 {status ? (
                     <div className={`rounded-2xl border px-4 py-3 ${toneClasses[statusTone].panel}`}>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Current token state</div>
-                        <div className={`mt-2 text-lg font-semibold ${toneClasses[statusTone].text}`}>{status}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Current token state
+                        </div>
+                        <div className={`mt-2 text-lg font-semibold ${toneClasses[statusTone].text}`}>
+                            {status}
+                        </div>
                     </div>
                 ) : null}
             </div>
@@ -394,10 +555,14 @@ function EmptyTokenState() {
                     <div className={text.eyebrow}>No credential issued</div>
                     <h2 className={`mt-3 ${text.sectionTitle}`}>No active Ephemeral Token</h2>
                     <p className={`mt-3 max-w-3xl ${text.body}`}>
-                        A short-lived evaluation token will appear here after escrow funding, workspace provisioning, and policy checks are complete.
+                        A short-lived evaluation token will appear here after escrow funding, workspace provisioning,
+                        and policy checks are complete.
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to="/datasets" className={`${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-2.5`}>
+                        <Link
+                            to="/datasets"
+                            className={`${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-2.5`}
+                        >
                             Browse Datasets
                         </Link>
                         <Link to="/escrow-center" className={secondaryButtonClass}>
@@ -440,9 +605,7 @@ function EducationSections() {
                                 </span>
                                 <div>
                                     <div className="text-sm font-semibold text-slate-100">{step}</div>
-                                    <p className={`mt-2 ${text.meta}`}>
-                                        {getFlowStepDetail(index)}
-                                    </p>
+                                    <p className={`mt-2 ${text.meta}`}>{getFlowStepDetail(index)}</p>
                                 </div>
                             </div>
                         </div>
@@ -457,7 +620,10 @@ function EducationSections() {
             >
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {securityControls.map(control => (
-                        <div key={control.title} className={`rounded-2xl border px-4 py-4 ${toneClasses[control.tone].panel}`}>
+                        <div
+                            key={control.title}
+                            className={`rounded-2xl border px-4 py-4 ${toneClasses[control.tone].panel}`}
+                        >
                             <StatusBadge label={control.title} tone={control.tone} />
                             <p className={`mt-3 ${text.bodyStrong}`}>{control.detail}</p>
                         </div>
@@ -479,16 +645,56 @@ function EducationSections() {
                     ))}
                 </div>
             </Panel>
+
+            <Panel
+                eyebrow="Lifecycle preview"
+                title="What the buyer workflow looks like"
+                description="Even before a token exists, the lifecycle remains visible: escrow, workspace readiness, policy checks, issuance, evaluation, and closure all stay governed."
+            >
+                <div className="space-y-4">
+                    {lifecyclePreviewEvents.map((event, index) => (
+                        <TimelineRow
+                            key={event.title}
+                            event={event}
+                            isLast={index === lifecyclePreviewEvents.length - 1}
+                        />
+                    ))}
+                </div>
+            </Panel>
         </div>
     )
 }
 
-function SummaryCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: Tone }) {
+function SummaryCard({
+    label,
+    value,
+    detail,
+    tone
+}: {
+    label: string
+    value: string
+    detail: string
+    tone: BuyerTokenTone
+}) {
     return (
         <article className={cardClass}>
-            <div className={`absolute inset-x-0 top-0 h-1 ${tone === 'emerald' ? 'bg-emerald-400/50' : tone === 'amber' ? 'bg-amber-400/50' : tone === 'rose' ? 'bg-rose-400/50' : tone === 'slate' ? 'bg-slate-500/50' : 'bg-cyan-400/50'}`} />
+            <div
+                className={`absolute inset-x-0 top-0 h-1 ${
+                    tone === 'emerald'
+                        ? 'bg-emerald-400/50'
+                        : tone === 'amber'
+                            ? 'bg-amber-400/50'
+                            : tone === 'rose'
+                                ? 'bg-rose-400/50'
+                                : tone === 'slate'
+                                    ? 'bg-slate-500/50'
+                                    : 'bg-cyan-400/50'
+                }`}
+            />
             <div className={text.eyebrow}>{label}</div>
-            <div className={`mt-3 text-2xl font-semibold tracking-[-0.04em] ${toneClasses[tone].text}`}>{value}</div>
+            <div className={`mt-3 text-2xl font-semibold tracking-[-0.04em] ${toneClasses[tone].text}`}>
+                {value}
+            </div>
             <p className={`mt-2 ${text.meta}`}>{detail}</p>
         </article>
     )
@@ -500,7 +706,9 @@ function SecurityNotice() {
             <div className="flex gap-3">
                 <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.7)]" />
                 <p className="text-sm leading-6 text-cyan-50/90">
-                    This page does not expose raw access secrets. The token reference is for audit and support only. Access is time-boxed, policy-bound, audit-logged, and revocable based on deal state and access controls.
+                    This page does not expose raw access secrets. The token reference is for audit and support only.
+                    Access is time-boxed, policy-bound, audit-logged, and revocable based on deal state and access
+                    controls.
                 </p>
             </div>
         </section>
@@ -508,25 +716,30 @@ function SecurityNotice() {
 }
 
 function TerminalStatePanel({
-    status,
     terminalState,
     dossierRoute
 }: {
-    status: TokenStatus
-    terminalState: TerminalState
+    terminalState: BuyerTokenTerminalState
     dossierRoute: string
 }) {
-    const tone = status === 'Revoked' ? 'rose' : 'amber'
+    const tone = terminalState.status === 'Revoked' ? 'rose' : 'amber'
     return (
         <section className={`mt-6 rounded-[24px] border px-5 py-5 ${toneClasses[tone].panel}`}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <StatusBadge label={status} tone={tone} />
-                    <h2 className="mt-3 text-xl font-semibold text-white">Token access is {status.toLowerCase()}</h2>
-                    <p className={`mt-2 max-w-3xl ${text.bodyStrong}`}>{terminalState.reason}</p>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <StatusBadge label={terminalState.status} tone={tone} />
+                    <h2 className="mt-3 text-xl font-semibold text-white">
+                        Token access is {terminalState.status.toLowerCase()}
+                    </h2>
+                    <p className={`mt-2 max-w-3xl ${text.bodyStrong}`}>
+                        This token is no longer usable. Access was restricted because the deal, policy, or evaluation
+                        state requires review.
+                    </p>
+                    <p className={`mt-3 max-w-3xl ${text.body}`}>{terminalState.reason}</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
                         <DetailRow label="Timestamp" value={terminalState.timestamp} />
-                        <DetailRow label="Trigger source" value={terminalState.triggerSource} />
+                        <DetailRow label="Trigger source" value={formatTriggerSource(terminalState.triggerSource)} />
+                        <DetailRow label="Next action" value={terminalState.nextAction} />
                     </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
@@ -536,7 +749,10 @@ function TerminalStatePanel({
                     <Link to="/audit-trail" className={secondaryButtonClass}>
                         View Audit Trail
                     </Link>
-                    <a href="mailto:support@redoubt.io?subject=Ephemeral%20Token%20support" className={secondaryButtonClass}>
+                    <a
+                        href="mailto:support@redoubt.io?subject=Ephemeral%20Token%20support"
+                        className={secondaryButtonClass}
+                    >
                         Contact Support
                     </a>
                 </div>
@@ -587,13 +803,42 @@ function DetailRow({
                     {value}
                 </span>
             ) : (
-                <div className={`mt-2 text-sm font-semibold text-slate-100 ${mono ? 'font-mono' : ''}`}>{value}</div>
+                <div className={`mt-2 break-words text-sm font-semibold text-slate-100 ${mono ? 'font-mono' : ''}`}>
+                    {value}
+                </div>
             )}
         </div>
     )
 }
 
-function PermissionList({ title, items, tone }: { title: string; items: string[]; tone: Tone }) {
+function CompactDetailRow({
+    label,
+    value,
+    mono = false
+}: {
+    label: string
+    value: string
+    mono?: boolean
+}) {
+    return (
+        <div className="rounded-2xl border border-[#22304D]/70 bg-slate-950/35 px-4 py-3">
+            <div className={text.eyebrow}>{label}</div>
+            <div className={`mt-2 break-words text-sm font-semibold text-slate-100 ${mono ? 'font-mono' : ''}`}>
+                {value}
+            </div>
+        </div>
+    )
+}
+
+function PermissionList({
+    title,
+    items,
+    tone
+}: {
+    title: string
+    items: string[]
+    tone: BuyerTokenTone
+}) {
     return (
         <div className={cardClass}>
             <div className="flex items-center justify-between gap-3">
@@ -603,7 +848,11 @@ function PermissionList({ title, items, tone }: { title: string; items: string[]
             <ul className="mt-4 space-y-3">
                 {items.map(item => (
                     <li key={item} className="flex gap-3 text-sm leading-6 text-slate-300">
-                        <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${tone === 'emerald' ? 'bg-emerald-300' : 'bg-rose-300'}`} />
+                        <span
+                            className={`mt-2 h-2 w-2 shrink-0 rounded-full ${
+                                tone === 'emerald' ? 'bg-emerald-300' : 'bg-rose-300'
+                            }`}
+                        />
                         {item}
                     </li>
                 ))}
@@ -612,28 +861,59 @@ function PermissionList({ title, items, tone }: { title: string; items: string[]
     )
 }
 
-function StatusBadge({ label, tone }: { label: string; tone: Tone }) {
+function StatusBadge({ label, tone }: { label: string; tone: BuyerTokenTone }) {
     return (
-        <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${toneClasses[tone].badge}`}>
+        <span
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${toneClasses[tone].badge}`}
+        >
             {label}
         </span>
     )
 }
 
-function ControlRow({ label, value, tone }: { label: string; value: string; tone: Tone }) {
+function PolicyControlRow({ control }: { control: BuyerTokenPolicyControl }) {
     return (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#22304D]/70 bg-slate-950/35 px-4 py-3">
-            <div>
-                <div className="text-sm font-semibold text-slate-100">{label}</div>
-                <div className={`mt-1 ${text.meta}`}>{value}</div>
+        <div className="rounded-2xl border border-[#22304D]/70 bg-slate-950/35 px-4 py-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <div className="text-sm font-semibold text-slate-100">{control.label}</div>
+                    <div className={`mt-1 ${text.meta}`}>{control.detail}</div>
+                </div>
+                <PolicyStatusBadge status={control.status} />
             </div>
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${tone === 'emerald' ? 'bg-emerald-300' : tone === 'amber' ? 'bg-amber-300' : tone === 'rose' ? 'bg-rose-300' : tone === 'cyan' ? 'bg-cyan-300' : 'bg-slate-400'}`} />
         </div>
     )
 }
 
-function TimelineRow({ event, isLast }: { event: TokenLifecycleEvent; isLast: boolean }) {
-    const tone = event.state === 'complete' ? 'emerald' : event.state === 'current' ? 'cyan' : event.state === 'blocked' ? 'rose' : 'slate'
+function PolicyStatusBadge({ status }: { status: PolicyControlStatus }) {
+    const tone =
+        status === 'Active'
+            ? 'emerald'
+            : status === 'Required' || status === 'Pending'
+                ? 'amber'
+                : status === 'Blocked'
+                    ? 'rose'
+                    : 'slate'
+
+    return <StatusBadge label={status} tone={tone} />
+}
+
+function TimelineRow({
+    event,
+    isLast
+}: {
+    event: BuyerTokenTimelineEvent
+    isLast: boolean
+}) {
+    const tone =
+        event.state === 'complete'
+            ? 'emerald'
+            : event.state === 'current'
+                ? 'cyan'
+                : event.state === 'blocked'
+                    ? 'rose'
+                    : 'slate'
+
     return (
         <div className="relative flex gap-4">
             <div className="flex flex-col items-center">
@@ -654,41 +934,6 @@ function TimelineRow({ event, isLast }: { event: TokenLifecycleEvent; isLast: bo
     )
 }
 
-function deriveTokenStatus(record: EscrowCheckoutRecord, nowMs: number): TokenStatus {
-    if (record.lifecycleState === 'RELEASED_TO_PROVIDER') return 'Revoked'
-    if (record.lifecycleState === 'DISPUTE_OPEN' || record.outcomeProtection.credits.status === 'issued') return 'Frozen'
-    if (record.credentials.status === 'issued' && record.credentials.expiresAt && Date.parse(record.credentials.expiresAt) <= nowMs) return 'Expired'
-    if (record.credentials.status === 'issued' && !hasFutureExpiry(record.credentials.expiresAt, nowMs)) return 'Provisioning'
-    if (record.credentials.status !== 'issued' || record.workspace.status !== 'ready') return 'Provisioning'
-    return 'Active'
-}
-
-function hasFutureExpiry(expiresAt: string | undefined, nowMs: number) {
-    if (!expiresAt) return false
-    const expiresMs = Date.parse(expiresAt)
-    return !Number.isNaN(expiresMs) && expiresMs > nowMs
-}
-
-function getSafeTokenReference(record: EscrowCheckoutRecord) {
-    return record.credentials.credentialId ?? `PLANNED-${record.escrowId}`
-}
-
-function getStatusTone(status: TokenStatus): Tone {
-    if (status === 'Active') return 'emerald'
-    if (status === 'Provisioning') return 'cyan'
-    if (status === 'Frozen') return 'amber'
-    if (status === 'Revoked') return 'rose'
-    return 'slate'
-}
-
-function getStatusDetail(status: TokenStatus) {
-    if (status === 'Active') return 'Scoped access is live inside the governed evaluation boundary.'
-    if (status === 'Provisioning') return 'Workspace, policy checks, or credential issue is still pending.'
-    if (status === 'Frozen') return 'Access is paused while policy, outcome, or dispute controls review the deal.'
-    if (status === 'Revoked') return 'The credential has been archived after release or control action.'
-    return 'The credential window has closed.'
-}
-
 function getFlowStepDetail(index: number) {
     if (index === 0) return 'The governed transaction starts only after escrow funding is captured.'
     if (index === 1) return 'Redoubt prepares the secure workspace that will contain evaluation activity.'
@@ -698,206 +943,10 @@ function getFlowStepDetail(index: number) {
     return 'Access ends automatically or is restricted when policy or deal state requires it.'
 }
 
-function getPolicyState(record: EscrowCheckoutRecord, status: TokenStatus) {
-    if (status === 'Frozen' || status === 'Revoked') return 'Restricted'
-    if (status === 'Expired') return 'Expired'
-    if (!record.dua.accepted || record.workspace.status !== 'ready') return 'Checks pending'
-    return 'Policy enforced'
-}
-
-function getTerminalState(record: EscrowCheckoutRecord, status: TokenStatus): TerminalState | null {
-    if (status === 'Frozen') {
-        return {
-            reason:
-                record.outcomeProtection.credits.reason ??
-                record.outcomeProtection.validation.note ??
-                'Deal controls froze access because escrow or outcome state requires review.',
-            timestamp: formatIsoTimestamp(
-                record.outcomeProtection.credits.issuedAt ??
-                    record.outcomeProtection.validation.updatedAt ??
-                    record.updatedAt,
-                'Timestamp unavailable'
-            ),
-            triggerSource: record.outcomeProtection.credits.status === 'issued' ? 'Outcome engine' : 'Policy control'
-        }
-    }
-
-    if (status === 'Revoked') {
-        return {
-            reason: 'Deal has settled and the ephemeral evaluation credential is archived after provider release.',
-            timestamp: formatIsoTimestamp(record.outcomeProtection.release?.releasedAt ?? record.updatedAt, 'Timestamp unavailable'),
-            triggerSource: 'System'
-        }
-    }
-
-    return null
-}
-
-function buildPolicyControls(record: EscrowCheckoutRecord, status: TokenStatus) {
-    const restricted = status === 'Frozen' || status === 'Revoked'
-    return [
-        { label: 'Policy enforcement', value: restricted ? 'Restricted by deal state' : 'Active and scoped', tone: restricted ? 'amber' : 'emerald' },
-        { label: 'Audit logging', value: 'Every governed access event is audit logged', tone: 'emerald' },
-        { label: 'Egress review', value: record.configuration.accessMode === 'clean_room' ? 'Blocked for clean-room evaluation' : 'Required before outputs leave', tone: record.configuration.accessMode === 'clean_room' ? 'cyan' : 'amber' },
-        { label: 'Watermarking', value: record.configuration.accessMode === 'clean_room' ? 'Workspace trace active' : 'Required for approved output paths', tone: 'cyan' },
-        { label: 'Re-identification block', value: 'Blocked by policy', tone: 'emerald' },
-        { label: 'Redistribution block', value: 'Blocked by DUA', tone: 'emerald' },
-        { label: 'Residency rule', value: 'Bound to deal and workspace policy', tone: 'cyan' },
-        { label: 'DUA accepted', value: record.dua.accepted ? `Accepted ${formatIsoTimestamp(record.dua.acceptedAt, '')}`.trim() : 'Pending acceptance', tone: record.dua.accepted ? 'emerald' : 'amber' }
-    ] satisfies Array<{ label: string; value: string; tone: Tone }>
-}
-
-function buildTimelineEvents(record: EscrowCheckoutRecord, status: TokenStatus, nowMs: number): TokenLifecycleEvent[] {
-    const workspaceReady = record.workspace.status === 'ready'
-    const credentialsIssued = record.credentials.status === 'issued'
-    const engineStatus = record.outcomeProtection.engine.status
-    const validationStatus = record.outcomeProtection.validation.status
-    const terminalTitle =
-        status === 'Expired'
-            ? 'Token expired'
-            : status === 'Frozen'
-              ? 'Token frozen'
-              : status === 'Revoked'
-                ? 'Token revoked'
-                : 'Token closes automatically'
-
-    return [
-        {
-            title: 'Escrow funded',
-            detail: `${record.escrowId} funded for ${record.datasetTitle}.`,
-            timestamp: formatIsoTimestamp(record.funding.fundedAt, 'Funding timestamp unavailable'),
-            state: 'complete'
-        },
-        {
-            title: 'Workspace provisioned',
-            detail: workspaceReady ? `${record.workspace.workspaceName} is ready.` : 'Workspace provisioning is pending.',
-            timestamp: formatIsoTimestamp(record.workspace.provisionedAt, 'Pending'),
-            state: workspaceReady ? 'complete' : 'current'
-        },
-        {
-            title: 'Ephemeral Token issued',
-            detail: credentialsIssued ? 'Safe token reference and scopes were attached to the evaluation workspace.' : 'Scoped credentials have not been issued yet.',
-            timestamp: formatIsoTimestamp(record.credentials.issuedAt, 'Pending'),
-            state: credentialsIssued ? 'complete' : workspaceReady ? 'current' : 'upcoming'
-        },
-        {
-            title: 'Evaluation started',
-            detail: credentialsIssued ? 'Buyer evaluation is tied to the governed workspace and audit trail.' : 'Evaluation starts after credential issue.',
-            timestamp: credentialsIssued ? formatIsoTimestamp(record.credentials.issuedAt, 'Pending') : 'Pending',
-            state: credentialsIssued ? 'complete' : 'upcoming'
-        },
-        {
-            title: `Outcome engine ${engineStatus.replace('_', ' ')}`,
-            detail: record.outcomeProtection.engine.summary,
-            timestamp: formatIsoTimestamp(record.outcomeProtection.engine.lastRunAt, credentialsIssued ? 'Awaiting engine run' : 'Pending token issue'),
-            state: engineStatus === 'failed' ? 'blocked' : engineStatus === 'passed' ? 'complete' : credentialsIssued ? 'current' : 'upcoming'
-        },
-        {
-            title: validationStatus === 'pending' ? 'Buyer validation pending' : 'Buyer validation submitted',
-            detail: record.outcomeProtection.validation.note ?? 'Buyer validation closes the review window before escrow can release.',
-            timestamp: formatIsoTimestamp(record.outcomeProtection.validation.updatedAt, 'Pending'),
-            state: validationStatus === 'pending' ? (engineStatus === 'passed' ? 'current' : 'upcoming') : validationStatus === 'issue_reported' ? 'blocked' : 'complete'
-        },
-        {
-            title: terminalTitle,
-            detail:
-                status === 'Active'
-                    ? 'Access will close at expiry unless a renewed token is approved.'
-                    : status === 'Provisioning'
-                      ? 'Terminal token state is pending credential issue.'
-                      : getStatusDetail(status),
-            timestamp: status === 'Expired' ? formatIsoTimestamp(record.credentials.expiresAt, 'Expired') : getTerminalTimestamp(record, status, nowMs),
-            state: status === 'Active' || status === 'Provisioning' ? 'upcoming' : status === 'Frozen' ? 'blocked' : 'complete'
-        }
-    ]
-}
-
-function getTerminalTimestamp(record: EscrowCheckoutRecord, status: TokenStatus, nowMs: number) {
-    if (status === 'Frozen') {
-        return formatIsoTimestamp(
-            record.outcomeProtection.credits.issuedAt ??
-                record.outcomeProtection.validation.updatedAt ??
-                record.updatedAt,
-            'Timestamp unavailable'
-        )
-    }
-    if (status === 'Revoked') return formatIsoTimestamp(record.outcomeProtection.release?.releasedAt ?? record.updatedAt, 'Timestamp unavailable')
-    if (status === 'Expired') return formatIsoTimestamp(record.credentials.expiresAt, 'Expired')
-    if (record.credentials.expiresAt && Date.parse(record.credentials.expiresAt) > nowMs) return formatIsoTimestamp(record.credentials.expiresAt, 'Scheduled expiry unavailable')
-    return 'Pending'
-}
-
-function sanitizeScopes(scopes: string[]) {
-    const labels = scopes.map(scope => {
-        if (scope.startsWith('dataset:')) return 'dataset read'
-        if (scope === 'audit:write') return 'audit write'
-        if (scope === 'policy:enforced') return 'policy enforced'
-        if (scope === 'query:clean-room') return 'query clean-room'
-        if (scope === 'query:aggregated') return 'query aggregated'
-        if (scope === 'export:aggregated') return 'aggregate export review'
-        if (scope === 'export:none') return 'export none'
-        if (scope === 'egress:blocked') return 'egress blocked'
-        if (scope === 'egress:reviewed') return 'egress reviewed'
-        if (scope === 'download:encrypted') return 'encrypted download approved'
-        if (scope === 'watermark:required') return 'watermark required'
-        if (scope === 'keys:ephemeral') return 'keys ephemeral'
-        return 'additional scoped permission'
-    })
-
-    return Array.from(new Set(labels))
-}
-
-function findDealContextForCheckout(
-    record: EscrowCheckoutRecord,
-    contexts: DealRouteContext[]
-): DealRouteContext | null {
-    return (
-        contexts.find(context =>
-            context.checkoutId === record.id ||
-            context.checkoutRecord?.id === record.id ||
-            context.dataset?.id === record.datasetId ||
-            context.seed.datasetId === record.datasetId
-        ) ?? null
-    )
-}
-
-function formatIsoTimestamp(value: string | undefined, fallback: string) {
-    if (!value) return fallback
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return fallback
-
-    return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'UTC',
-        timeZoneName: 'short'
-    }).format(date)
-}
-
-function formatTimeRemaining(expiresAt: string | undefined, nowMs: number) {
-    if (!expiresAt) return 'Pending issue'
-    const expiresMs = Date.parse(expiresAt)
-    if (Number.isNaN(expiresMs)) return 'Unknown'
-    const remainingMs = expiresMs - nowMs
-    if (remainingMs <= 0) return 'Expired'
-
-    const totalMinutes = Math.ceil(remainingMs / 60000)
-    const days = Math.floor(totalMinutes / 1440)
-    const hours = Math.floor((totalMinutes % 1440) / 60)
-    const minutes = totalMinutes % 60
-
-    if (days > 0) return `${days}d ${hours}h`
-    if (hours > 0) return `${hours}h ${minutes}m`
-    return `${minutes}m`
-}
-
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-    }).format(value)
+function formatTriggerSource(source: BuyerTokenTerminalState['triggerSource']) {
+    if (source === 'outcome engine') return 'Outcome engine'
+    if (source === 'policy control') return 'Policy control'
+    if (source === 'dispute state') return 'Dispute state'
+    if (source === 'admin') return 'Admin'
+    return 'System'
 }

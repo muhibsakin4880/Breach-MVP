@@ -1469,6 +1469,12 @@ export default function EscrowCheckoutPage() {
                                         >
                                             Launch Governed Workspace
                                         </Link>
+                                        <Link
+                                            to="/ephemeral-token"
+                                            className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20"
+                                        >
+                                            Open Ephemeral Token
+                                        </Link>
                                         {outputReviewPath ? (
                                             <Link
                                                 to={outputReviewPath}
