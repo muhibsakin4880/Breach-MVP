@@ -89,6 +89,7 @@ export const DEMO_ESCROW_CANONICAL_IDS = {
 export const PRIMARY_BUYER_ROUTE_TARGETS = {
     datasets: '/datasets',
     checkout: `/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
+    escrowCheckout: `/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
     escrowCenter: '/escrow-center',
     ephemeralToken: '/ephemeral-token',
     secureWorkspace: '/secure-enclave',
@@ -100,6 +101,7 @@ export const PRIMARY_BUYER_ROUTE_TARGETS = {
 export const DEMO_BUYER_ROUTE_TARGETS = {
     datasets: '/demo/datasets',
     checkout: `/demo/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
+    escrowCheckout: `/demo/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
     escrowCenter: '/demo/escrow-center',
     ephemeralToken: '/demo/ephemeral-token',
     secureWorkspace: '/demo/secure-enclave',

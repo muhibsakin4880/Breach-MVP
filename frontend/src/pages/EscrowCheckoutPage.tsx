@@ -1802,12 +1802,6 @@ export default function EscrowCheckoutPage() {
                                 </div>
                                 <div className="mt-4 grid gap-3">
                                     <Link
-                                        to={usesCanonicalBuyerDemo ? buyerRouteTargets.ephemeralToken : '/ephemeral-token'}
-                                        className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
-                                    >
-                                        View Ephemeral Token
-                                    </Link>
-                                    <Link
                                         to={secureWorkspacePath}
                                         className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
                                     >
@@ -2041,12 +2035,6 @@ export default function EscrowCheckoutPage() {
                                                 Workspace access unavailable
                                             </button>
                                         )}
-                                        <Link
-                                            to={usesCanonicalBuyerDemo ? buyerRouteTargets.ephemeralToken : '/ephemeral-token'}
-                                            className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20"
-                                        >
-                                            Open Ephemeral Token Detail
-                                        </Link>
                                         {outputReviewPath ? (
                                             <Link
                                                 to={outputReviewPath}

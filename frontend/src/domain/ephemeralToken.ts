@@ -74,6 +74,11 @@ export type BuyerTokenViewModel = {
     permissions: BuyerTokenPermissionMatrix
     policyControls: BuyerTokenPolicyControl[]
     timelineEvents: BuyerTokenTimelineEvent[]
+    datasetCategory?: string
+    outputReviewStatus?: string
+    egressStatus?: string
+    releaseReady?: boolean
+    outputReviewPath?: string
 }
 
 const statusPriority: Record<BuyerTokenStatus, number> = {
@@ -154,6 +159,8 @@ export function buildBuyerTokenViewModel(
     const accessModeMeta = checkoutAccessModeMeta[record.configuration.accessMode]
     const outcomeMeta = outcomeStageMeta[record.outcomeProtection.stage]
     const workspaceReady = record.workspace.status === 'ready'
+    const outcomeStage = record.outcomeProtection.stage
+    const releaseReady = outcomeStage === 'validated' || outcomeStage === 'released'
 
     return {
         record,
@@ -185,7 +192,12 @@ export function buildBuyerTokenViewModel(
         terminalState: getTerminalState(record, status),
         permissions: buildPermissionMatrix(record),
         policyControls: buildPolicyControls(record, status),
-        timelineEvents: buildTimelineEvents(record, status, nowMs)
+        timelineEvents: buildTimelineEvents(record, status, nowMs),
+        datasetCategory: record.configuration.accessMode === 'clean_room' ? 'Clean Room' : record.configuration.accessMode === 'aggregated_export' ? 'Aggregated Export' : 'Encrypted Download',
+        outputReviewStatus: outcomeStage === 'evaluation_pending' ? 'Pending' : outcomeStage === 'evaluation_active' ? 'In progress' : outcomeStage === 'validated' ? 'Complete' : outcomeStage === 'credit_issued' ? 'Credit issued' : 'Released',
+        egressStatus: record.configuration.accessMode === 'clean_room' ? 'Blocked' : record.configuration.accessMode === 'aggregated_export' ? 'Review required' : 'Download encrypted',
+        releaseReady,
+        outputReviewPath: dealContext?.routeTargets['output-review'] ?? undefined
     }
 }
 

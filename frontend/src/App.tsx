@@ -53,7 +53,6 @@ import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
-import EphemeralTokenPage from './pages/EphemeralTokenPage'
 import DealIndexPage from './pages/DealIndexPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
@@ -254,8 +253,7 @@ function App() {
                     <Route path="demo/access-requests" element={<AccessRequestsPage />} />
                     <Route path="demo/access-requests/:requestId" element={<AccessRequestDetailPage />} />
                     <Route path="demo/requests" element={<Navigate to="/demo/access-requests" replace />} />
-                    <Route path="demo/escrow-center" element={<EscrowCenterPage />} />
-                    <Route path="demo/ephemeral-token" element={<EphemeralTokenPage demo />} />
+<Route path="demo/escrow-center" element={<EscrowCenterPage />} />
                     <Route path="demo/trust-profile" element={<TrustProfilePage />} />
                     <Route path="demo/compliance-passport" element={<CompliancePassportPage />} />
                     <Route path="demo/audit-trail" element={<AuditTrailPage />} />
@@ -309,8 +307,7 @@ function App() {
                     <Route path="provider/datasets/new" element={<ContributionsPage />} />
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
-                    <Route path="researcher-access" element={<ResearcherAccessPage />} />
-                    <Route path="ephemeral-token" element={<EphemeralTokenPage />} />
+<Route path="researcher-access" element={<ResearcherAccessPage />} />
                     <Route path="deals" element={<DealIndexPage />} />
                     <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
