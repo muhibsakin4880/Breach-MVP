@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
 import {
+    getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
+    getDemoEscrowNextAction,
+    isBuyerDemoActive,
     isCanonicalDemoEscrowRecord,
     saveCanonicalDemoEscrowState,
     setDemoStage,
@@ -87,9 +90,31 @@ const ledgerPanelClass = "relative overflow-hidden rounded-[2rem] border border-
 export default function EscrowCenterPage() {
     const location = useLocation()
     const isDemo = location.pathname.startsWith('/demo/')
+    const showNormalBuyerDemoBanner = !isDemo
+    const buyerDemoActive = showNormalBuyerDemoBanner && isBuyerDemoActive()
+    const usesCanonicalBuyerDemo = isDemo || buyerDemoActive
+    const buyerRouteTargets = getBuyerRouteTargets(isDemo)
     const [recordsVersion, setRecordsVersion] = useState(0)
     const escrowCheckoutRecords = useMemo(() => loadEscrowCheckouts(), [recordsVersion])
-    const escrowTransactions = useMemo(() => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions], [recordsVersion])
+    const demoScenario = useMemo(
+        () => (usesCanonicalBuyerDemo ? getCanonicalDemoEscrowScenario() : null),
+        [recordsVersion, usesCanonicalBuyerDemo]
+    )
+    const canonicalDemoEscrowId = demoScenario?.checkoutRecord?.escrowId ?? null
+    const escrowTransactions = useMemo(() => {
+        const liveTransactions = loadEscrowCheckoutTransactions()
+
+        if (!usesCanonicalBuyerDemo || !canonicalDemoEscrowId) {
+            return [...liveTransactions, ...seedEscrowTransactions]
+        }
+
+        const pinnedLiveTransactions = [
+            ...liveTransactions.filter(transaction => transaction.id === canonicalDemoEscrowId),
+            ...liveTransactions.filter(transaction => transaction.id !== canonicalDemoEscrowId)
+        ]
+
+        return [...pinnedLiveTransactions, ...seedEscrowTransactions]
+    }, [canonicalDemoEscrowId, recordsVersion, usesCanonicalBuyerDemo])
     const [selectedId, setSelectedId] = useState(() => loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(8)
@@ -109,11 +134,29 @@ export default function EscrowCenterPage() {
         setRecordsVersion(current => current + 1)
     }
 
+    const handleDemoControlsChange = (scenario: DemoEscrowScenario | null) => {
+        if (scenario) {
+            applyDemoScenario(scenario)
+            return
+        }
+
+        setActiveFilter('All')
+        setSearchQuery('')
+        setCurrentPage(1)
+        setSelectedId(loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
+        setRecordsVersion(current => current + 1)
+    }
+
     useEffect(() => {
-        if (!isDemo) return
+        if (!usesCanonicalBuyerDemo) return
         saveCanonicalDemoEscrowState()
         applyDemoScenario(getCanonicalDemoEscrowScenario())
-    }, [isDemo])
+    }, [usesCanonicalBuyerDemo])
+
+    useEffect(() => {
+        if (!usesCanonicalBuyerDemo || !canonicalDemoEscrowId) return
+        setSelectedId(canonicalDemoEscrowId)
+    }, [canonicalDemoEscrowId, usesCanonicalBuyerDemo])
 
     const checkoutRecordByEscrowId = useMemo(
         () => new Map(escrowCheckoutRecords.map(record => [record.escrowId, record])),
@@ -176,6 +219,11 @@ export default function EscrowCenterPage() {
         () => escrowCheckoutRecords.find(record => record.escrowId === selectedTransaction?.id) ?? null,
         [escrowCheckoutRecords, selectedTransaction]
     )
+    const isCanonicalDemoSelected = Boolean(
+        usesCanonicalBuyerDemo &&
+        selectedCheckoutRecord &&
+        isCanonicalDemoEscrowRecord(selectedCheckoutRecord)
+    )
 
     const releasePaymentGuardrail = useMemo(() => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status), [selectedTransaction.status])
     const openDisputeGuardrail = useMemo(() => canPerformBuyerEscrowAction('open_dispute', selectedTransaction.status), [selectedTransaction.status])
@@ -196,6 +244,22 @@ export default function EscrowCenterPage() {
     const pageValue = useMemo(() => paginatedTransactions.reduce((sum, transaction) => sum + parseInt(transaction.amount.replace('$', ''), 10), 0), [paginatedTransactions])
     const selectedCaseTone = getGovernanceTone(selectedTransaction.status, selectedCheckoutRecord?.outcomeProtection.credits.status === 'issued')
     const selectedCaseSummary = getSelectedCaseSummary(selectedTransaction.status, releasePaymentGuardrail.allowed, selectedCheckoutRecord?.outcomeProtection.credits.status === 'issued')
+    const demoTokenState = isCanonicalDemoSelected
+        ? selectedCheckoutRecord?.credentials.status === 'issued'
+            ? selectedCheckoutRecord.lifecycleState === 'RELEASED_TO_PROVIDER'
+                ? 'Archived / revoked'
+                : 'Active'
+            : 'Not issued'
+        : null
+    const demoReleaseReadiness = isCanonicalDemoSelected
+        ? selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING'
+            ? 'Ready to release'
+            : selectedCheckoutRecord?.lifecycleState === 'RELEASED_TO_PROVIDER'
+                ? 'Released'
+                : selectedCheckoutRecord?.lifecycleState === 'ACCESS_ACTIVE'
+                    ? 'Waiting on buyer validation'
+                    : 'Not ready'
+        : null
 
     const toggleTag = (tag: string) => {
         setSelectedTags(previous => (previous.includes(tag) ? previous.filter(value => value !== tag) : [...previous, tag]))
@@ -209,7 +273,7 @@ export default function EscrowCenterPage() {
 
     const handleReleaseSelectedCheckout = () => {
         if (!selectedCheckoutRecord || selectedCheckoutRecord.lifecycleState !== 'RELEASE_PENDING') return
-        if (isDemo && isCanonicalDemoEscrowRecord(selectedCheckoutRecord)) {
+        if (usesCanonicalBuyerDemo && isCanonicalDemoEscrowRecord(selectedCheckoutRecord)) {
             applyDemoScenario(setDemoStage('released'))
             setShowSuccessToast(true)
             setTimeout(() => setShowSuccessToast(false), 3000)
@@ -252,7 +316,10 @@ export default function EscrowCenterPage() {
                     </div>
                 </header>
 
-                {isDemo && <DemoEscrowControls onScenarioChange={applyDemoScenario} />}
+                {isDemo && <DemoEscrowControls mode="demo-route" onScenarioChange={handleDemoControlsChange} />}
+                {showNormalBuyerDemoBanner && (
+                    <DemoEscrowControls mode="normal-route" onScenarioChange={handleDemoControlsChange} />
+                )}
 
                 <section aria-labelledby="escrow-kpis" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <MetricTile label="Access active" value={`${activeCount}`} detail="Live cases in governed access" />
@@ -409,6 +476,7 @@ export default function EscrowCenterPage() {
                                             row={row}
                                             checkoutRecord={checkoutRecordByEscrowId.get(row.id) ?? null}
                                             isSelected={row.id === selectedId}
+                                            isPinnedDemo={Boolean(canonicalDemoEscrowId && row.id === canonicalDemoEscrowId)}
                                             onSelect={() => setSelectedId(row.id)}
                                         />
                                     ))}
@@ -466,7 +534,9 @@ export default function EscrowCenterPage() {
 
                     <aside className={`${shellPanelClass} p-5 sm:p-6 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto`} aria-labelledby="selected-case">
                         <div className="border-b border-slate-800/90 pb-4">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Secondary context</div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                {isCanonicalDemoSelected ? 'Pinned demo case' : 'Secondary context'}
+                            </div>
                             <h2 id="selected-case" className="mt-2 text-lg font-semibold text-white">
                                 Selected case
                             </h2>
@@ -487,6 +557,62 @@ export default function EscrowCenterPage() {
                             </div>
                             <p className="mt-3 text-sm text-slate-400">{selectedCaseSummary}</p>
                         </div>
+
+                        {isCanonicalDemoSelected && demoScenario && selectedCheckoutRecord ? (
+                            <section className={`mt-5 ${quietPanelClass} p-4`}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">Active demo case</div>
+                                        <div className="mt-1 text-xs text-slate-400">
+                                            Canonical buyer walkthrough pinned to the live demo row.
+                                        </div>
+                                    </div>
+                                    <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100">
+                                        {demoScenario.stageLabel}
+                                    </span>
+                                </div>
+
+                                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                                    <FactTile label="Escrow stage" value={demoScenario.stageLabel} />
+                                    <FactTile label="Lifecycle state" value={statusStyles[selectedTransaction.status].text} />
+                                    <FactTile label="Workspace state" value={selectedCheckoutRecord.workspace.status === 'ready' ? 'Ready' : 'Planned'} />
+                                    <FactTile label="Token state" value={demoTokenState ?? 'Not issued'} />
+                                    <FactTile label="Release readiness" value={demoReleaseReadiness ?? 'Not ready'} />
+                                    <FactTile label="Outcome protection" value={outcomeStageMeta[selectedCheckoutRecord.outcomeProtection.stage].label} />
+                                </div>
+
+                                <div className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                    <span className="font-semibold text-white">Next recommended action:</span> {getDemoEscrowNextAction(demoScenario.stage)}
+                                </div>
+
+                                <div className="mt-4 grid gap-3">
+                                    <Link
+                                        to={buyerRouteTargets.ephemeralToken}
+                                        className="rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
+                                    >
+                                        Ephemeral Token
+                                    </Link>
+                                    <Link
+                                        to={buyerRouteTargets.secureWorkspace}
+                                        className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                                    >
+                                        Secure Workspace
+                                    </Link>
+                                    <Link
+                                        to={buyerRouteTargets.outputReview}
+                                        className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                    >
+                                        Output Review
+                                    </Link>
+                                    <Link
+                                        to={buyerRouteTargets.checkout}
+                                        className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                                    >
+                                        Checkout
+                                    </Link>
+                                </div>
+                            </section>
+                        ) : null}
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                             <FactTile label="Escrow amount" value={selectedTransaction.amount} />
@@ -712,11 +838,13 @@ function EscrowLedgerRow({
     row,
     checkoutRecord,
     isSelected,
+    isPinnedDemo = false,
     onSelect
 }: {
     row: EscrowTransaction
     checkoutRecord: ReturnType<typeof loadEscrowCheckouts>[number] | null
     isSelected: boolean
+    isPinnedDemo?: boolean
     onSelect: () => void
 }) {
     const statusStyle = statusStyles[row.status]
@@ -725,7 +853,14 @@ function EscrowLedgerRow({
     return (
         <tr className={`cursor-pointer align-top transition-colors ${statusStyle.row} ${isSelected ? 'bg-cyan-500/[0.09] ring-1 ring-inset ring-cyan-500/30' : ''}`} onClick={onSelect}>
             <td className="px-4 py-3.5">
-                <div className="font-mono text-xs font-semibold text-cyan-300">{row.id}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-mono text-xs font-semibold text-cyan-300">{row.id}</div>
+                    {isPinnedDemo ? (
+                        <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-100">
+                            Live demo case
+                        </span>
+                    ) : null}
+                </div>
             </td>
             <td className="px-4 py-3.5">
                 <div className="pr-2 text-sm font-semibold text-white">{row.dataset}</div>

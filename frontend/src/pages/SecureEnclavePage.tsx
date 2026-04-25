@@ -1,8 +1,16 @@
-import { Link } from 'react-router-dom'
-import { useMemo } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { getDealRouteContextById } from '../domain/dealDossier'
-import { loadEscrowCheckouts } from '../domain/escrowCheckout'
+import {
+    getBuyerRouteTargets,
+    getCanonicalDemoEscrowScenario,
+    getDemoEscrowNextAction,
+    isBuyerDemoActive,
+    saveCanonicalDemoEscrowState
+} from '../domain/demoEscrowScenario'
+import { checkoutAccessModeMeta, loadEscrowCheckouts } from '../domain/escrowCheckout'
 import { buildOutputReviewModel } from '../domain/outputReview'
 
 type SessionStat = {
@@ -28,6 +36,31 @@ const egressRules = [
 ] as const
 
 export default function SecureEnclavePage() {
+    const location = useLocation()
+    const isDemo = location.pathname.startsWith('/demo/')
+    const [demoControlsVersion, setDemoControlsVersion] = useState(0)
+    const buyerDemoActive = !isDemo && isBuyerDemoActive()
+    const useCanonicalBuyerDemo = isDemo || buyerDemoActive
+
+    useEffect(() => {
+        if (!useCanonicalBuyerDemo) return
+        saveCanonicalDemoEscrowState()
+    }, [useCanonicalBuyerDemo])
+
+    const demoScenario = useMemo(
+        () => (useCanonicalBuyerDemo ? getCanonicalDemoEscrowScenario() : null),
+        [demoControlsVersion, useCanonicalBuyerDemo]
+    )
+
+    if (useCanonicalBuyerDemo && demoScenario) {
+        return (
+            <DemoSecureEnclavePage
+                demoRoute={isDemo}
+                onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+            />
+        )
+    }
+
     const latestCheckout = useMemo(() => loadEscrowCheckouts()[0] ?? null, [])
     const dealRoute = useMemo(
         () => (latestCheckout ? getDealRouteRecordByDatasetId(latestCheckout.datasetId) : null),
@@ -72,6 +105,14 @@ export default function SecureEnclavePage() {
         <div className="relative min-h-screen bg-[#040812] text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(251,191,36,0.18),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_40%_80%,rgba(16,185,129,0.08),transparent_40%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                {!isDemo ? (
+                    <div className="mb-6">
+                        <DemoEscrowControls
+                            mode="normal-route"
+                            onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+                        />
+                    </div>
+                ) : null}
                 <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -329,6 +370,222 @@ export default function SecureEnclavePage() {
                     </div>
                 </section>
             </div>
+        </div>
+    )
+}
+
+function DemoSecureEnclavePage({
+    demoRoute,
+    onScenarioChange
+}: {
+    demoRoute: boolean
+    onScenarioChange: () => void
+}) {
+    const scenario = getCanonicalDemoEscrowScenario()
+    const record = scenario.checkoutRecord
+    const stage = scenario.stage
+    const buyerRouteTargets = getBuyerRouteTargets(demoRoute)
+    const accessMode = record ? checkoutAccessModeMeta[record.configuration.accessMode] : checkoutAccessModeMeta.clean_room
+    const workspaceStatus =
+        stage === 'quote_ready' || stage === 'escrow_funded'
+            ? 'Pending'
+            : stage === 'released'
+                ? 'Archived'
+                : 'Ready'
+    const evaluationStatus =
+        stage === 'token_issued' || stage === 'release_pending'
+            ? 'Evaluation access active'
+            : stage === 'released'
+                ? 'Access closed'
+                : stage === 'workspace_ready'
+                    ? 'Ready for token issue'
+                    : 'Evaluation not started'
+    const policyState =
+        stage === 'released'
+            ? 'Restricted after release'
+            : stage === 'token_issued' || stage === 'release_pending'
+                ? 'Policy enforced'
+                : 'Checks pending'
+    const tokenState =
+        stage === 'token_issued' || stage === 'release_pending'
+            ? record?.credentials.credentialId ?? 'Token active'
+            : stage === 'released'
+                ? 'Archived / revoked'
+                : 'No active Ephemeral Token'
+    const workspaceName = record?.workspace.workspaceName ?? scenario.workspaceName
+    const lifecycleState =
+        record?.lifecycleState === 'RELEASED_TO_PROVIDER'
+            ? 'Released to provider'
+            : record?.lifecycleState === 'RELEASE_PENDING'
+                ? 'Release pending'
+                : record?.lifecycleState === 'ACCESS_ACTIVE'
+                    ? 'Access active'
+                    : record?.lifecycleState === 'FUNDS_HELD'
+                        ? 'Funds held'
+                        : 'Pre-funding'
+
+    return (
+        <div className="relative min-h-screen bg-[#040812] text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(251,191,36,0.18),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_40%_80%,rgba(16,185,129,0.08),transparent_40%)]" />
+            <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                {!demoRoute ? (
+                    <div className="mb-6">
+                        <DemoEscrowControls mode="normal-route" onScenarioChange={onScenarioChange} />
+                    </div>
+                ) : null}
+                <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                    <div>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                            Buyer Demo · Secure Workspace
+                        </div>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                            Secure Enclave & Clean Room
+                        </h1>
+                        <p className="mt-3 max-w-3xl text-slate-400">
+                            The demo secure workspace reads the same canonical escrow case as checkout, escrow center, the Ephemeral Token page, and output review.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                        {evaluationStatus}
+                    </div>
+                </header>
+
+                <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <DemoStatCard label="Workspace" value={workspaceStatus} detail={workspaceName} tone={workspaceStatus === 'Pending' ? 'amber' : 'emerald'} />
+                    <DemoStatCard label="Evaluation access" value={evaluationStatus} detail={tokenState} tone={stage === 'released' ? 'rose' : stage === 'token_issued' || stage === 'release_pending' ? 'emerald' : 'cyan'} />
+                    <DemoStatCard label="Access mode" value={accessMode.label} detail={accessMode.detail} tone="cyan" />
+                    <DemoStatCard label="Policy state" value={policyState} detail={getDemoEscrowNextAction(stage)} tone={stage === 'released' ? 'rose' : stage === 'token_issued' || stage === 'release_pending' ? 'emerald' : 'amber'} />
+                </section>
+
+                <section className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                    <article className="rounded-3xl border border-cyan-500/25 bg-black/65 p-6 shadow-[0_0_20px_rgba(34,211,238,0.16)] backdrop-blur-xl">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Workspace context</div>
+                                <h2 className="mt-2 text-2xl font-semibold text-white">{workspaceName}</h2>
+                                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                                    {stage === 'quote_ready' || stage === 'escrow_funded'
+                                        ? 'Workspace provisioning is pending. The buyer cannot enter the governed environment until workspace readiness and policy checks complete.'
+                                        : stage === 'workspace_ready'
+                                            ? 'The secure workspace is provisioned and ready, but the buyer still needs an active Ephemeral Token before governed evaluation begins.'
+                                            : stage === 'released'
+                                                ? 'The governed workspace is archived because escrow is released and the demo access window is closed.'
+                                                : 'Governed evaluation is active inside the secure workspace. Raw export stays blocked and all activity remains audit-linked.'}
+                                </p>
+                            </div>
+                            <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                stage === 'released'
+                                    ? 'border-rose-400/35 bg-rose-500/10 text-rose-100'
+                                    : stage === 'quote_ready' || stage === 'escrow_funded'
+                                        ? 'border-amber-400/35 bg-amber-500/10 text-amber-100'
+                                        : 'border-emerald-400/35 bg-emerald-500/10 text-emerald-100'
+                            }`}>
+                                {lifecycleState}
+                            </span>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 md:grid-cols-2">
+                            <DemoFactRow label="Dataset" value={scenario.quote.datasetTitle} />
+                            <DemoFactRow label="Deal" value={scenario.dealId} mono />
+                            <DemoFactRow label="Workspace launch path" value={buyerRouteTargets.secureWorkspace} mono />
+                            <DemoFactRow label="Workspace state" value={workspaceStatus} />
+                            <DemoFactRow label="Token state" value={tokenState} mono={Boolean(record?.credentials.credentialId)} />
+                            <DemoFactRow label="Policy state" value={policyState} />
+                        </div>
+
+                        <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-4 text-sm leading-6 text-amber-100">
+                            Raw export does not become freely available here. Evaluation remains controlled by workspace isolation, policy-bound scopes, audit logging, and reviewed output release rules.
+                        </div>
+                    </article>
+
+                    <div className="space-y-6">
+                        <article className="rounded-2xl border border-white/10 bg-[#0a1424] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Access posture</div>
+                            <div className="mt-3 space-y-3">
+                                <DemoPolicyRow label="Workspace provisioning" value={workspaceStatus} />
+                                <DemoPolicyRow label="Ephemeral Token" value={tokenState} />
+                                <DemoPolicyRow label="Evaluation lane" value={evaluationStatus} />
+                                <DemoPolicyRow label="Release posture" value={stage === 'release_pending' ? 'Awaiting release' : stage === 'released' ? 'Closed' : 'Held in escrow'} />
+                            </div>
+                        </article>
+
+                        <article className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-6 shadow-[0_0_20px_rgba(16,185,129,0.16)]">
+                            <div className="text-sm font-semibold text-white">Next recommended action</div>
+                            <p className="mt-3 text-sm leading-6 text-emerald-100/90">
+                                {getDemoEscrowNextAction(stage)}
+                            </p>
+                        </article>
+
+                        <div className="grid gap-3">
+                            <Link
+                                to={buyerRouteTargets.ephemeralToken}
+                                className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
+                            >
+                                View Ephemeral Token
+                            </Link>
+                            <Link
+                                to={buyerRouteTargets.outputReview}
+                                className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                            >
+                                Review Output
+                            </Link>
+                            <Link
+                                to={buyerRouteTargets.checkout}
+                                className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                            >
+                                Open Checkout
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    )
+}
+
+function DemoStatCard({
+    label,
+    value,
+    detail,
+    tone
+}: {
+    label: string
+    value: string
+    detail: string
+    tone: 'cyan' | 'emerald' | 'amber' | 'rose'
+}) {
+    const toneClass =
+        tone === 'emerald'
+            ? 'text-emerald-200'
+            : tone === 'amber'
+                ? 'text-amber-200'
+                : tone === 'rose'
+                    ? 'text-rose-200'
+                    : 'text-cyan-200'
+
+    return (
+        <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+            <div className="text-xs uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className={`mt-3 text-xl font-semibold ${toneClass}`}>{value}</div>
+            <div className="mt-2 text-sm text-slate-400">{detail}</div>
+        </article>
+    )
+}
+
+function DemoFactRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+    return (
+        <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className={`mt-2 text-sm font-semibold text-slate-100 ${mono ? 'font-mono' : ''}`}>{value}</div>
+        </div>
+    )
+}
+
+function DemoPolicyRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm">
+            <span className="text-slate-400">{label}</span>
+            <span className="font-semibold text-white">{value}</span>
         </div>
     )
 }

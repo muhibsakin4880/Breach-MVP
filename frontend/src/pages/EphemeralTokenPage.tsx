@@ -6,6 +6,7 @@ import {
     type ReactNode
 } from 'react'
 import { Link } from 'react-router-dom'
+import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import {
     dashboardColorTokens,
     dashboardComponentTokens,
@@ -27,7 +28,14 @@ import {
     type BuyerTokenTone,
     type PolicyControlStatus
 } from '../domain/ephemeralToken'
-import { loadDealRouteContexts } from '../domain/dealDossier'
+import { getDealRouteContextById, loadDealRouteContexts } from '../domain/dealDossier'
+import {
+    DEMO_ESCROW_CANONICAL_IDS,
+    getBuyerRouteTargets,
+    getCanonicalDemoEscrowScenario,
+    isBuyerDemoActive,
+    saveCanonicalDemoEscrowState
+} from '../domain/demoEscrowScenario'
 import { loadEscrowCheckouts } from '../domain/escrowCheckout'
 
 const pageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
@@ -205,10 +213,27 @@ const lifecyclePreviewEvents: BuyerTokenTimelineEvent[] = [
     }
 ]
 
-export default function EphemeralTokenPage() {
+export default function EphemeralTokenPage({ demo = false }: { demo?: boolean }) {
     const [nowMs, setNowMs] = useState(() => Date.now())
-    const dealContexts = useMemo(() => loadDealRouteContexts(), [])
-    const checkoutRecords = useMemo(() => loadEscrowCheckouts(), [])
+    const [demoControlsVersion, setDemoControlsVersion] = useState(0)
+    const buyerDemoActive = !demo && isBuyerDemoActive()
+    const useBuyerDemoScenario = demo || buyerDemoActive
+    const buyerRouteTargets = getBuyerRouteTargets(demo)
+    const dealContexts = useMemo(() => (useBuyerDemoScenario ? [] : loadDealRouteContexts()), [demoControlsVersion, useBuyerDemoScenario])
+    const checkoutRecords = useMemo(() => (useBuyerDemoScenario ? [] : loadEscrowCheckouts()), [demoControlsVersion, useBuyerDemoScenario])
+    const demoScenario = useMemo(
+        () => (useBuyerDemoScenario ? getCanonicalDemoEscrowScenario() : null),
+        [demoControlsVersion, useBuyerDemoScenario]
+    )
+    const demoDealContext = useMemo(
+        () => (useBuyerDemoScenario ? getDealRouteContextById(DEMO_ESCROW_CANONICAL_IDS.dealId) : null),
+        [useBuyerDemoScenario]
+    )
+
+    useEffect(() => {
+        if (!useBuyerDemoScenario) return
+        saveCanonicalDemoEscrowState()
+    }, [useBuyerDemoScenario])
 
     useEffect(() => {
         let timeoutId = 0
@@ -231,27 +256,68 @@ export default function EphemeralTokenPage() {
     }, [])
 
     const primaryToken = useMemo(
-        () => selectPrimaryBuyerToken(checkoutRecords, nowMs),
-        [checkoutRecords, nowMs]
+        () =>
+            useBuyerDemoScenario
+                ? demoScenario?.checkoutRecord?.credentials.status === 'issued'
+                    ? selectPrimaryBuyerToken([demoScenario.checkoutRecord], nowMs)
+                    : null
+                : selectPrimaryBuyerToken(checkoutRecords, nowMs),
+        [checkoutRecords, demoScenario, nowMs, useBuyerDemoScenario]
     )
     const dealContext = useMemo(
-        () => (primaryToken ? findDealContextForCheckout(primaryToken.record, dealContexts) : null),
-        [dealContexts, primaryToken]
+        () =>
+            primaryToken
+                ? useBuyerDemoScenario
+                    ? demoDealContext
+                    : findDealContextForCheckout(primaryToken.record, dealContexts)
+                : null,
+        [dealContexts, demoDealContext, primaryToken, useBuyerDemoScenario]
     )
-    const viewModel = useMemo(
+    const baseViewModel = useMemo(
         () => (primaryToken ? buildBuyerTokenViewModel(primaryToken.record, dealContext, nowMs) : null),
         [dealContext, nowMs, primaryToken]
     )
+    const viewModel = useMemo(
+        () =>
+            baseViewModel
+                ? useBuyerDemoScenario
+                    ? {
+                        ...baseViewModel,
+                        record: {
+                            ...baseViewModel.record,
+                            workspace: {
+                                ...baseViewModel.record.workspace,
+                                launchPath: buyerRouteTargets.secureWorkspace
+                            }
+                        },
+                        dossierRoute: buyerRouteTargets.dealDossier,
+                        linkedDealReference: DEMO_ESCROW_CANONICAL_IDS.dealId
+                    }
+                    : baseViewModel
+                : null,
+        [baseViewModel, buyerRouteTargets.dealDossier, buyerRouteTargets.secureWorkspace, useBuyerDemoScenario]
+    )
+    const showDashboard = useBuyerDemoScenario
+        ? Boolean(demoScenario?.checkoutRecord?.credentials.status === 'issued' && viewModel)
+        : Boolean(viewModel)
 
     return (
         <div className={pageClass}>
             <div className={dashboardComponentTokens['page-background']} />
             <main className={shellClass}>
+                {!demo ? (
+                    <div className="pt-6">
+                        <DemoEscrowControls
+                            mode="normal-route"
+                            onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+                        />
+                    </div>
+                ) : null}
                 <PageHeader
                     status={viewModel?.status}
                     statusTone={viewModel ? getBuyerTokenTone(viewModel.status) : 'cyan'}
                 />
-                {viewModel ? <TokenDashboard viewModel={viewModel} /> : <EmptyTokenState />}
+                {showDashboard && viewModel ? <TokenDashboard viewModel={viewModel} demo={demo} /> : <EmptyTokenState demo={demo} />}
                 <EducationSections />
                 <SecurityNotice />
             </main>
@@ -259,7 +325,13 @@ export default function EphemeralTokenPage() {
     )
 }
 
-function TokenDashboard({ viewModel }: { viewModel: ReturnType<typeof buildBuyerTokenViewModel> }) {
+function TokenDashboard({
+    viewModel,
+    demo = false
+}: {
+    viewModel: ReturnType<typeof buildBuyerTokenViewModel>
+    demo?: boolean
+}) {
     const policyTone =
         viewModel.policyState === 'Policy enforced'
             ? 'emerald'
@@ -301,6 +373,7 @@ function TokenDashboard({ viewModel }: { viewModel: ReturnType<typeof buildBuyer
                 <TerminalStatePanel
                     terminalState={viewModel.terminalState}
                     dossierRoute={viewModel.dossierRoute}
+                    demo={demo}
                 />
             ) : null}
 
@@ -547,7 +620,8 @@ function PageHeader({
     )
 }
 
-function EmptyTokenState() {
+function EmptyTokenState({ demo = false }: { demo?: boolean }) {
+    const buyerRouteTargets = getBuyerRouteTargets(demo)
     return (
         <section className={`mt-6 ${panelClass}`}>
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
@@ -560,12 +634,12 @@ function EmptyTokenState() {
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
                         <Link
-                            to="/datasets"
+                            to={buyerRouteTargets.datasets}
                             className={`${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-2.5`}
                         >
                             Browse Datasets
                         </Link>
-                        <Link to="/escrow-center" className={secondaryButtonClass}>
+                        <Link to={buyerRouteTargets.escrowCenter} className={secondaryButtonClass}>
                             Open Escrow Center
                         </Link>
                     </div>
@@ -717,11 +791,14 @@ function SecurityNotice() {
 
 function TerminalStatePanel({
     terminalState,
-    dossierRoute
+    dossierRoute,
+    demo = false
 }: {
     terminalState: BuyerTokenTerminalState
     dossierRoute: string
+    demo?: boolean
 }) {
+    const buyerRouteTargets = getBuyerRouteTargets(demo)
     const tone = terminalState.status === 'Revoked' ? 'rose' : 'amber'
     return (
         <section className={`mt-6 rounded-[24px] border px-5 py-5 ${toneClasses[tone].panel}`}>
@@ -746,7 +823,7 @@ function TerminalStatePanel({
                     <Link to={dossierRoute} className={secondaryButtonClass}>
                         Open Deal Dossier
                     </Link>
-                    <Link to="/audit-trail" className={secondaryButtonClass}>
+                    <Link to={buyerRouteTargets.auditTrail} className={secondaryButtonClass}>
                         View Audit Trail
                     </Link>
                     <a

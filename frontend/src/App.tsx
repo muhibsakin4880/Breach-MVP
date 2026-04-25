@@ -255,6 +255,7 @@ function App() {
                     <Route path="demo/access-requests/:requestId" element={<AccessRequestDetailPage />} />
                     <Route path="demo/requests" element={<Navigate to="/demo/access-requests" replace />} />
                     <Route path="demo/escrow-center" element={<EscrowCenterPage />} />
+                    <Route path="demo/ephemeral-token" element={<EphemeralTokenPage demo />} />
                     <Route path="demo/trust-profile" element={<TrustProfilePage />} />
                     <Route path="demo/compliance-passport" element={<CompliancePassportPage />} />
                     <Route path="demo/audit-trail" element={<AuditTrailPage />} />

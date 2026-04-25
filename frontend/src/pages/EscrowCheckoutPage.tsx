@@ -38,7 +38,9 @@ import {
 import { buildOutputReviewModel } from '../domain/outputReview'
 import {
     DEMO_ESCROW_CANONICAL_IDS,
+    getBuyerRouteTargets,
     getCanonicalDemoEscrowScenario,
+    isBuyerDemoActive,
     saveCanonicalDemoEscrowState,
     setDemoStage,
     type DemoEscrowScenario
@@ -461,12 +463,18 @@ export default function EscrowCheckoutPage() {
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
     const isCanonicalDemoRoute = isDemo && dataset.id === DEMO_ESCROW_CANONICAL_IDS.datasetId
+    const showNormalBuyerDemoBanner = !isDemo && dataset.id === DEMO_ESCROW_CANONICAL_IDS.datasetId
+    const buyerDemoActive = showNormalBuyerDemoBanner && isBuyerDemoActive()
+    const usesCanonicalBuyerDemo = isCanonicalDemoRoute || buyerDemoActive
+    const buyerRouteTargets = getBuyerRouteTargets(isDemo)
     const dealRoute = getDealRouteRecordByDatasetId(dataset.id)
-    const outputReviewPath = dealRoute
-        ? isDemo
-            ? `/demo/deals/${dealRoute.dealId}/output-review`
-            : `/deals/${dealRoute.dealId}/output-review`
-        : null
+    const outputReviewPath = usesCanonicalBuyerDemo
+        ? buyerRouteTargets.outputReview
+        : dealRoute
+            ? isDemo
+                ? `/demo/deals/${dealRoute.dealId}/output-review`
+                : `/deals/${dealRoute.dealId}/output-review`
+            : null
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
     const [recordVersion, setRecordVersion] = useState(0)
@@ -513,11 +521,25 @@ export default function EscrowCheckoutPage() {
         )
     }
 
+    const handleDemoControlsChange = (scenario: DemoEscrowScenario | null) => {
+        if (scenario) {
+            applyDemoScenario(scenario)
+            return
+        }
+
+        setSelectedQuoteId(requestedQuoteId ?? fallbackQuote.id)
+        setCheckoutRecord(null)
+        setConfig(getRecommendedCheckoutConfig(fallbackQuote))
+        setDuaAccepted(false)
+        setRecordVersion(current => current + 1)
+        setNotice('Buyer demo cleared. Returning to the standard checkout surface.')
+    }
+
     useEffect(() => {
-        if (!isCanonicalDemoRoute) return
+        if (!usesCanonicalBuyerDemo) return
         saveCanonicalDemoEscrowState()
         applyDemoScenario(getCanonicalDemoEscrowScenario())
-    }, [isCanonicalDemoRoute])
+    }, [usesCanonicalBuyerDemo])
 
     useEffect(() => {
         if (!availableQuotes.some(quote => quote.id === selectedQuoteId)) {
@@ -564,6 +586,9 @@ export default function EscrowCheckoutPage() {
     )
     const configurationLocked = checkoutRecord !== null
     const acceptedForFunding = checkoutRecord ? checkoutRecord.dua.accepted : duaAccepted
+    const fundEscrowDisabled = usesCanonicalBuyerDemo
+        ? checkoutRecord !== null
+        : checkoutRecord !== null || !acceptedForFunding
     const workspaceReady = checkoutRecord?.workspace.status === 'ready'
     const credentialsIssued = checkoutRecord?.credentials.status === 'issued'
     const buyerJurisdiction = passport.organization.country || 'Pending buyer jurisdiction'
@@ -674,7 +699,7 @@ export default function EscrowCheckoutPage() {
     }, [outputReviewModel])
 
     useEffect(() => {
-        if (isCanonicalDemoRoute) return
+        if (usesCanonicalBuyerDemo) return
         if (!checkoutRecord || checkoutRecord.credentials.status !== 'issued') return
         if (checkoutRecord.outcomeProtection.engine.status !== 'not_started') return
 
@@ -685,7 +710,7 @@ export default function EscrowCheckoutPage() {
                 ? `${nextRecord.outcomeProtection.engine.summary} ${formatUsd(nextRecord.outcomeProtection.credits.amountUsd)} automatic credit applied and provider payout remains frozen.`
                 : `${nextRecord.outcomeProtection.engine.summary} Buyer confirmation is now required before escrow release.`
         )
-    }, [checkoutRecord, dataset, isCanonicalDemoRoute, selectedQuote])
+    }, [checkoutRecord, dataset, selectedQuote, usesCanonicalBuyerDemo])
 
     const updateConfig = <T extends keyof EscrowCheckoutConfig>(field: T, value: EscrowCheckoutConfig[T]) => {
         if (configurationLocked) return
@@ -713,11 +738,11 @@ export default function EscrowCheckoutPage() {
     }
 
     const handleFundEscrow = () => {
-        if (!duaAccepted) return
-        if (isCanonicalDemoRoute) {
+        if (usesCanonicalBuyerDemo) {
             applyDemoScenario(setDemoStage('escrow_funded'))
             return
         }
+        if (!duaAccepted) return
         const nextRecord = buildEscrowCheckoutRecord(dataset, selectedQuote, passport, config)
         saveRecord(
             nextRecord,
@@ -727,7 +752,7 @@ export default function EscrowCheckoutPage() {
 
     const handleProvisionWorkspace = () => {
         if (!checkoutRecord || workspaceReady) return
-        if (isCanonicalDemoRoute) {
+        if (usesCanonicalBuyerDemo) {
             applyDemoScenario(setDemoStage('workspace_ready'))
             return
         }
@@ -740,7 +765,7 @@ export default function EscrowCheckoutPage() {
 
     const handleIssueCredentials = () => {
         if (!checkoutRecord || !workspaceReady || credentialsIssued) return
-        if (isCanonicalDemoRoute) {
+        if (usesCanonicalBuyerDemo) {
             applyDemoScenario(setDemoStage('token_issued'))
             return
         }
@@ -753,7 +778,7 @@ export default function EscrowCheckoutPage() {
 
     const handleConfirmOutcome = () => {
         if (!checkoutRecord || !credentialsIssued) return
-        if (isCanonicalDemoRoute) {
+        if (usesCanonicalBuyerDemo) {
             applyDemoScenario(setDemoStage('release_pending'))
             return
         }
@@ -769,7 +794,7 @@ export default function EscrowCheckoutPage() {
 
     const handleReleaseEscrow = () => {
         if (!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING') return
-        if (isCanonicalDemoRoute) {
+        if (usesCanonicalBuyerDemo) {
             applyDemoScenario(setDemoStage('released'))
             return
         }
@@ -811,7 +836,13 @@ export default function EscrowCheckoutPage() {
 
                 {isCanonicalDemoRoute && (
                     <div className="mt-6">
-                        <DemoEscrowControls onScenarioChange={applyDemoScenario} />
+                        <DemoEscrowControls mode="demo-route" onScenarioChange={handleDemoControlsChange} />
+                    </div>
+                )}
+
+                {showNormalBuyerDemoBanner && (
+                    <div className="mt-6">
+                        <DemoEscrowControls mode="normal-route" onScenarioChange={handleDemoControlsChange} />
                     </div>
                 )}
 
@@ -1027,7 +1058,7 @@ export default function EscrowCheckoutPage() {
                                         {checkoutRecord?.workspace.workspaceId ?? 'Will be provisioned after funding'}
                                     </div>
                                     <div className="mt-3 text-xs text-slate-400">
-                                        Launch path {checkoutRecord?.workspace.launchPath ?? getPlannedWorkspaceLaunchPath(config.accessMode)}
+                                        Launch path {usesCanonicalBuyerDemo ? buyerRouteTargets.secureWorkspace : checkoutRecord?.workspace.launchPath ?? getPlannedWorkspaceLaunchPath(config.accessMode)}
                                     </div>
                                     <div className="mt-4">
                                         <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
@@ -1229,7 +1260,9 @@ export default function EscrowCheckoutPage() {
 
                                 {credentialsIssued ? (
                                     <div className="mt-4 grid gap-3">
-                                        {outcomeEngine.status === 'passed' && outcomeValidation.status === 'pending' && (
+                                        {((outcomeEngine.status === 'passed') ||
+                                            (usesCanonicalBuyerDemo && outcomeValidation.status === 'pending')) &&
+                                            outcomeValidation.status === 'pending' && (
                                             <button
                                                 type="button"
                                                 onClick={handleConfirmOutcome}
@@ -1439,16 +1472,27 @@ export default function EscrowCheckoutPage() {
                             </div>
 
                             <div className="mt-5 grid gap-3">
+                                {usesCanonicalBuyerDemo && (
+                                    <button
+                                        type="button"
+                                        onClick={() => applyDemoScenario(setDemoStage('quote_ready'))}
+                                        className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                            checkoutRecord === null
+                                                ? 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100'
+                                                : 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
+                                        }`}
+                                    >
+                                        {checkoutRecord === null ? 'Quote Ready Loaded' : '0. Confirm Quote / Reset to Quote Ready'}
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={handleFundEscrow}
-                                    disabled={checkoutRecord !== null || !acceptedForFunding}
+                                    disabled={fundEscrowDisabled}
                                     className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                        checkoutRecord !== null
+                                        fundEscrowDisabled
                                             ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                            : !acceptedForFunding
-                                                ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                                : 'bg-emerald-500 text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.22)] hover:bg-emerald-400'
+                                            : 'bg-emerald-500 text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.22)] hover:bg-emerald-400'
                                     }`}
                                 >
                                     {checkoutRecord ? 'Escrow Funded' : '1. Fund Escrow'}
@@ -1493,6 +1537,40 @@ export default function EscrowCheckoutPage() {
                                 </button>
                             </div>
 
+                            {usesCanonicalBuyerDemo && (
+                                <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                        Demo Buyer Handoffs
+                                    </div>
+                                    <div className="mt-4 grid gap-3">
+                                        <Link
+                                            to={buyerRouteTargets.escrowCenter}
+                                            className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                                        >
+                                            Open Escrow Center
+                                        </Link>
+                                        <Link
+                                            to={buyerRouteTargets.ephemeralToken}
+                                            className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
+                                        >
+                                            View Ephemeral Token
+                                        </Link>
+                                        <Link
+                                            to={buyerRouteTargets.secureWorkspace}
+                                            className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                                        >
+                                            Open Secure Workspace
+                                        </Link>
+                                        <Link
+                                            to={buyerRouteTargets.outputReview}
+                                            className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                        >
+                                            Review Output
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
                             {checkoutRecord?.credentials.expiresAt && (
                                 <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                                     <div className="text-sm font-semibold text-white">Access is now live</div>
@@ -1519,13 +1597,13 @@ export default function EscrowCheckoutPage() {
                                     ) : null}
                                     <div className="mt-4 grid gap-3">
                                         <Link
-                                            to={checkoutRecord.workspace.launchPath}
+                                            to={usesCanonicalBuyerDemo ? buyerRouteTargets.secureWorkspace : checkoutRecord.workspace.launchPath}
                                             className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-100"
                                         >
                                             Launch Governed Workspace
                                         </Link>
                                         <Link
-                                            to="/ephemeral-token"
+                                            to={usesCanonicalBuyerDemo ? buyerRouteTargets.ephemeralToken : '/ephemeral-token'}
                                             className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20"
                                         >
                                             Open Ephemeral Token
@@ -1539,7 +1617,7 @@ export default function EscrowCheckoutPage() {
                                             </Link>
                                         ) : null}
                                         <Link
-                                            to={isDemo ? '/demo/escrow-center' : '/escrow-center'}
+                                            to={usesCanonicalBuyerDemo ? buyerRouteTargets.escrowCenter : isDemo ? '/demo/escrow-center' : '/escrow-center'}
                                             className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white hover:border-emerald-400/40 hover:bg-white/5"
                                         >
                                             Open Escrow Center

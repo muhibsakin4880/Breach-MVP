@@ -65,6 +65,15 @@ export const DEMO_ESCROW_STAGE_EXPLANATIONS: Record<DemoEscrowStage, string> = {
     released: 'Escrow has been released to provider and token access is closed.'
 }
 
+export const getDemoEscrowNextAction = (stage: DemoEscrowStage) => {
+    if (stage === 'quote_ready') return 'Fund escrow to open the governed evaluation transaction.'
+    if (stage === 'escrow_funded') return 'Provision the secure workspace before issuing evaluation access.'
+    if (stage === 'workspace_ready') return 'Issue the Ephemeral Token to activate governed evaluation.'
+    if (stage === 'token_issued') return 'Run the evaluation and complete buyer validation.'
+    if (stage === 'release_pending') return 'Release escrow after buyer validation has been accepted.'
+    return 'Escrow is closed. Start a new evaluation window if follow-on access is needed.'
+}
+
 export const DEMO_ESCROW_CANONICAL_IDS = {
     dealId: 'DL-1001',
     datasetId: '1',
@@ -77,15 +86,43 @@ export const DEMO_ESCROW_CANONICAL_IDS = {
     passportId: 'CP-DEMO-1001'
 } as const
 
+export const PRIMARY_BUYER_ROUTE_TARGETS = {
+    datasets: '/datasets',
+    checkout: `/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
+    escrowCenter: '/escrow-center',
+    ephemeralToken: '/ephemeral-token',
+    secureWorkspace: '/secure-enclave',
+    outputReview: `/deals/${DEMO_ESCROW_CANONICAL_IDS.dealId}/output-review`,
+    dealDossier: `/deals/${DEMO_ESCROW_CANONICAL_IDS.dealId}`,
+    auditTrail: '/audit-trail'
+} as const
+
+export const DEMO_BUYER_ROUTE_TARGETS = {
+    datasets: '/demo/datasets',
+    checkout: `/demo/datasets/${DEMO_ESCROW_CANONICAL_IDS.datasetId}/escrow-checkout`,
+    escrowCenter: '/demo/escrow-center',
+    ephemeralToken: '/demo/ephemeral-token',
+    secureWorkspace: '/demo/secure-enclave',
+    outputReview: `/demo/deals/${DEMO_ESCROW_CANONICAL_IDS.dealId}/output-review`,
+    dealDossier: `/demo/deals/${DEMO_ESCROW_CANONICAL_IDS.dealId}`,
+    auditTrail: '/demo/audit-trail'
+} as const
+
+export function getBuyerRouteTargets(useDemoRoutes = false) {
+    return useDemoRoutes ? DEMO_BUYER_ROUTE_TARGETS : PRIMARY_BUYER_ROUTE_TARGETS
+}
+
+const BUYER_DEMO_ACTIVE_STORAGE_KEY = 'Redoubt:buyerDemoActive'
 const DEMO_ESCROW_STAGE_STORAGE_KEY = 'Redoubt:demoEscrowScenarioStage'
 const ESCROW_CHECKOUT_STORAGE_KEY = 'Redoubt:escrowCheckouts'
 const RIGHTS_QUOTE_STORAGE_KEY = 'Redoubt:rightsQuotes'
 const DEMO_DEFAULT_STAGE: DemoEscrowStage = 'quote_ready'
+const BUYER_DEMO_DEFAULT_STAGE: DemoEscrowStage = 'escrow_funded'
 const DEMO_SCENARIO_INSTANCE_ID = `demo_${Math.random().toString(36).slice(2, 10)}`
 
 const CANONICAL_BUYER_LABEL = 'Northbridge Research Labs · Evaluation'
 const CANONICAL_PROVIDER_LABEL = 'Provider withheld · ANON-1001'
-const CANONICAL_WORKSPACE_LAUNCH_PATH = '/demo/secure-enclave'
+const CANONICAL_WORKSPACE_LAUNCH_PATH = PRIMARY_BUYER_ROUTE_TARGETS.secureWorkspace
 const CANONICAL_QUOTE_INPUT: RightsQuoteForm = {
     deliveryMode: 'clean_room',
     fieldPack: 'analytics',
@@ -321,12 +358,12 @@ export function isCanonicalDemoEscrowRecord(record: EscrowCheckoutRecord) {
     )
 }
 
-function persistCanonicalDemoQuote(quote: RightsQuote) {
+function persistCanonicalDemoQuote(quote: RightsQuote | null) {
     const preservedQuotes = readStorageArray<RightsQuote>(RIGHTS_QUOTE_STORAGE_KEY)
         .filter(existing => !isCanonicalDemoQuote(existing))
         .slice(0, 19)
 
-    writeStorageArray(RIGHTS_QUOTE_STORAGE_KEY, [quote, ...preservedQuotes])
+    writeStorageArray(RIGHTS_QUOTE_STORAGE_KEY, quote ? [quote, ...preservedQuotes] : preservedQuotes)
 }
 
 function persistCanonicalDemoCheckoutRecord(record: EscrowCheckoutRecord | null) {
@@ -340,6 +377,14 @@ function persistCanonicalDemoCheckoutRecord(record: EscrowCheckoutRecord | null)
     }
 
     writeStorageArray(ESCROW_CHECKOUT_STORAGE_KEY, [record, ...preservedRecords])
+}
+
+function getStoredCanonicalDemoQuote() {
+    return readStorageArray<RightsQuote>(RIGHTS_QUOTE_STORAGE_KEY).find(isCanonicalDemoQuote) ?? null
+}
+
+function getStoredCanonicalDemoCheckoutRecord() {
+    return readStorageArray<EscrowCheckoutRecord>(ESCROW_CHECKOUT_STORAGE_KEY).find(isCanonicalDemoEscrowRecord) ?? null
 }
 
 function buildBaseCheckoutRecord(
@@ -557,7 +602,15 @@ export function getCurrentDemoStage(): DemoEscrowStage {
     return isDemoEscrowStage(stored) ? stored : DEMO_DEFAULT_STAGE
 }
 
+export function isBuyerDemoActive() {
+    if (!isBrowser()) return false
+    return window.localStorage.getItem(BUYER_DEMO_ACTIVE_STORAGE_KEY) === 'true'
+}
+
 export function getCanonicalDemoQuote(now = new Date()) {
+    const storedQuote = getStoredCanonicalDemoQuote()
+    if (storedQuote) return storedQuote
+
     const timestamps = buildStageTimestamps(getCurrentDemoStage(), now)
     return {
         ...buildCanonicalQuote(now),
@@ -567,13 +620,13 @@ export function getCanonicalDemoQuote(now = new Date()) {
 }
 
 export function getCanonicalDemoEscrowRecord(now = new Date()) {
-    return materializeCanonicalDemoCheckoutRecord(getCurrentDemoStage(), now)
+    return getStoredCanonicalDemoCheckoutRecord() ?? materializeCanonicalDemoCheckoutRecord(getCurrentDemoStage(), now)
 }
 
 export function getCanonicalDemoEscrowScenario(now = new Date()): DemoEscrowScenario {
     const stage = getCurrentDemoStage()
     const quote = getCanonicalDemoQuote(now)
-    const checkoutRecord = materializeCanonicalDemoCheckoutRecord(stage, now)
+    const checkoutRecord = getCanonicalDemoEscrowRecord(now)
 
     return {
         stage,
@@ -629,4 +682,33 @@ export function resetDemo(now = new Date()) {
 
 export function loadHappyPath(now = new Date(), stage: DemoEscrowStage = 'token_issued') {
     return setDemoStage(stage, now)
+}
+
+export function activateBuyerDemo(
+    now = new Date(),
+    stage: DemoEscrowStage = BUYER_DEMO_DEFAULT_STAGE
+) {
+    if (isBrowser()) {
+        window.localStorage.setItem(BUYER_DEMO_ACTIVE_STORAGE_KEY, 'true')
+        window.localStorage.setItem(DEMO_ESCROW_STAGE_STORAGE_KEY, stage)
+    }
+
+    saveCanonicalDemoEscrowState(stage, now)
+    return getCanonicalDemoEscrowScenario(now)
+}
+
+export function loadBuyerDemoHappyPath(
+    now = new Date(),
+    stage: DemoEscrowStage = 'token_issued'
+) {
+    return activateBuyerDemo(now, stage)
+}
+
+export function deactivateBuyerDemo() {
+    if (!isBrowser()) return
+
+    window.localStorage.removeItem(BUYER_DEMO_ACTIVE_STORAGE_KEY)
+    window.localStorage.removeItem(DEMO_ESCROW_STAGE_STORAGE_KEY)
+    persistCanonicalDemoQuote(null)
+    persistCanonicalDemoCheckoutRecord(null)
 }

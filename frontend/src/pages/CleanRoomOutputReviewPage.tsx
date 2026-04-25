@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
 import OutputReviewEventFeed from '../components/deals/OutputReviewEventFeed'
 import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 import { getDealRouteContextById } from '../domain/dealDossier'
+import {
+    DEMO_ESCROW_CANONICAL_IDS,
+    getBuyerRouteTargets,
+    getCanonicalDemoEscrowScenario,
+    getDemoEscrowNextAction,
+    isBuyerDemoActive,
+    saveCanonicalDemoEscrowState
+} from '../domain/demoEscrowScenario'
 import {
     buildOutputReviewModel,
     type OutputReviewCoreState
@@ -21,6 +30,27 @@ export default function CleanRoomOutputReviewPage({
     demo = false
 }: CleanRoomOutputReviewPageProps) {
     const { dealId } = useParams<{ dealId: string }>()
+    const [demoControlsVersion, setDemoControlsVersion] = useState(0)
+    const showNormalBuyerDemoBanner = !demo && dealId === DEMO_ESCROW_CANONICAL_IDS.dealId
+    const buyerDemoActive = showNormalBuyerDemoBanner && isBuyerDemoActive()
+    const useCanonicalBuyerDemo = dealId === DEMO_ESCROW_CANONICAL_IDS.dealId && (demo || buyerDemoActive)
+
+    useEffect(() => {
+        if (useCanonicalBuyerDemo) {
+            saveCanonicalDemoEscrowState()
+        }
+    }, [dealId, useCanonicalBuyerDemo])
+
+    if (useCanonicalBuyerDemo) {
+        return (
+            <DemoCanonicalOutputReviewPage
+                demoRoute={demo}
+                onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+                key={`buyer-demo-output-${demoControlsVersion}-${demo ? 'demo' : 'normal'}`}
+            />
+        )
+    }
+
     const context = getDealRouteContextById(dealId)
 
     const model = useMemo(
@@ -41,6 +71,14 @@ export default function CleanRoomOutputReviewPage({
             <div className="min-h-screen bg-[#030814] text-white">
                 <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_82%_0%,rgba(34,211,238,0.12),transparent_30%)]" />
                 <div className="relative mx-auto max-w-6xl px-6 py-10 lg:px-10">
+                    {showNormalBuyerDemoBanner ? (
+                        <div className="mb-6">
+                            <DemoEscrowControls
+                                mode="normal-route"
+                                onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+                            />
+                        </div>
+                    ) : null}
                     <section className={panelClass}>
                         <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-100">
                             Output review not found
@@ -70,6 +108,14 @@ export default function CleanRoomOutputReviewPage({
         <div className="min-h-screen bg-[#030814] text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(16,185,129,0.14),transparent_30%),radial-gradient(circle_at_84%_0%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_48%_85%,rgba(59,130,246,0.10),transparent_34%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                {showNormalBuyerDemoBanner ? (
+                    <div className="mb-6">
+                        <DemoEscrowControls
+                            mode="normal-route"
+                            onScenarioChange={() => setDemoControlsVersion(current => current + 1)}
+                        />
+                    </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
                     <Link to={demo ? '/demo/deals' : '/deals'} className="transition-colors hover:text-white">
                         Deals
@@ -404,7 +450,236 @@ export default function CleanRoomOutputReviewPage({
     )
 }
 
+function DemoCanonicalOutputReviewPage({
+    demoRoute,
+    onScenarioChange
+}: {
+    demoRoute: boolean
+    onScenarioChange: () => void
+}) {
+    const scenario = getCanonicalDemoEscrowScenario()
+    const record = scenario.checkoutRecord
+    const stage = scenario.stage
+    const buyerRouteTargets = getBuyerRouteTargets(demoRoute)
+    const status =
+        stage === 'released'
+            ? {
+                label: 'Output approved / released',
+                tone: 'emerald' as const,
+                detail: 'Reviewed outputs are approved and escrow is closed.'
+            }
+            : stage === 'release_pending'
+                ? {
+                    label: 'Output ready for approval / release',
+                    tone: 'emerald' as const,
+                    detail: 'Buyer validation is complete and the release lane is open.'
+                }
+                : stage === 'token_issued'
+                    ? {
+                        label: 'Output pending review',
+                        tone: 'amber' as const,
+                        detail: 'Evaluation is active and reviewed outputs are still in the governed queue.'
+                    }
+                    : {
+                        label: 'Evaluation not complete',
+                        tone: 'slate' as const,
+                        detail: 'No reviewed output can move until the secure evaluation workspace and token are active.'
+                    }
+
+    const releaseBoundary =
+        stage === 'released'
+            ? 'Approved reviewed output only'
+            : stage === 'release_pending'
+                ? 'Ready for reviewed release'
+                : stage === 'token_issued'
+                    ? 'Reviewed aggregate output only'
+                    : 'No output release yet'
+
+    const outputTimeline = [
+        {
+            label: 'Evaluation checkpoint',
+            value:
+                stage === 'token_issued' || stage === 'release_pending' || stage === 'released'
+                    ? 'Protected evaluation has started'
+                    : 'Evaluation not complete'
+        },
+        {
+            label: 'Reviewer queue',
+            value:
+                stage === 'release_pending'
+                    ? 'Reviewed output ready for release'
+                    : stage === 'released'
+                        ? 'Queue closed after approval'
+                        : stage === 'token_issued'
+                            ? 'Pending / in review'
+                            : 'Waiting for evaluation artifacts'
+        },
+        {
+            label: 'Escrow posture',
+            value:
+                record?.lifecycleState === 'RELEASED_TO_PROVIDER'
+                    ? 'Closed'
+                    : record?.lifecycleState === 'RELEASE_PENDING'
+                        ? 'Release pending'
+                        : record?.lifecycleState === 'ACCESS_ACTIVE'
+                            ? 'Held during evaluation'
+                            : 'Pre-release'
+        },
+        {
+            label: 'Raw export',
+            value: 'Blocked unless a reviewed and approved output path exists'
+        }
+    ]
+
+    return (
+        <div className="min-h-screen bg-[#030814] text-white">
+            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(16,185,129,0.14),transparent_30%),radial-gradient(circle_at_84%_0%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_48%_85%,rgba(59,130,246,0.10),transparent_34%)]" />
+            <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
+                {!demoRoute ? (
+                    <div className="mb-6">
+                        <DemoEscrowControls mode="normal-route" onScenarioChange={onScenarioChange} />
+                    </div>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                    <Link to={demoRoute ? '/demo/deals' : '/deals'} className="transition-colors hover:text-white">
+                        Deals
+                    </Link>
+                    <span>/</span>
+                    <span className="text-slate-200">{scenario.dealId}</span>
+                    <span>/</span>
+                    <span className="max-w-full truncate text-slate-200">{scenario.quote.datasetTitle}</span>
+                    <span>/</span>
+                    <span className="text-slate-200">Output review</span>
+                </div>
+
+                <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.16)]">
+                                Clean Room Output Review
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                Buyer demo output lane
+                            </span>
+                        </div>
+                        <h1 className="mt-4 max-w-5xl text-3xl font-semibold tracking-tight text-slate-100 sm:text-[2.35rem]">
+                            {scenario.quote.datasetTitle}
+                        </h1>
+                        <p className="mt-2 max-w-3xl text-slate-400">
+                            Reviewed outputs remain controlled. Raw data is not freely exported, and every release decision stays linked to the same escrow, workspace, and policy-bound evaluation flow.
+                        </p>
+                    </div>
+                    <DemoOutputTonePill tone={status.tone} label={status.label} />
+                </header>
+
+                <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <DemoOutputSummaryCard label="Output review state" value={status.label} detail={status.detail} tone={status.tone} />
+                    <DemoOutputSummaryCard label="Escrow state" value={record?.lifecycleState === 'RELEASED_TO_PROVIDER' ? 'Escrow closed' : record?.lifecycleState === 'RELEASE_PENDING' ? 'Release pending' : record?.lifecycleState === 'ACCESS_ACTIVE' ? 'Held for evaluation' : 'Not funded yet'} detail={scenario.stageLabel} tone={stage === 'released' ? 'emerald' : stage === 'release_pending' ? 'amber' : 'cyan'} />
+                    <DemoOutputSummaryCard label="Workspace" value={record?.workspace.status === 'ready' ? 'Ready' : 'Pending'} detail={record?.workspace.workspaceName ?? scenario.workspaceName} tone={record?.workspace.status === 'ready' ? 'emerald' : 'amber'} />
+                    <DemoOutputSummaryCard label="Release boundary" value={releaseBoundary} detail="Reviewed outputs only" tone="cyan" />
+                </section>
+
+                <section className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                    <section className={panelClass}>
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Demo review packet</div>
+                                <h2 className="mt-2 text-2xl font-semibold text-white">Current release posture</h2>
+                                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                                    {status.detail} {getDemoEscrowNextAction(stage)}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3">
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Token reference</div>
+                                <div className="mt-2 text-sm font-semibold text-slate-100">
+                                    {record?.credentials.credentialId ?? 'No active token'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 md:grid-cols-2">
+                            <FieldRow label="Deal id" value={scenario.dealId} />
+                            <FieldRow label="Dataset" value={scenario.quote.datasetTitle} />
+                            <FieldRow label="Workspace" value={record?.workspace.workspaceName ?? scenario.workspaceName} />
+                            <FieldRow label="Outcome protection" value={record ? record.outcomeProtection.stage : 'Awaiting evaluation'} />
+                            <FieldRow label="Output queue" value={stage === 'release_pending' ? 'Ready for release review' : stage === 'released' ? 'Closed after approval' : stage === 'token_issued' ? 'Pending review' : 'Not opened'} />
+                            <FieldRow label="Raw export" value="Blocked" />
+                        </div>
+
+                        <div className="mt-5 rounded-2xl border border-rose-500/20 bg-rose-500/8 px-4 py-4 text-sm leading-6 text-rose-100">
+                            This route reviews governed outputs only. Raw dataset material does not leave the workspace here, and approval never converts the buyer session into uncontrolled export access.
+                        </div>
+                    </section>
+
+                    <aside className="space-y-6">
+                        <section className={panelClass}>
+                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Lifecycle</div>
+                            <h2 className="mt-2 text-xl font-semibold text-white">Output lane checkpoints</h2>
+                            <div className="mt-5 space-y-3">
+                                {outputTimeline.map(item => (
+                                    <FieldRow key={item.label} label={item.label} value={item.value} />
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className={panelClass}>
+                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Buyer navigation</div>
+                            <h2 className="mt-2 text-xl font-semibold text-white">Continue the demo</h2>
+                            <div className="mt-5 grid gap-3">
+                                <Link
+                                    to={buyerRouteTargets.secureWorkspace}
+                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                                >
+                                    Open Secure Workspace
+                                </Link>
+                                <Link
+                                    to={buyerRouteTargets.ephemeralToken}
+                                    className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
+                                >
+                                    View Ephemeral Token
+                                </Link>
+                                <Link
+                                    to={buyerRouteTargets.escrowCenter}
+                                    className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                                >
+                                    Open Escrow Center
+                                </Link>
+                                <Link
+                                    to={buyerRouteTargets.checkout}
+                                    className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                                >
+                                    Return to Checkout
+                                </Link>
+                            </div>
+                        </section>
+                    </aside>
+                </section>
+            </div>
+        </div>
+    )
+}
+
 function SummaryCard({
+    label,
+    value,
+    detail,
+    tone
+}: {
+    label: string
+    value: string
+    detail: string
+    tone: 'slate' | 'cyan' | 'amber' | 'emerald' | 'rose'
+}) {
+    return (
+        <article className="rounded-2xl border border-white/10 bg-[#0a1526]/88 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className={`mt-3 text-xl font-semibold ${getToneClass(tone)}`}>{value}</div>
+            <div className="mt-2 text-xs leading-5 text-slate-400">{detail}</div>
+        </article>
+    )
+}
+
+function DemoOutputSummaryCard({
     label,
     value,
     detail,
@@ -479,6 +754,20 @@ function ShellList({
 }
 
 function TonePill({
+    tone,
+    label
+}: {
+    tone: 'slate' | 'cyan' | 'amber' | 'emerald' | 'rose'
+    label: string
+}) {
+    return (
+        <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getToneBadgeClasses(tone)}`}>
+            {label}
+        </span>
+    )
+}
+
+function DemoOutputTonePill({
     tone,
     label
 }: {
