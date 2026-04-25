@@ -32,6 +32,8 @@ type DatasetRequestStatusPanelProps = {
         classes: string
     }
     latestSavedQuote: RightsQuote | null
+    rightsQuotePath: string
+    compliancePassportPath: string
 }
 
 const quoteExpiryFormatter = new Intl.DateTimeFormat('en-US', {
@@ -56,7 +58,9 @@ export default function DatasetRequestStatusPanel({
     compliancePassportId,
     compliancePassportCompletionPercent,
     passportStatus,
-    latestSavedQuote
+    latestSavedQuote,
+    rightsQuotePath,
+    compliancePassportPath
 }: DatasetRequestStatusPanelProps) {
     return (
         <DatasetDetailPanel
@@ -172,7 +176,7 @@ export default function DatasetRequestStatusPanel({
                                         Use In Request
                                     </button>
                                     <Link
-                                        to="/compliance-passport"
+                                        to={compliancePassportPath}
                                         className="rounded-sm border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:border-emerald-400/50 hover:bg-white/5"
                                     >
                                         Open Passport
@@ -218,17 +222,17 @@ export default function DatasetRequestStatusPanel({
                                                 Use Quote In Request
                                             </button>
                                             <Link
-                                                to={`/datasets/${datasetId}/rights-quote`}
+                                                to={rightsQuotePath}
                                                 className="rounded-sm border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:border-cyan-400/50 hover:bg-white/5"
                                             >
-                                                Refine Terms
+                                                Open Advanced Terms
                                             </Link>
                                         </div>
                                         <div className="mt-3 text-[11px] leading-5 text-slate-500">
                                             Quote terms describe licensed use in this demo. They do not prove ownership, lawful basis, or chain-of-title.
                                         </div>
                                         <div className="text-[11px] leading-5 text-slate-500">
-                                            When you are ready to proceed, use the main <span className="font-semibold text-slate-300">Escrow-Native Checkout</span> action above so this quote is applied through the single checkout path.
+                                            When you are ready to proceed, use the main <span className="font-semibold text-slate-300">Protected Evaluation Checkout</span> action above so this quote is applied through the single buyer checkout path.
                                         </div>
                                     </>
                                 ) : (
@@ -237,13 +241,13 @@ export default function DatasetRequestStatusPanel({
                                             No terms saved yet. Build evaluation terms to turn delivery, usage, term, and exclusivity into a reusable package.
                                         </p>
                                         <Link
-                                            to={`/datasets/${datasetId}/rights-quote`}
+                                            to={rightsQuotePath}
                                             className="mt-3 inline-flex rounded-sm border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                         >
-                                            Build Evaluation Terms
+                                            Open Advanced Terms
                                         </Link>
                                         <p className="mt-3 text-[11px] leading-5 text-slate-500">
-                                            After terms are ready, continue from the main <span className="font-semibold text-slate-300">Escrow-Native Checkout</span> action above.
+                                            After terms are ready, continue from the main <span className="font-semibold text-slate-300">Protected Evaluation Checkout</span> action above.
                                         </p>
                                     </div>
                                 )}

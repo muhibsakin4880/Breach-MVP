@@ -22,6 +22,8 @@ type DatasetActionCheckoutPanelProps = {
     escrowHoldLabel: string
     reviewWindowHours: number
     protectedSummary: string
+    qualityBreakdownPath: string
+    checkoutInProgress: boolean
     activeDecisionMode: 'free' | 'protected'
     onDecisionModeChange: (mode: 'free' | 'protected') => void
     compact?: boolean
@@ -49,6 +51,8 @@ export default function DatasetActionCheckoutPanel({
     escrowHoldLabel,
     reviewWindowHours,
     protectedSummary,
+    qualityBreakdownPath,
+    checkoutInProgress,
     activeDecisionMode,
     onDecisionModeChange,
     compact = true
@@ -70,7 +74,7 @@ export default function DatasetActionCheckoutPanel({
     return (
         <DatasetDetailPanel
             eyebrow="Action / Checkout"
-            title="Primary deal controls"
+            title="Protected evaluation next step"
             badge={
                 <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-100">
                     {latestCheckoutLabel}
@@ -91,31 +95,33 @@ export default function DatasetActionCheckoutPanel({
                     </div>
                 </div>
 
-                <div className={`grid gap-2 ${compact ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
+                <div className={`grid gap-2 ${compact ? 'sm:grid-cols-3' : 'md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.95fr)]'}`}>
+                    <Link
+                        to={escrowCheckoutPath}
+                        state={escrowCheckoutState}
+                        className="rounded-sm border border-emerald-400/40 bg-emerald-500/12 px-3 py-2 text-center text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20"
+                    >
+                        {checkoutInProgress
+                            ? 'Continue Protected Evaluation Checkout'
+                            : 'Start Protected Evaluation Checkout'}
+                    </Link>
+                    <Link
+                        to={rightsQuotePath}
+                        className="rounded-sm border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-center text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
+                    >
+                        Open Advanced Terms
+                    </Link>
                     <button
                         type="button"
                         onClick={onOpenRequestModal}
                         className={`rounded-sm px-3 py-2 text-xs font-semibold transition-colors ${
                             minimumTrustNeedsReview
                                 ? 'border border-amber-400/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/20'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'border border-white/12 bg-white/5 text-white hover:border-cyan-400/35 hover:bg-white/10'
                         }`}
                     >
                         {requestEntryLabel}
                     </button>
-                    <Link
-                        to={rightsQuotePath}
-                        className="rounded-sm border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-center text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                    >
-                        Build Rights Quote
-                    </Link>
-                    <Link
-                        to={escrowCheckoutPath}
-                        state={escrowCheckoutState}
-                        className="rounded-sm border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-center text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20"
-                    >
-                        Escrow-Native Checkout
-                    </Link>
                 </div>
 
                 <div className={`rounded-sm border border-slate-800 bg-slate-950/55 ${compact ? 'p-3' : 'p-4'}`}>
@@ -178,7 +184,7 @@ export default function DatasetActionCheckoutPanel({
                             <div className="mt-3 text-xs leading-5 text-emerald-100/90">{protectedSummary}</div>
                         ) : (
                             <Link
-                                to={`/datasets/${dataset.id}/quality-breakdown`}
+                                to={qualityBreakdownPath}
                                 className="mt-3 inline-flex items-center rounded-sm bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
                             >
                                 Open Advanced Quality Workspace
@@ -193,7 +199,8 @@ export default function DatasetActionCheckoutPanel({
                             {isProtected ? (
                                 <div className="mt-3 space-y-3">
                                     <p className="text-sm text-slate-200/85">
-                                        Enter protected evaluation setup, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. This is the standard buyer-paid step before production or API access is discussed.
+                                        Checkout is the main buyer workflow. It carries terms inline, funds escrow, provisions the governed workspace,
+                                        issues a short-lived Ephemeral Token, and keeps buyer validation plus release readiness in one place.
                                     </p>
                                     <div className="grid gap-2 sm:grid-cols-2">
                                         {protectedMetricDetails.map(metric => (
@@ -210,7 +217,7 @@ export default function DatasetActionCheckoutPanel({
                                         </p>
                                     </div>
                                     <div className="rounded-sm border border-emerald-400/20 bg-emerald-500/8 px-3 py-2.5 text-sm text-emerald-100/90">
-                                        Start checkout from the main <span className="font-semibold text-white">Escrow-Native Checkout</span> action in the Request &amp; Status panel. Any saved quote context will carry into the governed evaluation flow automatically.
+                                        The main buyer CTA is <span className="font-semibold text-white">Protected Evaluation Checkout</span>. Advanced Terms stays available as a secondary surface when you need to refine rights before funding.
                                     </div>
                                 </div>
                             ) : (

@@ -681,7 +681,7 @@ export default function EscrowCenterPage() {
                                 </>
                             ) : (
                                 <div className="mt-4 rounded-xl border border-dashed border-slate-700/90 bg-slate-950/40 px-4 py-3 text-xs text-slate-400">
-                                    This record belongs to the legacy escrow set. Protected evaluation commitments appear only on deals started through Escrow-Native Checkout.
+                                    This record belongs to the legacy escrow set. Protected evaluation commitments appear only on deals started through Protected Evaluation Checkout.
                                 </div>
                             )}
                         </section>

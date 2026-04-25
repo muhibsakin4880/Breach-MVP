@@ -240,6 +240,22 @@ export default function DatasetDetailPage() {
             : `/datasets/${dataset.id}/quality-breakdown`,
         [dataset.id, isDemoRoute]
     )
+    const rightsQuotePath = useMemo(
+        () => isDemoRoute
+            ? `/demo/datasets/${dataset.id}/rights-quote`
+            : `/datasets/${dataset.id}/rights-quote`,
+        [dataset.id, isDemoRoute]
+    )
+    const escrowCheckoutPath = useMemo(
+        () => isDemoRoute
+            ? `/demo/datasets/${dataset.id}/escrow-checkout`
+            : `/datasets/${dataset.id}/escrow-checkout`,
+        [dataset.id, isDemoRoute]
+    )
+    const compliancePassportPath = useMemo(
+        () => (isDemoRoute ? '/demo/compliance-passport' : '/compliance-passport'),
+        [isDemoRoute]
+    )
     const dealContext = useMemo(
         () => (dealRoute ? getDealRouteContextById(dealRoute.dealId) : null),
         [dealRoute]
@@ -705,6 +721,13 @@ export default function DatasetDetailPage() {
                                         providerPacketPath={providerPacketPath}
                                         availableSurfaceCount={dealSurfaceReadiness.available}
                                         placeholderSurfaceCount={dealSurfaceReadiness.placeholder}
+                                        checkoutPath={escrowCheckoutPath}
+                                        checkoutState={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
+                                        advancedTermsPath={rightsQuotePath}
+                                        protectedSummary={protectedSummary}
+                                        latestCheckoutLabel={latestCheckoutLabel}
+                                        evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
+                                        checkoutInProgress={Boolean(latestCheckout)}
                                     />
                                     <DatasetQualityPreviewPanel
                                         dataset={dataset}
@@ -773,14 +796,16 @@ export default function DatasetDetailPage() {
                                     requestEntryLabel={requestEntryLabel}
                                     onOpenRequestModal={openRequestModal}
                                     minimumTrustNeedsReview={minimumTrustNeedsReview}
-                                    rightsQuotePath={isDemoRoute ? `/demo/datasets/${dataset.id}/rights-quote` : `/datasets/${dataset.id}/rights-quote`}
-                                    escrowCheckoutPath={isDemoRoute ? `/demo/datasets/${dataset.id}/escrow-checkout` : `/datasets/${dataset.id}/escrow-checkout`}
+                                    rightsQuotePath={rightsQuotePath}
+                                    escrowCheckoutPath={escrowCheckoutPath}
                                     escrowCheckoutState={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
                                     latestCheckoutLabel={latestCheckoutLabel}
                                     evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
                                     escrowHoldLabel={formatUsd(recommendedQuote.escrowHoldUsd)}
                                     reviewWindowHours={validationWindowHours}
                                     protectedSummary={protectedSummary}
+                                    qualityBreakdownPath={qualityBreakdownPath}
+                                    checkoutInProgress={Boolean(latestCheckout)}
                                     activeDecisionMode={activeDecisionMode}
                                     onDecisionModeChange={setActiveDecisionMode}
                                     compact={false}
@@ -815,6 +840,8 @@ export default function DatasetDetailPage() {
                                 classes: passportStatus.classes
                             }}
                             latestSavedQuote={latestSavedQuote}
+                            rightsQuotePath={rightsQuotePath}
+                            compliancePassportPath={compliancePassportPath}
                         />
                         <DatasetSecureAccessPanel
                             escrowWindow={escrowWindow}

@@ -235,15 +235,21 @@ test.describe('ephemeral token buyer control center', () => {
 
         await page.goto('/datasets/1/escrow-checkout')
 
+        await expect(page.getByText('Workspace & Ephemeral Token')).toBeVisible()
+        await expect(page.getByText('Pending issuance').first()).toBeVisible()
+        await expect(page.getByText('A temporary, scoped token appears only after escrow funding, workspace provisioning, and policy checks clear.')).toBeVisible()
+
         await page.getByLabel(/I accept this DUA/i).check()
         await page.getByRole('button', { name: '1. Fund Escrow' }).click()
         await page.getByRole('button', { name: '2. Provision Workspace' }).click()
-        await page.getByRole('button', { name: '3. Issue Scoped Credentials' }).click()
+        await page.getByRole('button', { name: '3. Issue Ephemeral Token' }).click()
 
         await expect(page.getByText('Access is now live')).toBeVisible()
-        await expect(page.getByRole('link', { name: 'Open Ephemeral Token' })).toBeVisible()
+        await expect(page.getByText(/^TOK-/).first()).toBeVisible()
+        await expect(page.getByText('dataset read', { exact: true }).first()).toBeVisible()
+        await expect(page.getByRole('link', { name: 'View Ephemeral Token' })).toBeVisible()
 
-        await page.getByRole('link', { name: 'Open Ephemeral Token' }).click()
+        await page.getByRole('link', { name: 'View Ephemeral Token' }).click()
 
         await expect(page).toHaveURL(/\/ephemeral-token$/)
         await expect(page.getByText(/^TOK-/)).toBeVisible()

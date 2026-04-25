@@ -47,6 +47,7 @@ import {
     setDemoStage,
     type DemoEscrowScenario
 } from '../domain/demoEscrowScenario'
+import { buildBuyerTokenViewModel, formatTimestamp } from '../domain/ephemeralToken'
 import {
     buildRightsQuote,
     formatUsd,
@@ -90,6 +91,15 @@ type TransactionTimelineStep = {
     label: string
     detail: string
     state: TransactionTimelineStepState
+}
+
+type CheckoutFlowTone = 'emerald' | 'cyan' | 'amber' | 'rose' | 'slate'
+
+type CheckoutFlowCard = {
+    label: string
+    value: string
+    detail: string
+    tone: CheckoutFlowTone
 }
 
 const geographyLabelMap = {
@@ -469,6 +479,12 @@ export default function EscrowCheckoutPage() {
     const buyerDemoActive = showNormalBuyerDemoBanner && isBuyerDemoActive()
     const usesCanonicalBuyerDemo = isCanonicalDemoRoute || buyerDemoActive
     const buyerRouteTargets = getBuyerRouteTargets(isDemo)
+    const datasetsPath = isDemo ? '/demo/datasets' : '/datasets'
+    const datasetDetailPath = isDemo ? `/demo/datasets/${dataset.id}` : `/datasets/${dataset.id}`
+    const rightsQuotePath = isDemo ? `/demo/datasets/${dataset.id}/rights-quote` : `/datasets/${dataset.id}/rights-quote`
+    const qualityPreviewPath = isDemo
+        ? `/demo/datasets/${dataset.id}/quality-breakdown`
+        : `/datasets/${dataset.id}/quality-breakdown`
     const dealRoute = getDealRouteRecordByDatasetId(dataset.id)
     const outputReviewPath = usesCanonicalBuyerDemo
         ? buyerRouteTargets.outputReview
@@ -480,6 +496,7 @@ export default function EscrowCheckoutPage() {
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
     const [recordVersion, setRecordVersion] = useState(0)
+    const [nowMs, setNowMs] = useState(() => Date.now())
     const savedQuotes = useMemo(() => {
         const quotes = loadRightsQuotes(dataset.id)
         return usesCanonicalBuyerDemo ? quotes : filterOutCanonicalDemoQuotes(quotes)
@@ -552,6 +569,14 @@ export default function EscrowCheckoutPage() {
         saveCanonicalDemoEscrowState()
         applyDemoScenario(getCanonicalDemoEscrowScenario())
     }, [usesCanonicalBuyerDemo])
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setNowMs(Date.now())
+        }, 60000)
+
+        return () => window.clearInterval(intervalId)
+    }, [])
 
     useEffect(() => {
         if (!availableQuotes.some(quote => quote.id === selectedQuoteId)) {
@@ -709,6 +734,143 @@ export default function EscrowCheckoutPage() {
                     : extensionPreview
         ].filter((artifact): artifact is NonNullable<typeof artifact> => Boolean(artifact))
     }, [outputReviewModel])
+    const tokenViewModel = useMemo(
+        () =>
+            checkoutRecord
+                ? buildBuyerTokenViewModel(checkoutRecord, outputReviewContext, nowMs)
+                : null,
+        [checkoutRecord, nowMs, outputReviewContext]
+    )
+    const buyerValidationReady = Boolean(
+        checkoutRecord &&
+        credentialsIssued &&
+        outcomeValidation.status === 'pending' &&
+        (outcomeEngine.status === 'passed' || usesCanonicalBuyerDemo)
+    )
+    const releaseReady = checkoutRecord?.lifecycleState === 'RELEASE_PENDING'
+    const checkoutReleased = checkoutRecord?.lifecycleState === 'RELEASED_TO_PROVIDER'
+    const secureWorkspacePath = usesCanonicalBuyerDemo
+        ? buyerRouteTargets.secureWorkspace
+        : checkoutRecord?.workspace.launchPath ?? getPlannedWorkspaceLaunchPath(config.accessMode)
+    const inlineScopeChips = tokenViewModel?.permissions.scopeChips ?? plannedScopes.map(formatCheckoutScopeLabel)
+    const checkoutFlowCards: CheckoutFlowCard[] = [
+        {
+            label: 'Rights summary',
+            value: selectedQuote.id,
+            detail:
+                savedQuotes.length > 0
+                    ? 'Terms are already attached to checkout and can be refined as an advanced step.'
+                    : 'Starter terms were generated from the current passport and are already loaded into checkout.',
+            tone: 'cyan'
+        },
+        {
+            label: 'Escrow funding',
+            value: checkoutRecord ? 'Funds held' : acceptedForFunding ? 'Ready to fund' : 'DUA required',
+            detail: checkoutRecord
+                ? `${checkoutRecord.escrowId} is holding funds while governed evaluation remains active.`
+                : acceptedForFunding
+                    ? 'Fund escrow to open workspace provisioning and token issuance.'
+                    : 'Accept the DUA before escrow funding can begin.',
+            tone: checkoutRecord ? 'emerald' : acceptedForFunding ? 'cyan' : 'amber'
+        },
+        {
+            label: 'Workspace',
+            value: workspaceReady ? 'Ready' : checkoutRecord ? 'Provisioning next' : 'Planned',
+            detail: workspaceReady
+                ? `${checkoutRecord?.workspace.workspaceName ?? getPlannedWorkspaceName(dataset, config.accessMode)} is ready for governed evaluation.`
+                : checkoutRecord
+                    ? 'Provision the secure workspace before any Ephemeral Token can activate.'
+                    : 'The workspace is planned and will provision after funding clears.',
+            tone: workspaceReady ? 'emerald' : checkoutRecord ? 'cyan' : 'slate'
+        },
+        {
+            label: 'Ephemeral Token',
+            value: tokenViewModel?.status ?? 'Pending issue',
+            detail: tokenViewModel
+                ? `${tokenViewModel.safeTokenReference} · ${tokenViewModel.statusDetail}`
+                : 'A temporary, scoped token appears only after escrow funding, workspace provisioning, and policy checks clear.',
+            tone: tokenViewModel
+                ? tokenViewModel.status === 'Active'
+                    ? 'emerald'
+                    : tokenViewModel.status === 'Provisioning'
+                        ? 'cyan'
+                        : tokenViewModel.status === 'Frozen'
+                            ? 'amber'
+                            : 'rose'
+                : 'slate'
+        },
+        {
+            label: 'Buyer validation',
+            value:
+                outcomeValidation.status === 'confirmed'
+                    ? 'Complete'
+                    : outcomeValidation.status === 'issue_reported'
+                        ? 'Issue reported'
+                        : credentialsIssued
+                            ? 'Open in checkout'
+                            : 'Locked',
+            detail:
+                outcomeValidation.status === 'confirmed'
+                    ? 'The evaluating organization validated the contracted outcome.'
+                    : outcomeValidation.status === 'issue_reported'
+                        ? 'Validation is blocked while a protection issue remains open.'
+                        : credentialsIssued
+                            ? 'Buyer validation is controlled here after the evaluation run completes.'
+                            : 'Validation unlocks only after the Ephemeral Token activates governed access.',
+            tone:
+                outcomeValidation.status === 'confirmed'
+                    ? 'emerald'
+                    : outcomeValidation.status === 'issue_reported'
+                        ? 'rose'
+                        : credentialsIssued
+                            ? 'cyan'
+                            : 'slate'
+        },
+        {
+            label: 'Release readiness',
+            value:
+                checkoutReleased
+                    ? 'Released'
+                    : releaseReady
+                        ? 'Ready to release'
+                        : outcomeCredits.status === 'issued'
+                            ? 'Blocked'
+                            : 'Awaiting validation',
+            detail:
+                checkoutReleased
+                    ? 'Escrow released to the provider and buyer access is now closing.'
+                    : releaseReady
+                        ? 'Buyer validation passed and payout can now be released.'
+                        : outcomeCredits.status === 'issued'
+                            ? 'Release is frozen because the outcome engine issued protection credits.'
+                            : 'Release remains locked until buyer validation closes the evaluation window.',
+            tone:
+                checkoutReleased
+                    ? 'emerald'
+                    : releaseReady
+                        ? 'cyan'
+                        : outcomeCredits.status === 'issued'
+                            ? 'rose'
+                            : 'slate'
+        }
+    ]
+    const nextRecommendedAction = !checkoutRecord
+        ? acceptedForFunding
+            ? 'Fund escrow to open the governed evaluation transaction.'
+            : 'Accept the DUA and confirm the inline rights package before funding.'
+        : !workspaceReady
+            ? 'Provision the secure workspace so Redoubt can prepare the governed evaluation boundary.'
+            : !credentialsIssued
+                ? 'Issue the short-lived Ephemeral Token to activate buyer evaluation access.'
+                : outcomeValidation.status === 'pending'
+                    ? outcomeEngine.status === 'failed'
+                        ? 'Output release is blocked while the protection issue is reviewed.'
+                        : 'Complete buyer validation here before escrow can move to release.'
+                    : checkoutRecord.lifecycleState === 'RELEASE_PENDING'
+                        ? 'Release escrow once validation is complete.'
+                        : checkoutReleased
+                            ? 'Access is closed. Use secondary pages for audit and review context only.'
+                            : 'Continue inside the secure workspace or review outputs as secondary views.'
 
     useEffect(() => {
         if (usesCanonicalBuyerDemo) return
@@ -822,22 +984,23 @@ export default function EscrowCheckoutPage() {
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(16,185,129,0.14),transparent_32%),radial-gradient(circle_at_82%_0%,rgba(34,211,238,0.12),transparent_30%),radial-gradient(circle_at_50%_84%,rgba(59,130,246,0.10),transparent_35%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Link to="/datasets" className="hover:text-white transition-colors">Datasets</Link>
+                    <Link to={datasetsPath} className="hover:text-white transition-colors">Datasets</Link>
                     <span>/</span>
-                    <Link to={`/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
+                    <Link to={datasetDetailPath} className="hover:text-white transition-colors">{dataset.title}</Link>
                     <span>/</span>
-                    <span className="text-slate-200">Protected Evaluation Setup</span>
+                    <span className="text-slate-200">Escrow Checkout</span>
                 </div>
 
                 <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Protected Evaluation Setup
+                            Buyer workflow · Protected evaluation
                         </div>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Evaluation Setup</h1>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Escrow Checkout</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            This setup turns the evaluation into a governed engagement: it funds escrow, generates the DUA,
-                            chooses access mode, sets the review window, provisions the workspace, and issues scoped credentials. Metadata review and terms creation are free; this is where the standard buyer-paid protected evaluation path begins.
+                            Checkout is the buyer control center for protected evaluation. It keeps the dataset and rights summary,
+                            escrow funding, workspace provisioning, temporary Ephemeral Token issuance, buyer validation, and
+                            release readiness on one governed surface. Advanced Terms remains available, but it is now a secondary view.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${passportStatus.classes}`}>
@@ -858,6 +1021,38 @@ export default function EscrowCheckoutPage() {
                     </div>
                 )}
 
+                <section className="mt-6 rounded-3xl border border-white/10 bg-[#081320]/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100/75">
+                                Guided buyer flow
+                            </div>
+                            <h2 className="mt-2 text-xl font-semibold text-white">
+                                One checkout surface from rights summary through release
+                            </h2>
+                            <p className="mt-2 max-w-3xl text-sm text-slate-400">
+                                Redoubt does not grant uncontrolled raw access. Buyer access stays temporary, scoped, policy-bound,
+                                audit-logged, and tied to escrow, workspace, rights terms, and deal state.
+                            </p>
+                        </div>
+                        <div className="rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+                            <span className="font-semibold text-white">Next recommended action:</span> {nextRecommendedAction}
+                        </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+                        {checkoutFlowCards.map(card => (
+                            <CheckoutFlowStatusCard
+                                key={card.label}
+                                label={card.label}
+                                value={card.value}
+                                detail={card.detail}
+                                tone={card.tone}
+                            />
+                        ))}
+                    </div>
+                </section>
+
                 <div className="mt-8">
                     <DealProgressTracker model={dealProgress} />
                 </div>
@@ -867,51 +1062,105 @@ export default function EscrowCheckoutPage() {
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-white">Rights Package</h2>
+                                    <h2 className="text-xl font-semibold text-white">Dataset & rights summary</h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        Evaluation is anchored to a configurable rights package rather than a flat dataset access.
+                                        The selected rights package is already loaded into checkout. You can keep funding and provisioning here,
+                                        and only open Advanced Terms if the package needs to change.
                                     </p>
                                 </div>
                                 <Link
-                                    to={`/datasets/${dataset.id}/rights-quote`}
+                                    to={rightsQuotePath}
                                     className="rounded-lg border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                 >
-                                    Refine terms
+                                    Open Advanced Terms
                                 </Link>
                             </div>
 
-                            <div className="mt-5 grid gap-3">
-                                {availableQuotes.map(quote => {
-                                    const isSelected = quote.id === selectedQuote.id
-                                    return (
-                                        <button
-                                            key={quote.id}
-                                            type="button"
-                                            disabled={configurationLocked && quote.id !== selectedQuote.id}
-                                            onClick={() => setSelectedQuoteId(quote.id)}
-                                            className={`rounded-2xl border p-4 text-left transition-colors ${
-                                                isSelected
-                                                    ? 'border-cyan-400/50 bg-cyan-500/10'
-                                                    : 'border-white/10 bg-slate-950/40 hover:border-slate-500/50'
-                                            } ${configurationLocked && quote.id !== selectedQuote.id ? 'cursor-not-allowed opacity-50' : ''}`}
-                                        >
-                                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-white">{quote.id}</div>
-                                                    <div className="mt-1 text-xs text-slate-400">
-                                                        {quote.rightsSummary.slice(0, 3).join(' · ')}
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-sm font-semibold text-cyan-100">{formatUsd(quote.totalUsd)}</div>
-                                                    <div className="mt-1 text-[11px] text-slate-500">
-                                                        Escrow hold {formatUsd(quote.escrowHoldUsd)}
-                                                    </div>
-                                                </div>
+                            <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
+                                <div className="rounded-2xl border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(34,211,238,0.08),rgba(8,15,28,0.92))] p-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100/75">
+                                                Active package
                                             </div>
-                                        </button>
-                                    )
-                                })}
+                                            <div className="mt-2 text-lg font-semibold text-white">{selectedQuote.id}</div>
+                                            <div className="mt-2 text-sm text-slate-300">
+                                                {savedQuotes.length > 0
+                                                    ? 'These saved rights terms are already applied to the governed checkout flow.'
+                                                    : 'This checkout is using starter terms generated from the current passport defaults.'}
+                                            </div>
+                                        </div>
+                                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                                            {formatUsd(selectedQuote.totalUsd)}
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        {selectedQuote.rightsSummary.slice(0, 5).map(item => (
+                                            <span
+                                                key={item}
+                                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200"
+                                            >
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        <SummaryStat label="Dataset" value={dataset.title} />
+                                        <SummaryStat label="Escrow hold" value={formatUsd(selectedQuote.escrowHoldUsd)} />
+                                        <SummaryStat label="Validation window" value={`${config.reviewWindowHours} hours`} />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                        Advanced terms
+                                    </div>
+                                    <div className="mt-2 text-base font-semibold text-white">Optional secondary view</div>
+                                    <p className="mt-2 text-sm text-slate-300">
+                                        Use Advanced Terms only when the rights package needs to change. The main buyer journey continues here in checkout.
+                                    </p>
+
+                                    <details className="mt-4 rounded-2xl border border-white/8 bg-slate-900/60 p-4">
+                                        <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+                                            Change saved rights package
+                                        </summary>
+                                        <div className="mt-4 grid gap-3">
+                                            {availableQuotes.map(quote => {
+                                                const isSelected = quote.id === selectedQuote.id
+                                                return (
+                                                    <button
+                                                        key={quote.id}
+                                                        type="button"
+                                                        disabled={configurationLocked && quote.id !== selectedQuote.id}
+                                                        onClick={() => setSelectedQuoteId(quote.id)}
+                                                        className={`rounded-2xl border p-4 text-left transition-colors ${
+                                                            isSelected
+                                                                ? 'border-cyan-400/50 bg-cyan-500/10'
+                                                                : 'border-white/10 bg-slate-950/40 hover:border-slate-500/50'
+                                                        } ${configurationLocked && quote.id !== selectedQuote.id ? 'cursor-not-allowed opacity-50' : ''}`}
+                                                    >
+                                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                                            <div>
+                                                                <div className="text-sm font-semibold text-white">{quote.id}</div>
+                                                                <div className="mt-1 text-xs text-slate-400">
+                                                                    {quote.rightsSummary.slice(0, 3).join(' · ')}
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-sm font-semibold text-cyan-100">{formatUsd(quote.totalUsd)}</div>
+                                                                <div className="mt-1 text-[11px] text-slate-500">
+                                                                    Escrow hold {formatUsd(quote.escrowHoldUsd)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </details>
+                                </div>
                             </div>
                         </section>
 
@@ -1055,56 +1304,192 @@ export default function EscrowCheckoutPage() {
                         </section>
 
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-                            <h2 className="text-xl font-semibold text-white">Provisioning & Credentials</h2>
+                            <h2 className="text-xl font-semibold text-white">Workspace & Ephemeral Token</h2>
                             <p className="mt-1 text-sm text-slate-400">
-                                Funding escrow prepares the governed workspace; credential issuance activates live access.
+                                Buyer access stays temporary and scoped. Funding escrow prepares the governed workspace,
+                                and issuing the Ephemeral Token activates policy-bound evaluation access.
                             </p>
 
-                            <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                                 <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
-                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Workspace</div>
-                                    <div className="mt-3 text-lg font-semibold text-white">
-                                        {checkoutRecord?.workspace.workspaceName ?? getPlannedWorkspaceName(dataset, config.accessMode)}
-                                    </div>
-                                    <div className="mt-2 text-sm text-slate-300">
-                                        {checkoutRecord?.workspace.workspaceId ?? 'Will be provisioned after funding'}
-                                    </div>
-                                    <div className="mt-3 text-xs text-slate-400">
-                                        Launch path {usesCanonicalBuyerDemo ? buyerRouteTargets.secureWorkspace : checkoutRecord?.workspace.launchPath ?? getPlannedWorkspaceLaunchPath(config.accessMode)}
-                                    </div>
-                                    <div className="mt-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Workspace</div>
+                                            <div className="mt-3 text-lg font-semibold text-white">
+                                                {checkoutRecord?.workspace.workspaceName ?? getPlannedWorkspaceName(dataset, config.accessMode)}
+                                            </div>
+                                        </div>
                                         <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
                                             workspaceReady
                                                 ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
                                                 : 'border-amber-500/35 bg-amber-500/10 text-amber-200'
                                         }`}>
-                                            {workspaceReady ? 'Provisioned' : 'Pending funding'}
+                                            {workspaceReady ? 'Ready' : checkoutRecord ? 'Provisioning' : 'Planned'}
                                         </span>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <SummaryStat
+                                            label="Workspace ID"
+                                            value={checkoutRecord?.workspace.workspaceId ?? 'WS planned'}
+                                        />
+                                        <SummaryStat
+                                            label="Access mode"
+                                            value={checkoutAccessModeMeta[config.accessMode].label}
+                                        />
+                                        <SummaryStat
+                                            label="Launch path"
+                                            value={secureWorkspacePath}
+                                        />
+                                        <SummaryStat
+                                            label="Policy state"
+                                            value={tokenViewModel?.policyState ?? 'Checks pending'}
+                                        />
+                                    </div>
+
+                                    <div className="mt-4 rounded-2xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                        {workspaceReady
+                                            ? 'The governed workspace is ready. Buyer access still remains bounded by policy state and the active Ephemeral Token window.'
+                                            : checkoutRecord
+                                                ? 'Escrow is funded. Workspace provisioning is the next control point before any token can activate.'
+                                                : 'Workspace provisioning begins only after escrow funding clears.'}
                                     </div>
                                 </div>
 
                                 <div className="rounded-2xl border border-white/8 bg-slate-950/45 p-4">
-                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Scoped credentials</div>
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        {(checkoutRecord?.credentials.scopes ?? plannedScopes).map(scope => (
-                                            <span key={scope} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Ephemeral Token</div>
+                                            <div className="mt-3 text-lg font-semibold text-white">
+                                                {tokenViewModel?.safeTokenReference ?? 'Pending issuance'}
+                                            </div>
+                                        </div>
+                                        <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                            tokenViewModel
+                                                ? tokenViewModel.status === 'Active'
+                                                    ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                                                    : tokenViewModel.status === 'Provisioning'
+                                                        ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100'
+                                                        : tokenViewModel.status === 'Frozen'
+                                                            ? 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                                                            : 'border-rose-500/35 bg-rose-500/10 text-rose-200'
+                                                : 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                                        }`}>
+                                            {tokenViewModel?.status ?? 'Pending issue'}
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <SummaryStat
+                                            label="Time remaining"
+                                            value={tokenViewModel?.timeRemaining ?? 'Pending issue'}
+                                        />
+                                        <SummaryStat
+                                            label="Access mode"
+                                            value={tokenViewModel?.accessModeLabel ?? checkoutAccessModeMeta[config.accessMode].label}
+                                        />
+                                        <SummaryStat
+                                            label="Policy state"
+                                            value={tokenViewModel?.policyState ?? 'Checks pending'}
+                                        />
+                                        <SummaryStat
+                                            label="Expiry"
+                                            value={
+                                                tokenViewModel
+                                                    ? formatTimestamp(tokenViewModel.record.credentials.expiresAt, 'Pending issue')
+                                                    : 'Pending issue'
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        {inlineScopeChips.map(scope => (
+                                            <span
+                                                key={scope}
+                                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200"
+                                            >
                                                 {scope}
                                             </span>
                                         ))}
                                     </div>
-                                    <div className="mt-4 text-xs text-slate-400">
-                                        TTL {(checkoutRecord?.credentials.tokenTtlMinutes ?? (config.accessMode === 'encrypted_download' ? 90 : 180))} minutes
-                                    </div>
-                                    {checkoutRecord?.credentials.issuedAt && (
-                                        <div className="mt-2 text-xs text-slate-400">
-                                            Issued {new Date(checkoutRecord.credentials.issuedAt).toLocaleString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: 'numeric',
-                                                minute: '2-digit'
-                                            })}
+
+                                    <div className="mt-4 rounded-2xl border border-white/8 bg-slate-900/60 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                            Access posture
                                         </div>
-                                    )}
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
+                                                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-100/80">
+                                                    Allowed
+                                                </div>
+                                                <div className="mt-2 space-y-2 text-sm text-emerald-100">
+                                                    {(tokenViewModel?.permissions.allowed ?? [
+                                                        'Dataset read inside governed workspace',
+                                                        'Audit write',
+                                                        'Policy-enforced evaluation'
+                                                    ]).slice(0, 4).map(item => (
+                                                        <div key={item}>{item}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/8 px-4 py-3">
+                                                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-rose-100/80">
+                                                    Blocked
+                                                </div>
+                                                <div className="mt-2 space-y-2 text-sm text-rose-100">
+                                                    {(tokenViewModel?.permissions.blocked ?? [
+                                                        'Raw export',
+                                                        'Unreviewed egress',
+                                                        'Access after expiry'
+                                                    ]).slice(0, 4).map(item => (
+                                                        <div key={item}>{item}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-500/8 px-4 py-3 text-sm text-cyan-100">
+                                        {tokenViewModel
+                                            ? tokenViewModel.terminalState
+                                                ? tokenViewModel.terminalState.reason
+                                                : tokenViewModel.statusDetail
+                                            : 'No raw secret is shown here. The token remains a safe audit reference until issuance conditions clear.'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    Token issuance conditions
+                                </div>
+                                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                    <TokenConditionCard
+                                        label="Rights package loaded"
+                                        detail="Checkout is carrying the active rights package inline."
+                                        state="complete"
+                                    />
+                                    <TokenConditionCard
+                                        label="Escrow funded"
+                                        detail="Funds must be held before workspace access can broaden."
+                                        state={checkoutRecord ? 'complete' : acceptedForFunding ? 'current' : 'blocked'}
+                                    />
+                                    <TokenConditionCard
+                                        label="Workspace provisioned"
+                                        detail="A governed workspace must be ready before token activation."
+                                        state={workspaceReady ? 'complete' : checkoutRecord ? 'current' : 'upcoming'}
+                                    />
+                                    <TokenConditionCard
+                                        label="Policy checks cleared"
+                                        detail="DUA, scope, and deal-state checks stay attached to issuance."
+                                        state={
+                                            tokenViewModel?.status === 'Active'
+                                                ? 'complete'
+                                                : checkoutRecord
+                                                    ? 'current'
+                                                    : 'upcoming'
+                                        }
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -1131,7 +1516,7 @@ export default function EscrowCheckoutPage() {
                                         Buyers can inspect confidence, freshness, schema metadata, and AI summaries before entering paid evaluation.
                                     </p>
                                     <Link
-                                        to={`/datasets/${dataset.id}/quality-breakdown`}
+                                        to={qualityPreviewPath}
                                         className="mt-4 inline-flex rounded-lg border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                     >
                                         Open Metadata Preview
@@ -1280,7 +1665,7 @@ export default function EscrowCheckoutPage() {
                                                 onClick={handleConfirmOutcome}
                                                 className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400"
                                             >
-                                                Confirm Buyer Validation
+                                                Complete buyer validation in place
                                             </button>
                                         )}
 
@@ -1324,6 +1709,128 @@ export default function EscrowCheckoutPage() {
                     </div>
 
                     <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+                        <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+                            <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Guided Actions</div>
+                            <h2 className="mt-2 text-2xl font-semibold text-white">Run the buyer workflow here</h2>
+                            <p className="mt-2 text-sm text-slate-400">
+                                These actions move the governed evaluation from quote-ready to release. Secondary pages remain available for detail, not for required setup.
+                            </p>
+
+                            <div className="mt-5 grid gap-3">
+                                {usesCanonicalBuyerDemo && (
+                                    <button
+                                        type="button"
+                                        onClick={() => applyDemoScenario(setDemoStage('quote_ready'))}
+                                        className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                            checkoutRecord === null
+                                                ? 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100'
+                                                : 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
+                                        }`}
+                                    >
+                                        {checkoutRecord === null ? 'Quote Ready Loaded' : '0. Confirm Quote / Reset to Quote Ready'}
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={handleFundEscrow}
+                                    disabled={fundEscrowDisabled}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        fundEscrowDisabled
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'bg-emerald-500 text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.22)] hover:bg-emerald-400'
+                                    }`}
+                                >
+                                    {checkoutRecord ? 'Escrow Funded' : '1. Fund Escrow'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleProvisionWorkspace}
+                                    disabled={!checkoutRecord || workspaceReady}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        !checkoutRecord || workspaceReady
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
+                                    }`}
+                                >
+                                    {workspaceReady ? 'Workspace Ready' : '2. Provision Workspace'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleIssueCredentials}
+                                    disabled={!checkoutRecord || !workspaceReady || credentialsIssued}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        !checkoutRecord || !workspaceReady || credentialsIssued
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'border border-amber-400/45 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20'
+                                    }`}
+                                >
+                                    {credentialsIssued ? 'Ephemeral Token Issued' : '3. Issue Ephemeral Token'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmOutcome}
+                                    disabled={!buyerValidationReady}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        !buyerValidationReady
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'border border-emerald-400/45 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20'
+                                    }`}
+                                >
+                                    {outcomeValidation.status === 'confirmed'
+                                        ? 'Buyer Validation Complete'
+                                        : '4. Validate Buyer Outcome'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleReleaseEscrow}
+                                    disabled={!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'}
+                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                        !checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'
+                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
+                                            : 'bg-white text-slate-950 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {checkoutRecord?.lifecycleState === 'RELEASED_TO_PROVIDER'
+                                        ? 'Escrow Released'
+                                        : '5. Release Escrow'}
+                                </button>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                    Secondary views
+                                </div>
+                                <div className="mt-4 grid gap-3">
+                                    <Link
+                                        to={usesCanonicalBuyerDemo ? buyerRouteTargets.ephemeralToken : '/ephemeral-token'}
+                                        className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
+                                    >
+                                        View Ephemeral Token
+                                    </Link>
+                                    <Link
+                                        to={secureWorkspacePath}
+                                        className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                                    >
+                                        Open Secure Workspace
+                                    </Link>
+                                    {outputReviewPath ? (
+                                        <Link
+                                            to={outputReviewPath}
+                                            className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                        >
+                                            Open Output Review
+                                        </Link>
+                                    ) : null}
+                                    <Link
+                                        to={usesCanonicalBuyerDemo ? buyerRouteTargets.escrowCenter : isDemo ? '/demo/escrow-center' : '/escrow-center'}
+                                        className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+                                    >
+                                        Open Escrow Center
+                                    </Link>
+                                </div>
+                            </div>
+                        </section>
+
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                             <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Settlement Summary</div>
                             <h2 className="mt-2 text-2xl font-semibold text-white">{formatUsd(selectedQuote.totalUsd)}</h2>
@@ -1483,118 +1990,28 @@ export default function EscrowCheckoutPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-5 grid gap-3">
-                                {usesCanonicalBuyerDemo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => applyDemoScenario(setDemoStage('quote_ready'))}
-                                        className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                            checkoutRecord === null
-                                                ? 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100'
-                                                : 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
-                                        }`}
-                                    >
-                                        {checkoutRecord === null ? 'Quote Ready Loaded' : '0. Confirm Quote / Reset to Quote Ready'}
-                                    </button>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={handleFundEscrow}
-                                    disabled={fundEscrowDisabled}
-                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                        fundEscrowDisabled
-                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                            : 'bg-emerald-500 text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.22)] hover:bg-emerald-400'
-                                    }`}
-                                >
-                                    {checkoutRecord ? 'Escrow Funded' : '1. Fund Escrow'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleProvisionWorkspace}
-                                    disabled={!checkoutRecord || workspaceReady}
-                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                        !checkoutRecord || workspaceReady
-                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                            : 'border border-cyan-400/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20'
-                                    }`}
-                                >
-                                    {workspaceReady ? 'Workspace Ready' : '2. Provision Workspace'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleIssueCredentials}
-                                    disabled={!checkoutRecord || !workspaceReady || credentialsIssued}
-                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                        !checkoutRecord || !workspaceReady || credentialsIssued
-                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                            : 'border border-amber-400/45 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20'
-                                    }`}
-                                >
-                                    {credentialsIssued ? 'Credentials Issued' : '3. Issue Scoped Credentials'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleReleaseEscrow}
-                                    disabled={!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'}
-                                    className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                        !checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING'
-                                            ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                            : 'bg-white text-slate-950 hover:bg-slate-100'
-                                    }`}
-                                >
-                                    {checkoutRecord?.lifecycleState === 'RELEASED_TO_PROVIDER'
-                                        ? 'Escrow Released'
-                                        : '4. Release Escrow'}
-                                </button>
-                            </div>
-
-                            {usesCanonicalBuyerDemo && (
-                                <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                        Demo Buyer Handoffs
-                                    </div>
-                                    <div className="mt-4 grid gap-3">
-                                        <Link
-                                            to={buyerRouteTargets.escrowCenter}
-                                            className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
-                                        >
-                                            Open Escrow Center
-                                        </Link>
-                                        <Link
-                                            to={buyerRouteTargets.ephemeralToken}
-                                            className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
-                                        >
-                                            View Ephemeral Token
-                                        </Link>
-                                        <Link
-                                            to={buyerRouteTargets.secureWorkspace}
-                                            className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
-                                        >
-                                            Open Secure Workspace
-                                        </Link>
-                                        <Link
-                                            to={buyerRouteTargets.outputReview}
-                                            className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
-                                        >
-                                            Review Output
-                                        </Link>
-                                    </div>
-                                </div>
-                            )}
-
-                            {checkoutRecord?.credentials.expiresAt && (
+                            {tokenViewModel && (
                                 <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-                                    <div className="text-sm font-semibold text-white">Access is now live</div>
-                                    <div className="mt-2 text-xs text-emerald-100/85">
-                                        {checkoutRecord.credentials.credentialId} expires{' '}
-                                        {new Date(checkoutRecord.credentials.expiresAt).toLocaleString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: 'numeric',
-                                            minute: '2-digit'
-                                        })}
+                                    <div className="text-sm font-semibold text-white">
+                                        {tokenViewModel.status === 'Active'
+                                            ? 'Access is now live'
+                                            : tokenViewModel.status === 'Frozen'
+                                                ? 'Access is frozen'
+                                                : tokenViewModel.status === 'Revoked'
+                                                    ? 'Access is closed'
+                                                    : tokenViewModel.status === 'Expired'
+                                                        ? 'Access has expired'
+                                                        : 'Access is provisioning'}
                                     </div>
+                                    <div className="mt-2 text-xs text-emerald-100/85">
+                                        {tokenViewModel.safeTokenReference} · {tokenViewModel.timeRemaining}
+                                        {tokenViewModel.record.credentials.expiresAt ? ` · expires ${formatTimestamp(tokenViewModel.record.credentials.expiresAt, 'Pending')}` : ''}
+                                    </div>
+                                    {tokenViewModel.terminalState ? (
+                                        <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 text-sm text-slate-200">
+                                            {tokenViewModel.terminalState.reason}
+                                        </div>
+                                    ) : null}
                                     {outputReviewModel ? (
                                         <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
                                             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
@@ -1608,31 +2025,41 @@ export default function EscrowCheckoutPage() {
                                         </div>
                                     ) : null}
                                     <div className="mt-4 grid gap-3">
-                                        <Link
-                                            to={usesCanonicalBuyerDemo ? buyerRouteTargets.secureWorkspace : checkoutRecord.workspace.launchPath}
-                                            className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-100"
-                                        >
-                                            Launch Governed Workspace
-                                        </Link>
+                                        {tokenViewModel.status === 'Active' && workspaceReady ? (
+                                            <Link
+                                                to={secureWorkspacePath}
+                                                className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-100"
+                                            >
+                                                Continue In Secure Workspace
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-center text-sm font-semibold text-slate-500"
+                                            >
+                                                Workspace access unavailable
+                                            </button>
+                                        )}
                                         <Link
                                             to={usesCanonicalBuyerDemo ? buyerRouteTargets.ephemeralToken : '/ephemeral-token'}
                                             className="rounded-xl border border-amber-400/45 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20"
                                         >
-                                            Open Ephemeral Token
+                                            Open Ephemeral Token Detail
                                         </Link>
                                         {outputReviewPath ? (
                                             <Link
                                                 to={outputReviewPath}
                                                 className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                             >
-                                                Open Output Review
+                                                Review Output Detail
                                             </Link>
                                         ) : null}
                                         <Link
                                             to={usesCanonicalBuyerDemo ? buyerRouteTargets.escrowCenter : isDemo ? '/demo/escrow-center' : '/escrow-center'}
                                             className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white hover:border-emerald-400/40 hover:bg-white/5"
                                         >
-                                            Open Escrow Center
+                                            View Escrow Center
                                         </Link>
                                     </div>
                                     {checkoutOutputArtifacts.length > 0 ? (
@@ -1651,6 +2078,51 @@ export default function EscrowCheckoutPage() {
                     </aside>
                 </section>
             </div>
+        </div>
+    )
+}
+
+function CheckoutFlowStatusCard({
+    label,
+    value,
+    detail,
+    tone
+}: CheckoutFlowCard) {
+    return (
+        <div className={`rounded-2xl border px-4 py-4 ${getCheckoutFlowToneClasses(tone)}`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-current/80">{label}</div>
+            <div className="mt-3 text-base font-semibold text-white">{value}</div>
+            <div className="mt-2 text-xs leading-5 text-current/85">{detail}</div>
+        </div>
+    )
+}
+
+type TokenConditionState = 'complete' | 'current' | 'upcoming' | 'blocked'
+
+function TokenConditionCard({
+    label,
+    detail,
+    state
+}: {
+    label: string
+    detail: string
+    state: TokenConditionState
+}) {
+    return (
+        <div className={`rounded-2xl border px-4 py-4 ${getTokenConditionClasses(state)}`}>
+            <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-white">{label}</div>
+                <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[11px] font-semibold text-current">
+                    {state === 'complete'
+                        ? 'Done'
+                        : state === 'current'
+                            ? 'In progress'
+                            : state === 'blocked'
+                                ? 'Blocked'
+                                : 'Standby'}
+                </span>
+            </div>
+            <div className="mt-2 text-xs leading-5 text-current/85">{detail}</div>
         </div>
     )
 }
@@ -1739,4 +2211,35 @@ function SafetyPrincipleRow({ label, detail }: { label: string; detail: string }
             </div>
         </div>
     )
+}
+
+function getCheckoutFlowToneClasses(tone: CheckoutFlowTone) {
+    if (tone === 'emerald') return 'border-emerald-500/25 bg-emerald-500/10 text-emerald-100'
+    if (tone === 'cyan') return 'border-cyan-400/25 bg-cyan-500/10 text-cyan-100'
+    if (tone === 'amber') return 'border-amber-500/25 bg-amber-500/10 text-amber-100'
+    if (tone === 'rose') return 'border-rose-500/25 bg-rose-500/10 text-rose-100'
+    return 'border-white/10 bg-white/5 text-slate-300'
+}
+
+function getTokenConditionClasses(state: TokenConditionState) {
+    if (state === 'complete') return 'border-emerald-500/25 bg-emerald-500/10 text-emerald-100'
+    if (state === 'current') return 'border-cyan-400/25 bg-cyan-500/10 text-cyan-100'
+    if (state === 'blocked') return 'border-amber-500/25 bg-amber-500/10 text-amber-100'
+    return 'border-white/10 bg-white/5 text-slate-300'
+}
+
+function formatCheckoutScopeLabel(scope: string) {
+    if (scope.startsWith('dataset:')) return 'dataset read'
+    if (scope === 'audit:write') return 'audit write'
+    if (scope === 'policy:enforced') return 'policy enforced'
+    if (scope === 'query:clean-room') return 'query clean-room'
+    if (scope === 'query:aggregated') return 'query aggregated'
+    if (scope === 'export:aggregated') return 'aggregate export approved'
+    if (scope === 'export:none') return 'export none'
+    if (scope === 'egress:blocked') return 'egress blocked'
+    if (scope === 'egress:reviewed') return 'egress reviewed'
+    if (scope === 'download:encrypted') return 'encrypted download approved'
+    if (scope === 'watermark:required') return 'watermark required'
+    if (scope === 'keys:ephemeral') return 'keys ephemeral'
+    return scope.replace(/[:]/g, ' ')
 }

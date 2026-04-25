@@ -54,12 +54,12 @@ test.describe('buyer demo on normal routes', () => {
         await expect(page.getByRole('button', { name: '1. Fund Escrow' })).toBeVisible()
         await page.getByRole('button', { name: '1. Fund Escrow' }).click()
         await page.getByRole('button', { name: '2. Provision Workspace' }).click()
-        await page.getByRole('button', { name: '3. Issue Scoped Credentials' }).click()
+        await page.getByRole('button', { name: '3. Issue Ephemeral Token' }).click()
 
         await expect(page.getByText('Access is now live')).toBeVisible()
-        await expect(page.getByRole('button', { name: 'Confirm Buyer Validation' })).toBeVisible()
-        await page.getByRole('button', { name: 'Confirm Buyer Validation' }).click()
-        await page.getByRole('button', { name: '4. Release Escrow' }).click()
+        await expect(page.getByRole('button', { name: '4. Validate Buyer Outcome' })).toBeVisible()
+        await page.getByRole('button', { name: '4. Validate Buyer Outcome' }).click()
+        await page.getByRole('button', { name: '5. Release Escrow' }).click()
 
         await expect(page.getByRole('button', { name: 'Escrow Released' })).toBeVisible()
     })

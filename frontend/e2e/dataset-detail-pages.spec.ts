@@ -45,7 +45,7 @@ test.describe('participant dataset detail journeys', () => {
             await page.getByRole('link', { name: `View details for ${dataset.title}` }).click()
 
             await expect(page).toHaveURL(new RegExp(`/datasets/${dataset.id}$`))
-            await expect(page.getByRole('heading', { name: dataset.title })).toBeVisible()
+            await expect(page.getByRole('heading', { name: dataset.title }).first()).toBeVisible()
         }
     })
 
@@ -54,7 +54,7 @@ test.describe('participant dataset detail journeys', () => {
 
         await page.goto('/datasets/2/quality-breakdown')
         await expect(page).toHaveURL(/\/datasets\/2\/quality-breakdown$/)
-        await expect(page.getByRole('heading', { name: 'Quality Breakdown for Urban Mobility Sensor Streams' })).toBeVisible()
+        await expect(page.getByRole('heading', { name: /Schema, risk, and governance inspection for Urban Mobility Sensor Streams/i })).toBeVisible()
 
         await page.goto('/datasets/2/rights-quote')
         await expect(page).toHaveURL(/\/datasets\/2\/rights-quote$/)
@@ -64,7 +64,21 @@ test.describe('participant dataset detail journeys', () => {
         await page.goto('/datasets/3/escrow-checkout')
         await expect(page).toHaveURL(/\/datasets\/3\/escrow-checkout$/)
         await expect(page.getByText('Financial Market Tick Data').first()).toBeVisible()
-        await expect(page.getByRole('heading', { name: 'Evaluation Setup' })).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Escrow Checkout' })).toBeVisible()
+    })
+
+    test('lets buyers jump straight from dataset detail into escrow checkout', async ({ page }) => {
+        await seedParticipantSession(page)
+
+        await page.goto('/datasets/1')
+
+        await expect(page.getByRole('link', { name: 'Start Protected Evaluation Checkout' })).toBeVisible()
+        await expect(page.getByRole('link', { name: 'Open Advanced Terms' }).first()).toBeVisible()
+
+        await page.getByRole('link', { name: 'Start Protected Evaluation Checkout' }).click()
+
+        await expect(page).toHaveURL(/\/datasets\/1\/escrow-checkout$/)
+        await expect(page.getByRole('heading', { name: 'Escrow Checkout' })).toBeVisible()
     })
 
     test('shows unavailable states instead of falling back to dataset 1', async ({ page }) => {

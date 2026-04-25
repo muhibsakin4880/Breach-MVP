@@ -28,7 +28,7 @@ test.describe('advanced output review states', () => {
         await seedParticipantSession(page)
 
         await page.goto('/deals/DL-1001/output-review')
-        await expect(page.getByRole('heading', { name: 'Clean Room Output Review' })).toBeVisible()
+        await expect(page.getByText('Clean Room Output Review').first()).toBeVisible()
         await expect(page.getByRole('heading', { name: 'Extension request', exact: true })).toBeVisible()
         await expect(page.getByRole('heading', { name: 'Reviewer action summary' })).toBeVisible()
         await expect(page.getByText('Export review note', { exact: true })).toBeVisible()
@@ -52,7 +52,7 @@ test.describe('advanced output review states', () => {
         await page.getByLabel(/I accept this DUA/i).check()
         await page.getByRole('button', { name: '1. Fund Escrow' }).click()
         await page.getByRole('button', { name: '2. Provision Workspace' }).click()
-        await page.getByRole('button', { name: '3. Issue Scoped Credentials' }).click()
+        await page.getByRole('button', { name: '3. Issue Ephemeral Token' }).click()
 
         await expect(page.getByText('Access is now live')).toBeVisible()
         await expect(page.getByText('Output review status')).toBeVisible()

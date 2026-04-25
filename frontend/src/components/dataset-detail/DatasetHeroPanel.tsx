@@ -10,6 +10,13 @@ type DatasetHeroPanelProps = {
     providerPacketPath: string | null
     availableSurfaceCount: number
     placeholderSurfaceCount: number
+    checkoutPath: string
+    checkoutState?: { quoteId: string }
+    advancedTermsPath: string
+    protectedSummary: string
+    latestCheckoutLabel: string
+    evaluationFeeLabel: string
+    checkoutInProgress: boolean
 }
 
 export default function DatasetHeroPanel({
@@ -19,7 +26,14 @@ export default function DatasetHeroPanel({
     dossierPath,
     providerPacketPath,
     availableSurfaceCount,
-    placeholderSurfaceCount
+    placeholderSurfaceCount,
+    checkoutPath,
+    checkoutState,
+    advancedTermsPath,
+    protectedSummary,
+    latestCheckoutLabel,
+    evaluationFeeLabel,
+    checkoutInProgress
 }: DatasetHeroPanelProps) {
     return (
         <DatasetDetailPanel
@@ -55,6 +69,67 @@ export default function DatasetHeroPanel({
                     </div>
                 </div>
             </div>
+
+            <section className="mt-5 overflow-hidden rounded-md border border-cyan-500/20 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_32%),linear-gradient(135deg,rgba(8,17,31,0.98)_0%,rgba(15,23,42,0.92)_100%)] p-4 shadow-[0_14px_40px_rgba(2,8,20,0.22)]">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                Buyer workflow
+                            </span>
+                            <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                                {latestCheckoutLabel}
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                Evaluation fee {evaluationFeeLabel}
+                            </span>
+                        </div>
+
+                        <h2 className="mt-3 text-lg font-semibold text-white">
+                            Escrow Checkout is the primary buyer control surface
+                        </h2>
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                            Start protected evaluation here to carry rights terms inline, fund escrow, provision the governed workspace,
+                            and receive a short-lived Ephemeral Token after policy checks clear. No uncontrolled raw data access is opened.
+                        </p>
+                        <div className="mt-3 text-sm text-cyan-50/85">{protectedSummary}</div>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {[
+                                'Temporary access only',
+                                'Escrow-backed',
+                                'Policy-bound',
+                                'Reviewed output release'
+                            ].map(item => (
+                                <span
+                                    key={item}
+                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200"
+                                >
+                                    {item}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid shrink-0 gap-2 sm:min-w-[270px]">
+                        <Link
+                            to={checkoutPath}
+                            state={checkoutState}
+                            className="inline-flex justify-center rounded-sm bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
+                        >
+                            {checkoutInProgress
+                                ? 'Continue Protected Evaluation Checkout'
+                                : 'Start Protected Evaluation Checkout'}
+                        </Link>
+                        <Link
+                            to={advancedTermsPath}
+                            className="inline-flex justify-center rounded-sm border border-white/12 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-white"
+                        >
+                            Open Advanced Terms
+                        </Link>
+                    </div>
+                </div>
+            </section>
 
             {dossierPath ? (
                 <DealDossierHeroStrip
