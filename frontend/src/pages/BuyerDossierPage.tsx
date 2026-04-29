@@ -380,7 +380,7 @@ export default function BuyerDossierPage({ demo = false }: { demo?: boolean }) {
     const dealRef = dealId ?? '—'
     const datasetTitle = dataset?.title ?? 'Dataset'
 
-    const workspacePath = checkoutRecord?.workspace.launchPath ?? (useDemo ? '/demo/workspace' : '/workspace')
+    const workspacePath = checkoutRecord?.workspace.launchPath ?? (useDemo ? '/demo/secure-enclave' : '/secure-enclave')
     const outputReviewPath = useDemo ? `/demo/deals/${dealRef}/output-review` : `/deals/${dealRef}/output-review`
     const termsPath = datasetId ? (useDemo ? `/demo/datasets/${datasetId}/rights-quote` : `/datasets/${datasetId}/rights-quote`) : '#'
     const checkoutPath = datasetId ? (useDemo ? `/demo/datasets/${datasetId}/escrow-checkout` : `/datasets/${datasetId}/escrow-checkout`) : '#'
@@ -448,32 +448,6 @@ export default function BuyerDossierPage({ demo = false }: { demo?: boolean }) {
                             </p>
                         </div>
 
-                        <div className="flex shrink-0 flex-col gap-3 sm:flex-row xl:flex-col xl:items-stretch xl:min-w-[180px]">
-                            {primaryAction === 'issue_credential' && (
-                                <button
-                                    onClick={handleIssueCredential}
-                                    className="rounded-xl bg-cyan-500 px-5 py-3 text-center text-sm font-semibold text-slate-950 shadow-[0_8px_24px_rgba(34,211,238,0.22)] hover:bg-cyan-400"
-                                >
-                                    Issue Evaluation Credential
-                                </button>
-                            )}
-                            {primaryAction === 'open_workspace' && (
-                                <Link to={workspacePath} className="rounded-xl bg-emerald-500 px-5 py-3 text-center text-sm font-semibold text-slate-950 shadow-[0_8px_24px_rgba(16,185,129,0.22)] hover:bg-emerald-400">
-                                    Open Secure Workspace
-                                </Link>
-                            )}
-                            {primaryAction === 'review_outputs' && (
-                                <Link to={outputReviewPath} className="rounded-xl bg-cyan-500 px-5 py-3 text-center text-sm font-semibold text-slate-950 shadow-[0_8px_24px_rgba(34,211,238,0.22)] hover:bg-cyan-400">
-                                    Review Outputs
-                                </Link>
-                            )}
-                            <Link to={datasetPath} className="rounded-xl border border-white/15 px-5 py-3 text-center text-sm font-semibold text-slate-200 hover:border-white/30 hover:text-white">
-                                Back to Dataset
-                            </Link>
-                            <Link to={checkoutPath} className="rounded-xl border border-white/15 px-5 py-3 text-center text-sm font-semibold text-slate-200 hover:border-white/30 hover:text-white">
-                                Open Escrow Checkout
-                            </Link>
-                        </div>
                     </div>
                 </header>
 
@@ -868,12 +842,6 @@ export default function BuyerDossierPage({ demo = false }: { demo?: boolean }) {
                                 <QuickLinkRow to={checkoutPath} label="Escrow Checkout" />
                                 <QuickLinkRow to={workspacePath} label="Secure Workspace" />
                                 <QuickLinkRow to={outputReviewPath} label="Output Review" />
-                                {datasetId && (
-                                    <QuickLinkRow
-                                        to={useDemo ? `/demo/datasets/${datasetId}/provider-packet` : `/datasets/${datasetId}/provider-packet`}
-                                        label="Provider Rights Packet"
-                                    />
-                                )}
                             </div>
                         </div>
 

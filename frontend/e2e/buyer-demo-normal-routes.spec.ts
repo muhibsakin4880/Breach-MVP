@@ -24,31 +24,27 @@ async function seedParticipantSession(page: Page) {
 }
 
 test.describe('buyer demo on normal routes', () => {
-    test('normal buyer routes expose the visible buyer-demo activation banner', async ({ page }) => {
+    test('normal checkout stays production-clean while the demo-route checkout keeps its controls', async ({ page }) => {
         await seedParticipantSession(page)
 
-        await page.goto('/escrow-center')
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
-
-        await page.goto('/ephemeral-token')
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
-
         await page.goto('/datasets/1/escrow-checkout')
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toHaveCount(0)
+        await expect(page.getByLabel('Buyer demo controls')).toHaveCount(0)
+        await expect(page.getByLabel('Demo controls')).toHaveCount(0)
+        await expect(page.getByRole('link', { name: 'Open Output Review' })).toHaveCount(0)
+        await expect(page.getByText('Output review status')).toHaveCount(0)
 
-        await page.goto('/secure-enclave')
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
-
-        await page.goto('/deals/DL-1001/output-review')
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
+        await page.goto('/demo/datasets/1/escrow-checkout')
+        await expect(page.getByLabel('Demo controls')).toBeVisible()
+        await expect(page.getByRole('button', { name: /Jump to Quote Ready/i })).toBeVisible()
     })
 
-    test('normal-route checkout drives the canonical buyer demo progression', async ({ page }) => {
+    test('demo-route checkout still drives the canonical buyer demo progression', async ({ page }) => {
         await seedParticipantSession(page)
 
-        await page.goto('/datasets/1/escrow-checkout')
+        await page.goto('/demo/datasets/1/escrow-checkout')
 
-        await page.getByRole('button', { name: 'Load buyer demo' }).click()
+        await expect(page.getByLabel('Demo controls')).toBeVisible()
         await page.getByRole('button', { name: /Jump to Quote Ready/i }).click()
 
         await expect(page.getByRole('button', { name: '1. Fund Escrow' })).toBeVisible()
@@ -57,6 +53,8 @@ test.describe('buyer demo on normal routes', () => {
         await page.getByRole('button', { name: '3. Issue Ephemeral Token' }).click()
 
         await expect(page.getByText('Access is now live')).toBeVisible()
+        await expect(page.getByText('Output review status')).toBeVisible()
+        await expect(page.getByRole('link', { name: 'Open Output Review' })).toBeVisible()
         await expect(page.getByRole('button', { name: '4. Validate Buyer Outcome' })).toBeVisible()
         await page.getByRole('button', { name: '4. Validate Buyer Outcome' }).click()
         await page.getByRole('button', { name: '5. Release Escrow' }).click()
@@ -64,49 +62,31 @@ test.describe('buyer demo on normal routes', () => {
         await expect(page.getByRole('button', { name: 'Escrow Released' })).toBeVisible()
     })
 
-    test('normal-route buyer demo stays synced across token, workspace, output review, and escrow center', async ({ page }) => {
+    test('normal-route checkout ignores demo state activated elsewhere', async ({ page }) => {
         await seedParticipantSession(page)
 
-        await page.goto('/ephemeral-token')
-
+        await page.goto('/demo/datasets/1/escrow-checkout')
         await page.getByRole('button', { name: 'Load happy path' }).click()
+        await expect(page.getByText('TOK-DEMO-1001', { exact: true })).toBeVisible()
 
-        await expect(page.getByText('TOK-DEMO-1001')).toBeVisible()
-        await expect(page.getByRole('link', { name: 'Open Secure Workspace' })).toBeVisible()
+        await page.goto('/datasets/1/escrow-checkout')
 
-        await page.getByRole('link', { name: 'Open Secure Workspace' }).click()
-        await expect(page).toHaveURL(/\/secure-enclave$/)
-        await expect(page.getByRole('heading', { name: 'Secure Enclave & Clean Room' })).toBeVisible()
-        await expect(page.getByText('Evaluation access active').first()).toBeVisible()
-
-        await page.getByRole('link', { name: 'Review Output' }).click()
-        await expect(page).toHaveURL(/\/deals\/DL-1001\/output-review$/)
-        await expect(page.getByText('Output pending review').first()).toBeVisible()
-
-        await page.getByRole('link', { name: 'Open Escrow Center' }).click()
-        await expect(page).toHaveURL(/\/escrow-center$/)
-        await expect(page.getByText('Active demo case')).toBeVisible()
-        await expect(page.getByText('Live demo case')).toBeVisible()
-    })
-
-    test('reset demo returns the normal buyer routes to their non-demo state', async ({ page }) => {
-        await seedParticipantSession(page)
-
-        await page.goto('/ephemeral-token')
-
-        await page.getByRole('button', { name: 'Load happy path' }).click()
-        await expect(page.getByText('TOK-DEMO-1001')).toBeVisible()
-
-        await page.getByRole('button', { name: 'Reset demo' }).click()
-
-        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
-        await expect(page.getByRole('heading', { name: 'No active Ephemeral Token' })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Load buyer demo' })).toHaveCount(0)
+        await expect(page.getByLabel('Buyer demo controls')).toHaveCount(0)
+        await expect(page.getByText('Load the canonical buyer walkthrough')).toHaveCount(0)
+        await expect(page.getByText('QT-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByText('ESC-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByText('TOK-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByRole('link', { name: 'Open Output Review' })).toHaveCount(0)
+        await expect(page.getByText('Output review status')).toHaveCount(0)
+        await expect(page.getByRole('button', { name: '1. Fund Escrow' })).toBeVisible()
+        await expect(page.getByLabel(/I accept this DUA/i)).toBeVisible()
     })
 
     test('demo storage does not leak canonical demo quote or escrow ids into normal dataset browsing', async ({ page }) => {
         await seedParticipantSession(page)
 
-        await page.goto('/demo/escrow-center')
+        await page.goto('/demo/datasets/1/escrow-checkout')
         await page.getByRole('button', { name: /Jump to Token Issued/i }).click()
 
         await page.goto('/datasets/1')
@@ -115,5 +95,10 @@ test.describe('buyer demo on normal routes', () => {
 
         await page.goto('/datasets/1/rights-quote')
         await expect(page.getByText('QT-DEMO-1001')).toHaveCount(0)
+
+        await page.goto('/datasets/1/escrow-checkout')
+        await expect(page.getByText('ESC-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByText('TOK-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByRole('link', { name: 'Open Output Review' })).toHaveCount(0)
     })
 })
