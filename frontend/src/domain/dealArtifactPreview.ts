@@ -18,9 +18,9 @@ import { releaseReadinessMeta, rightsRiskMeta } from './dealLifecycle'
 import {
     checkoutAccessModeMeta,
     outcomeIssueMeta,
-    outcomeStageMeta,
-    paymentMethodMeta
-} from './escrowCheckout'
+    outcomeStageMeta
+} from './evaluationEscrow'
+import { paymentMethodMeta } from './purchaseEscrow'
 import {
     getProviderDatasetSubmissionByDatasetId,
     getProviderDossierBindingByDealId,

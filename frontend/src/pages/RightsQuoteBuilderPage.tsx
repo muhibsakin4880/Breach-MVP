@@ -12,7 +12,7 @@ import {
 } from '../domain/demoEscrowScenario'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { getDealPolicyConflictModelByDatasetId } from '../domain/dealPolicyConflict'
-import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
+import { loadEscrowCheckoutByQuoteId } from '../domain/purchaseEscrow'
 import {
     buildRightsQuote,
     buildRightsUsageGuidance,

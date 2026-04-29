@@ -11,7 +11,8 @@ import {
     type EphemeralCredential
 } from '../domain/ephemeralCredentialStore'
 import { loadRightsQuotes, formatUsd, type RightsQuote } from '../domain/rightsQuoteBuilder'
-import { loadEscrowCheckouts, type EscrowCheckoutRecord } from '../domain/escrowCheckout'
+import { loadEscrowCheckouts } from '../domain/purchaseEscrow'
+import type { EscrowCheckoutRecord } from '../domain/escrowCheckout'
 import { getDatasetDetailById, DATASET_DETAILS, confidenceLevel } from '../data/datasetDetailData'
 import { isBuyerDemoActive, getCanonicalDemoEscrowScenario } from '../domain/demoEscrowScenario'
 

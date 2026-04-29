@@ -3,10 +3,10 @@ import {
     type CompliancePassport,
     type CompliancePassportStatus
 } from './compliancePassport'
-import {
-    loadEscrowCheckouts,
-    type EscrowCheckoutRecord,
-    type OutcomeEngineStatus
+import { loadEscrowCheckouts } from './purchaseEscrow'
+import type {
+    EscrowCheckoutRecord,
+    OutcomeEngineStatus
 } from './escrowCheckout'
 import { loadRightsQuotes, type RightsQuote } from './rightsQuoteBuilder'
 

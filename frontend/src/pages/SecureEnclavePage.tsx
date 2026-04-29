@@ -11,7 +11,8 @@ import {
     isBuyerDemoActive,
     saveCanonicalDemoEscrowState
 } from '../domain/demoEscrowScenario'
-import { checkoutAccessModeMeta, loadEscrowCheckouts } from '../domain/escrowCheckout'
+import { checkoutAccessModeMeta } from '../domain/evaluationEscrow'
+import { loadEscrowCheckouts } from '../domain/purchaseEscrow'
 import { buildOutputReviewModel } from '../domain/outputReview'
 
 type SessionStat = {

@@ -50,7 +50,8 @@ import {
     filterOutCanonicalDemoQuotes
 } from '../domain/demoEscrowScenario'
 import { buildDealProgressModel } from '../domain/dealProgress'
-import { getOutcomeEvaluationFee, loadEscrowCheckouts } from '../domain/escrowCheckout'
+import { getOutcomeEvaluationFee } from '../domain/evaluationEscrow'
+import { loadEscrowCheckouts } from '../domain/purchaseEscrow'
 import { getProviderDatasetSubmissionByDatasetId } from '../domain/providerDatasetSubmission'
 import {
     getDatasetTrustRiskLabels,

@@ -1,7 +1,7 @@
 import type { DealArtifactPreview, DealArtifactPreviewTone } from './dealArtifactPreview'
 import { buildDealDossierProofBundle } from './dealArtifactPreview'
 import type { DealRouteContext } from './dealDossier'
-import { checkoutAccessModeMeta } from './escrowCheckout'
+import { checkoutAccessModeMeta } from './evaluationEscrow'
 
 export type OutputReviewCoreState =
     | 'active_session'

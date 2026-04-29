@@ -6,7 +6,7 @@ import {
     selectPrimaryBuyerToken,
     type BuyerTokenViewModel
 } from '../domain/ephemeralToken'
-import { loadEscrowCheckouts } from '../domain/escrowCheckout'
+import { loadEscrowCheckouts } from '../domain/purchaseEscrow'
 import { loadDealRouteContexts } from '../domain/dealDossier'
 import {
     filterOutCanonicalDemoEscrowRecords,

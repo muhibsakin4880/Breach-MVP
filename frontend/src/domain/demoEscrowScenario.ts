@@ -1,13 +1,17 @@
 import { getDatasetDetailById } from '../data/datasetDetailData'
 import type { CompliancePassport } from './compliancePassport'
 import {
-    buildEscrowCheckoutRecord,
     confirmOutcomeValidation,
     issueEscrowScopedCredentials,
-    provisionEscrowWorkspace,
-    releaseEscrowToProvider,
-    type EscrowCheckoutConfig,
-    type EscrowCheckoutRecord
+    provisionEscrowWorkspace
+} from './evaluationEscrow'
+import {
+    buildEscrowCheckoutRecord,
+    releaseEscrowToProvider
+} from './purchaseEscrow'
+import type {
+    EscrowCheckoutConfig,
+    EscrowCheckoutRecord
 } from './escrowCheckout'
 import {
     buildRightsQuote,

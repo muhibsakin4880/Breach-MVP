@@ -15,13 +15,13 @@ import {
     setDemoStage,
     type DemoEscrowScenario
 } from '../domain/demoEscrowScenario'
+import { outcomeStageMeta } from '../domain/evaluationEscrow'
 import {
     loadEscrowCheckouts,
     loadEscrowCheckoutTransactions,
-    outcomeStageMeta,
     releaseEscrowToProvider,
     saveEscrowCheckout
-} from '../domain/escrowCheckout'
+} from '../domain/purchaseEscrow'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,

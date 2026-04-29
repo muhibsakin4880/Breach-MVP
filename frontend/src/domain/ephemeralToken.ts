@@ -2,9 +2,9 @@ import { CONTRACT_STATE_LABELS } from './accessContract'
 import type { DealRouteContext } from './dealDossier'
 import {
     checkoutAccessModeMeta,
-    outcomeStageMeta,
-    type EscrowCheckoutRecord
-} from './escrowCheckout'
+    outcomeStageMeta
+} from './evaluationEscrow'
+import type { EscrowCheckoutRecord } from './escrowCheckout'
 
 export type BuyerTokenStatus = 'Active' | 'Provisioning' | 'Frozen' | 'Expired' | 'Revoked'
 export type BuyerTokenTone = 'cyan' | 'emerald' | 'amber' | 'rose' | 'slate'

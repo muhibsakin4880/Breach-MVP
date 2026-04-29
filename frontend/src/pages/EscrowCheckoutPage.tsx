@@ -10,30 +10,34 @@ import { buildDealProgressModel } from '../domain/dealProgress'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import {
-    buildEscrowCheckoutRecord,
     buildEscrowDueUseAgreement,
     checkoutAccessModeMeta,
     confirmOutcomeValidation,
-    describeCheckoutPaymentMethod,
     getPlannedCredentialScopes,
     getOutcomeEvaluationFee,
     getPlannedWorkspaceLaunchPath,
     getPlannedWorkspaceName,
-    getRecommendedCheckoutConfig,
     issueEscrowScopedCredentials,
-    loadEscrowCheckoutByQuoteId,
     outcomeStageMeta,
-    paymentMethodMeta,
     provisionEscrowWorkspace,
-    releaseEscrowToProvider,
     reviewWindowOptions,
-    runOutcomeProtectionEngine,
-    saveEscrowCheckout,
-    type EscrowCheckoutConfig,
-    type EscrowCheckoutRecord,
-    type EscrowCheckoutAccessMode,
-    type EscrowPaymentMethod,
-    type EscrowReviewWindowHours
+    runOutcomeProtectionEngine
+} from '../domain/evaluationEscrow'
+import {
+    buildEscrowCheckoutRecord,
+    describeCheckoutPaymentMethod,
+    getRecommendedCheckoutConfig,
+    loadEscrowCheckoutByQuoteId,
+    paymentMethodMeta,
+    releaseEscrowToProvider,
+    saveEscrowCheckout
+} from '../domain/purchaseEscrow'
+import type {
+    EscrowCheckoutConfig,
+    EscrowCheckoutRecord,
+    EscrowCheckoutAccessMode,
+    EscrowPaymentMethod,
+    EscrowReviewWindowHours
 } from '../domain/escrowCheckout'
 import { buildOutputReviewModel } from '../domain/outputReview'
 import {
